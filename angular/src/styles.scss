@@ -1,0 +1,380 @@
+/* You can add global styles to this file, and also import other style files */
+
+// ─── Brand Palette ───────────────────────────────────────────────────────────
+$clr-green: #1A8A40;
+$clr-bg:    #ffffff;
+
+:root {
+  --clr-green: #{$clr-green};
+  --clr-bg:    #{$clr-bg};
+
+  // ── LeptonX brand (drives breadcrumb hover, dropdown active, etc.) ───────
+  --lpx-brand:   #{$clr-green};
+  --lpx-primary: #{$clr-green};
+
+  // ── Bootstrap primary ─────────────────────────────────────────────────────
+  --bs-primary:                #{$clr-green};
+  --bs-primary-rgb:            26, 138, 64;
+  --bs-primary-text-emphasis:  #{$clr-green};
+  --bs-primary-bg-subtle:      #d1f0dc;
+  --bs-primary-border-subtle:  #a3e1b9;
+
+  // ── Page & body ───────────────────────────────────────────────────────────
+  --bs-body-bg:         #{$clr-bg};
+  --bs-body-bg-rgb:     255, 255, 255;
+  --bs-body-color:      #2d3748;
+  --bs-body-color-rgb:  45, 55, 72;
+
+  // ── Card ──────────────────────────────────────────────────────────────────
+  --lpx-card-bg: #ffffff;
+
+  // ── Login backgrounds ─────────────────────────────────────────────────────
+  --lpx-theme-light-bg: url('assets/images/login/login-bg-img-light.svg');
+  --lpx-theme-dim-bg:   url('assets/images/login/login-bg-img-dim.svg');
+  --lpx-theme-dark-bg:  url('assets/images/login/login-bg-img-dark.svg');
+
+  // ── Logo ──────────────────────────────────────────────────────────────────
+  --lpx-logo-icon: url('assets/images/logo/icon-lite.svg');
+  --lpx-logo-url:  var(--lpx-logo-icon);
+  --lpx-logo:      var(--lpx-logo-icon);
+
+  // ── Buttons ───────────────────────────────────────────────────────────────
+  --bs-btn-bg:                 #{$clr-green};
+  --bs-btn-border-color:       #{$clr-green};
+  --bs-btn-hover-bg:           #157035;
+  --bs-btn-hover-border-color: #157035;
+  --bs-btn-active-bg:          #0f5228;
+
+  // ── Dropdowns / pills / pagination ───────────────────────────────────────
+  --bs-dropdown-link-active-bg:  #{$clr-green};
+  --bs-nav-pills-link-active-bg: rgba(26, 138, 64, 0.15);
+  --bs-pagination-active-bg:     #{$clr-green};
+  --bs-list-group-active-bg:     rgba(26, 138, 64, 0.15);
+  --bs-accordion-active-bg:      rgba(26, 138, 64, 0.08);
+
+  .abp-logo    { background-repeat: no-repeat; }
+
+  .abp-support {
+    width: 178px; height: 30px;
+    background-image: url('assets/images/getting-started/abp-support.svg');
+  }
+  .abp-community {
+    width: 215px; height: 30px;
+    background-image: url('assets/images/getting-started/abp-community.svg');
+  }
+  .abp-blog {
+    width: 142px; height: 30px;
+    background-image: url('assets/images/getting-started/abp-blog.svg');
+  }
+  .logo-x {
+    width: 20px; height: 20px;
+    background-image: url('assets/images/getting-started/x.svg');
+  }
+}
+
+// ─── Base ─────────────────────────────────────────────────────────────────────
+html,
+body {
+  background-color: $clr-bg !important;
+}
+
+// ─── Sidebar shell ────────────────────────────────────────────────────────────
+.lpx-sidebar {
+  background-color: #ffffff !important;
+  color: #4a5568 !important;
+  border-right: 1px solid #e8edf2 !important;
+
+  .lpx-logo-container {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #e8edf2 !important;
+  }
+}
+
+.lpx-sidebar-container .lpx-sidebar .lpx-nav .lpx-nav-menu {
+  background-color: #ffffff !important;
+}
+
+// ─── Flat Sidebar: always show sub-menus ──────────────────────────────────────
+
+// 1. Override the CSS rule that hides collapsed inner menus
+.lpx-nav-menu .lpx-inner-menu.collapsed {
+  display: block !important;
+}
+
+// 2. Override Angular animation inline style (sets height:0 on collapse)
+.lpx-nav-menu .lpx-inner-menu {
+  height: auto !important;
+  overflow: visible !important;
+}
+
+// 3. Hide expand / collapse chevron icons
+.lpx-nav-menu .lpx-menu-item-link .dd-icon {
+  display: none !important;
+}
+
+// 4. Style parent group items (that have an inner-menu) as flat section labels
+.lpx-nav-menu lpx-sub-navbar:has(> .lpx-inner-menu) > .lpx-menu-item-link {
+  pointer-events: none !important;
+  cursor: default !important;
+  color: #9aa5b4 !important;
+  background-color: transparent !important;
+  border-left-color: transparent !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.09em !important;
+  height: auto !important;
+  line-height: 1 !important;
+  padding: 1rem 1rem 0.3rem 1rem !important;
+  margin-top: 0.25rem !important;
+
+  // Hide the icon for section-header items
+  .lpx-menu-item-icon {
+    display: none !important;
+  }
+}
+
+// ─── Sidebar group headings (groupedItems path, kept for completeness) ─────────
+.lpx-nav-menu .group-menu-item {
+  color: #9aa5b4 !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.09em !important;
+  text-transform: uppercase !important;
+}
+
+// ─── Sidebar menu items ────────────────────────────────────────────────────────
+.lpx-nav-menu .lpx-menu-item-link {
+  color: #4a5568 !important;
+  border-left: 3px solid transparent !important;
+  padding-left: 15px !important;
+  transition: all 0.2s ease !important;
+
+  .lpx-menu-item-icon {
+    opacity: 0.85;
+  }
+
+  // Hover state
+  &:hover {
+    color: $clr-green !important;
+    background-color: rgba(26, 138, 64, 0.06) !important;
+    border-left-color: rgba(26, 138, 64, 0.4) !important;
+
+    .lpx-menu-item-icon {
+      opacity: 1 !important;
+    }
+  }
+
+  // Active / selected state
+  &.selected,
+  &.expanded {
+    color: $clr-green !important;
+    font-weight: 600 !important;
+    background-color: rgba(26, 138, 64, 0.09) !important;
+    border-left-color: $clr-green !important;
+
+    .lpx-menu-item-icon,
+    .dd-icon {
+      color: $clr-green !important;
+      opacity: 1 !important;
+    }
+  }
+}
+
+// Inner (child) menu items — align with outer items (no extra indent)
+.lpx-nav-menu .lpx-inner-menu-item .lpx-menu-item-link {
+  padding-left: 18px !important;
+
+  &.selected,
+  &:hover {
+    color: $clr-green !important;
+    background-color: rgba(26, 138, 64, 0.07) !important;
+    border-left-color: $clr-green !important;
+  }
+}
+
+// ─── Topbar ────────────────────────────────────────────────────────────────────
+.lpx-topbar-container {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e8edf2 !important;
+}
+
+.lpx-topbar-container .lpx-topbar {
+  background-color: #ffffff !important;
+  border-color: #e8edf2 !important;
+}
+
+// ─── Topbar: match sidebar logo section height (padding:20px + logo:32px = 72px)
+.lpx-topbar-container .lpx-topbar {
+  min-height: 72px !important;
+  align-items: stretch !important;
+}
+
+// ─── Breadcrumb container: match sidebar logo section (width + height)
+// flex shorthand overrides flex-grow/shrink that would otherwise expand/shrink it
+.lpx-topbar-container .lpx-topbar .lpx-breadcrumb-container {
+  flex: 0 0 280px !important;
+  width: 280px !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+  height: auto !important;       // override the 30px default
+  align-self: stretch !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 20px !important;    // match .lpx-logo-container padding
+  border-right: 1px solid #e8edf2 !important;
+}
+
+// Tablet: sidebar collapses to 72px — match it
+@media only screen and (min-width: 768px) and (max-width: 1199px) {
+  .lpx-topbar-container .lpx-topbar .lpx-breadcrumb-container {
+    flex: 0 0 72px !important;
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+    padding: 0 8px !important;
+  }
+}
+
+// ─── Breadcrumb ────────────────────────────────────────────────────────────────
+.lpx-breadcrumb-item {
+  color: #6b7280 !important;
+
+  a {
+    color: #6b7280 !important;
+    text-decoration: none !important;
+
+    &:hover {
+      color: $clr-green !important;
+    }
+  }
+
+  &:last-child {
+    color: $clr-green !important;
+    font-weight: 500 !important;
+  }
+
+  &:hover {
+    color: $clr-green !important;
+
+    .lpx-breadcrumb-item-icon,
+    .lpx-caret {
+      color: $clr-green !important;
+    }
+  }
+}
+
+.lpx-breadcrumb-dropdown-item {
+  &:hover::before,
+  &.active::before {
+    background-color: $clr-green !important;
+  }
+}
+
+// ─── Page title ────────────────────────────────────────────────────────────────
+.lpx-main-title {
+  color: #1a202c !important;
+}
+
+// ─── Content wrapper ───────────────────────────────────────────────────────────
+.lpx-content-wrapper {
+  border-color: #e8edf2 !important;
+  background-color: $clr-bg !important;
+}
+
+// ─── Cards ────────────────────────────────────────────────────────────────────
+.card {
+  background-color: #ffffff !important;
+  border-color: #e8edf2 !important;
+}
+
+// ─── Primary buttons ──────────────────────────────────────────────────────────
+.btn-primary {
+  background-color: $clr-green !important;
+  border-color:     $clr-green !important;
+  color: #fff !important;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: #157035 !important;
+    border-color:     #157035 !important;
+  }
+}
+
+// ─── Links ────────────────────────────────────────────────────────────────────
+a {
+  color: $clr-green;
+  &:hover { color: #157035; }
+}
+
+// ─── Pagination ───────────────────────────────────────────────────────────────
+.page-item.active .page-link {
+  background-color: $clr-green !important;
+  border-color:     $clr-green !important;
+}
+
+.page-link {
+  color: $clr-green !important;
+  &:hover { color: #157035 !important; }
+}
+
+// ─── Brand logo: make the badge fill cleanly ──────────────────────────────────
+.lpx-brand-logo {
+  background-size: 32px 32px !important;
+  background-position: center left !important;
+  width: 32px !important;
+}
+
+// ─── Brand name: "Dymo" dark-bold + "Energy" green ────────────────────────────
+.lpx-brand-name {
+  background: transparent !important;
+  color: transparent !important;        // hide the raw text node
+  font-size: 0 !important;             // collapse original glyph space
+  line-height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+
+  // "Dymo"
+  &::before {
+    content: 'Dymo';
+    font-size: 17px !important;
+    font-weight: 700 !important;
+    color: #1a202c !important;
+    line-height: 32px;
+  }
+
+  // "Energy"
+  &::after {
+    content: 'Energy';
+    font-size: 17px !important;
+    font-weight: 400 !important;
+    color: $clr-green !important;
+    line-height: 32px;
+  }
+}
+
+// Login page brand name (keep it visible as plain text)
+.lpx-brand-name.lpx-login-name {
+  background: transparent !important;
+  color: $clr-green !important;
+  font-size: 26px !important;
+  display: block !important;
+
+  &::before { content: none; }
+  &::after  { content: none; }
+}
+
+// ─── Mobile navbar ────────────────────────────────────────────────────────────
+.lpx-mobile-navbar,
+.lpx-mobile-menu {
+  background-color: #ffffff !important;
+  color: #4a5568 !important;
+  border-bottom: 1px solid #e8edf2 !important;
+}
+
+// ─── Login brand strip ────────────────────────────────────────────────────────
+.lpx-layout-login {
+  background-color: rgba(26, 138, 64, 0.7) !important;
+}

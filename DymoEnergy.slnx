@@ -1,0 +1,23 @@
+<Solution>
+    <Configurations>
+        <Platform Name="Any CPU" />
+    </Configurations>
+    <Folder Name="/src/">
+        <Project Path="src/DymoEnergy.Domain/DymoEnergy.Domain.csproj" />
+        <Project Path="src/DymoEnergy.Application/DymoEnergy.Application.csproj" />
+        <Project Path="src/DymoEnergy.EntityFrameworkCore/DymoEnergy.EntityFrameworkCore.csproj" />
+        <Project Path="src/DymoEnergy.Domain.Shared/DymoEnergy.Domain.Shared.csproj" />
+        <Project Path="src/DymoEnergy.Application.Contracts/DymoEnergy.Application.Contracts.csproj" />
+        <Project Path="src/DymoEnergy.HttpApi/DymoEnergy.HttpApi.csproj" />
+        <Project Path="src/DymoEnergy.HttpApi.Client/DymoEnergy.HttpApi.Client.csproj" />
+        <Project Path="src/DymoEnergy.HttpApi.Host/DymoEnergy.HttpApi.Host.csproj" />
+        <Project Path="src/DymoEnergy.DbMigrator/DymoEnergy.DbMigrator.csproj" />
+    </Folder>
+    <Folder Name="/test/">
+        <Project Path="test/DymoEnergy.Application.Tests/DymoEnergy.Application.Tests.csproj" />
+        <Project Path="test/DymoEnergy.EntityFrameworkCore.Tests/DymoEnergy.EntityFrameworkCore.Tests.csproj" />
+        <Project Path="test/DymoEnergy.TestBase/DymoEnergy.TestBase.csproj" />
+        <Project Path="test/DymoEnergy.Domain.Tests/DymoEnergy.Domain.Tests.csproj" />
+        <Project Path="test/DymoEnergy.HttpApi.Client.ConsoleTestApp/DymoEnergy.HttpApi.Client.ConsoleTestApp.csproj" />
+    </Folder>
+</Solution>

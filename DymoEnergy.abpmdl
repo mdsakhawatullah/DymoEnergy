@@ -1,0 +1,104 @@
+{
+  "template": "app",
+  "imports": {
+    "Volo.Abp.LeptonXLiteTheme": {
+      "version": "5.4.0",
+      "isInstalled": true,
+      "creationTime": "05/24/2026 19:08:50 +00:00"
+    },
+    "Volo.Abp.Account": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "05/24/2026 19:08:50 +00:00"
+    },
+    "Volo.Abp.OpenIddict": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "05/24/2026 19:08:50 +00:00"
+    },
+    "Volo.Abp.Identity": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "05/24/2026 19:08:50 +00:00"
+    },
+    "Volo.Abp.SettingManagement": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "05/24/2026 19:08:50 +00:00"
+    },
+    "Volo.Abp.PermissionManagement": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "05/24/2026 19:08:50 +00:00"
+    },
+    "Volo.Abp.FeatureManagement": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "05/24/2026 19:08:50 +00:00"
+    }
+  },
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {}
+    }
+  },
+  "packages": {
+    "DymoEnergy.Application": {
+      "path": "src/DymoEnergy.Application/DymoEnergy.Application.abppkg",
+      "folder": "src"
+    },
+    "DymoEnergy.Application.Tests": {
+      "path": "test/DymoEnergy.Application.Tests/DymoEnergy.Application.Tests.abppkg",
+      "folder": "test"
+    },
+    "DymoEnergy.Domain.Shared": {
+      "path": "src/DymoEnergy.Domain.Shared/DymoEnergy.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "DymoEnergy.Application.Contracts": {
+      "path": "src/DymoEnergy.Application.Contracts/DymoEnergy.Application.Contracts.abppkg",
+      "folder": "src"
+    },
+    "DymoEnergy.HttpApi": {
+      "path": "src/DymoEnergy.HttpApi/DymoEnergy.HttpApi.abppkg",
+      "folder": "src"
+    },
+    "DymoEnergy.HttpApi.Client": {
+      "path": "src/DymoEnergy.HttpApi.Client/DymoEnergy.HttpApi.Client.abppkg",
+      "folder": "src"
+    },
+    "DymoEnergy.EntityFrameworkCore.Tests": {
+      "path": "test/DymoEnergy.EntityFrameworkCore.Tests/DymoEnergy.EntityFrameworkCore.Tests.abppkg",
+      "folder": "test"
+    },
+    "DymoEnergy.EntityFrameworkCore": {
+      "path": "src/DymoEnergy.EntityFrameworkCore/DymoEnergy.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "DymoEnergy.TestBase": {
+      "path": "test/DymoEnergy.TestBase/DymoEnergy.TestBase.abppkg",
+      "folder": "test"
+    },
+    "DymoEnergy.Domain.Tests": {
+      "path": "test/DymoEnergy.Domain.Tests/DymoEnergy.Domain.Tests.abppkg",
+      "folder": "test"
+    },
+    "DymoEnergy.HttpApi.Client.ConsoleTestApp": {
+      "path": "test/DymoEnergy.HttpApi.Client.ConsoleTestApp/DymoEnergy.HttpApi.Client.ConsoleTestApp.abppkg",
+      "folder": "test"
+    },
+    "DymoEnergy.DbMigrator": {
+      "path": "src/DymoEnergy.DbMigrator/DymoEnergy.DbMigrator.abppkg",
+      "folder": "src"
+    },
+    "DymoEnergy.HttpApi.Host": {
+      "path": "src/DymoEnergy.HttpApi.Host/DymoEnergy.HttpApi.Host.abppkg",
+      "folder": "src"
+    },
+    "DymoEnergy.Domain": {
+      "path": "src/DymoEnergy.Domain/DymoEnergy.Domain.abppkg",
+      "folder": "src"
+    }
+  }
+}
