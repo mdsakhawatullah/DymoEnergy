@@ -1,0 +1,160 @@
+<form nz-form [formGroup]="form" nzLayout="vertical" class="drawer-form">
+
+  <!-- Basic Info -->
+  <nz-divider nzText="Basic Info" nzOrientation="left"></nz-divider>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <nz-form-item>
+        <nz-form-label>Name</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="name" placeholder="Catalogue name" />
+        </nz-form-control>
+      </nz-form-item>
+    </div>
+    <div class="col-md-6">
+      <nz-form-item>
+        <nz-form-label>Slug</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="slug" placeholder="url-friendly-slug" />
+        </nz-form-control>
+      </nz-form-item>
+    </div>
+  </div>
+
+  <nz-form-item>
+    <nz-form-label>Description</nz-form-label>
+    <nz-form-control>
+      <textarea
+        nz-input
+        formControlName="description"
+        [nzAutosize]="{ minRows: 2, maxRows: 4 }"
+        placeholder="Short description"
+      ></textarea>
+    </nz-form-control>
+  </nz-form-item>
+
+  <!-- Hero Section -->
+  <nz-divider nzText="Hero Section" nzOrientation="left"></nz-divider>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <nz-form-item>
+        <nz-form-label>Hero Title</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="heroTitle" placeholder="Hero heading" />
+        </nz-form-control>
+      </nz-form-item>
+    </div>
+    <div class="col-md-6">
+      <nz-form-item>
+        <nz-form-label>Hero Subtitle</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="heroSubtitle" placeholder="Hero subheading" />
+        </nz-form-control>
+      </nz-form-item>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <nz-form-item>
+        <nz-form-label>Thumbnail URL</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="thumbnailImageUrl" placeholder="https://..." />
+        </nz-form-control>
+      </nz-form-item>
+    </div>
+    <div class="col-md-6">
+      <nz-form-item>
+        <nz-form-label>Background Image URL</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="primaryBackgroundImageUrl" placeholder="https://..." />
+        </nz-form-control>
+      </nz-form-item>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <nz-divider nzText="Settings" nzOrientation="left"></nz-divider>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <nz-form-item>
+        <nz-form-label>Layout Type</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="layoutType" style="width:100%">
+            @for (opt of layoutOptions; track opt.value) {
+              <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+    </div>
+    <div class="col-md-6">
+      <nz-form-item>
+        <nz-form-label>Display Order</nz-form-label>
+        <nz-form-control>
+          <nz-input-number formControlName="displayOrder" [nzMin]="0" style="width:100%"></nz-input-number>
+        </nz-form-control>
+      </nz-form-item>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <nz-form-item>
+        <nz-form-label>Published</nz-form-label>
+        <nz-form-control>
+          <nz-switch formControlName="isPublished" nzCheckedChildren="Yes" nzUnCheckedChildren="No"></nz-switch>
+        </nz-form-control>
+      </nz-form-item>
+    </div>
+    <div class="col-md-6">
+      <nz-form-item>
+        <nz-form-label>Featured</nz-form-label>
+        <nz-form-control>
+          <nz-switch formControlName="isFeatured" nzCheckedChildren="Yes" nzUnCheckedChildren="No"></nz-switch>
+        </nz-form-control>
+      </nz-form-item>
+    </div>
+  </div>
+
+  <!-- SEO -->
+  <nz-divider nzText="SEO" nzOrientation="left"></nz-divider>
+
+  <nz-form-item>
+    <nz-form-label>Meta Title</nz-form-label>
+    <nz-form-control>
+      <input nz-input formControlName="metaTitle" placeholder="SEO page title" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>Meta Description</nz-form-label>
+    <nz-form-control>
+      <textarea
+        nz-input
+        formControlName="metaDescription"
+        [nzAutosize]="{ minRows: 2, maxRows: 3 }"
+        placeholder="SEO description"
+      ></textarea>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>Meta Keywords</nz-form-label>
+    <nz-form-control>
+      <input nz-input formControlName="metaKeywords" placeholder="keyword1, keyword2" />
+    </nz-form-control>
+  </nz-form-item>
+
+</form>
+
+<!-- Footer actions -->
+<div class="drawer-footer">
+  <button nz-button (click)="close()" [disabled]="saving">Cancel</button>
+  <button nz-button nzType="primary" class="btn-save" (click)="save()" [nzLoading]="saving">
+    {{ input?.id ? 'Update' : 'Create' }}
+  </button>
+</div>

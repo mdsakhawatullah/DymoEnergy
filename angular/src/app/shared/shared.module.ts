@@ -1,0 +1,43 @@
+import { NgModule } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { LocalizationPipe } from '@abp/ng.core';
+import { NzTableModule } from 'ng-zorro-antd/table';
+import { NzTagModule } from 'ng-zorro-antd/tag';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzDrawerModule } from 'ng-zorro-antd/drawer';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
+import { NzDividerModule } from 'ng-zorro-antd/divider';
+
+const MODULES = [
+  CommonModule,
+  FormsModule,
+  ReactiveFormsModule,
+  NzTableModule,
+  NzTagModule,
+  NzInputModule,
+  NzButtonModule,
+  NzIconModule,
+  NzSpinModule,
+  NzDrawerModule,
+  NzFormModule,
+  NzSelectModule,
+  NzSwitchModule,
+  NzInputNumberModule,
+  NzDividerModule,
+];
+
+// Standalone pipes/directives that must appear in both imports and exports
+const STANDALONE = [DatePipe, LocalizationPipe];
+
+@NgModule({
+  imports:  [...MODULES, ...STANDALONE],
+  exports:  [...MODULES, ...STANDALONE],
+})
+export class SharedModule {}

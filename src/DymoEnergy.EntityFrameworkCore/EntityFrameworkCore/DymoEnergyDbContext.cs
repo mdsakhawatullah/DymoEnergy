@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using DymoEnergy.Books;
 using DymoEnergy.AdminSiteSettings;
+using DymoEnergy.Catalogues;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
 using Volo.Abp.Data;
@@ -27,6 +28,8 @@ public class DymoEnergyDbContext :
 
     public DbSet<Book> Books { get; set; }
     public DbSet<AdminSiteSetting> AdminSiteSettings { get; set; }
+    public DbSet<Catalogue> Catalogues { get; set; }
+    public DbSet<CatalogueImage> CatalogueImages { get; set; }
 
     #region Entities from the modules
 
@@ -86,6 +89,22 @@ public class DymoEnergyDbContext :
         {
             b.ToTable(DymoEnergyConsts.DbTablePrefix + "AdminSiteSettings", DymoEnergyConsts.DbSchema);
             b.ConfigureByConvention();
+        });
+
+        /* ── Catalogues ──────────────────────────────────────────────── */
+        builder.Entity<Catalogue>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "Catalogues", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();   // auto-increment int PK
+        });
+
+        builder.Entity<CatalogueImage>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "CatalogueImages", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.Id).ValueGeneratedOnAdd();   // auto-increment int PK
         });
     }
 }
