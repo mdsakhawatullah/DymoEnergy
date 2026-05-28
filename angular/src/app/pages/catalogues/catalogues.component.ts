@@ -3,7 +3,7 @@ import { forkJoin } from 'rxjs';
 import { SharedModule } from '../../shared/shared.module';
 import { CatalogueService } from '../../proxy/catalogues/catalogue.service';
 import { CatalogueDto } from '../../proxy/catalogues/models';
-import { CatalogueEntryDrawerComponent } from './catalogue-entry-drawer.component';
+import { CatalogueEntryDrawerComponent } from './entry-drawer/catalogue-entry-drawer.component';
 
 type TabKey   = 'all' | 'published' | 'unpublished' | 'featured';
 type StatsKey = 'total' | 'published' | 'unpublished' | 'featured';

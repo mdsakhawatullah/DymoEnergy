@@ -1,0 +1,296 @@
+<!-- ── Page header ─────────────────────────────────────────────────────── -->
+<div class="d-flex align-items-start justify-content-between mb-4">
+  <div>
+    <h4 class="mb-1 fw-bold">Admin Site Settings</h4>
+    <span class="text-muted small">
+      {{ hasRecord ? 'Update your site appearance and branding.' : 'No settings found. Create your site configuration below.' }}
+    </span>
+  </div>
+  @if (!hasRecord && !loading) {
+    <button nz-button nzType="primary" class="btn-create" (click)="save()" [nzLoading]="saving">
+      <span nz-icon nzType="plus" nzTheme="outline"></span> Create Settings
+    </button>
+  }
+</div>
+
+<!-- ── Loading skeleton ───────────────────────────────────────────────── -->
+@if (loading) {
+  <div class="text-center py-5">
+    <nz-spin nzSize="large"></nz-spin>
+  </div>
+} @else {
+
+<form nz-form [formGroup]="form" nzLayout="vertical" class="settings-form">
+
+  <!-- ① General ──────────────────────────────────────────────────────── -->
+  <div class="settings-card">
+    <div class="section-header">
+      <span class="section-badge">1</span>
+      <span class="section-title">General</span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="field-label">SITE NAME</div>
+        <input nz-input formControlName="siteName" placeholder="e.g. DymoEnergy Admin" />
+      </div>
+      <div class="col-md-6">
+        <div class="field-label">TAGLINE</div>
+        <input nz-input formControlName="tagline" placeholder="e.g. Powering a Sustainable Future" />
+      </div>
+      <div class="col-12">
+        <div class="field-label">LOGO URL</div>
+        <div class="d-flex align-items-center gap-3">
+          <input nz-input formControlName="logoUrl" placeholder="https://..." class="flex-grow-1" />
+          @if (form.get('logoUrl')?.value) {
+            <img [src]="form.get('logoUrl')?.value" alt="Logo preview" class="logo-preview" />
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② Brand Colours ─────────────────────────────────────────────── -->
+  <div class="settings-card">
+    <div class="section-header">
+      <span class="section-badge">2</span>
+      <span class="section-title">Brand Colours</span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="field-label">PRIMARY</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('primaryColor')"
+                 (input)="onColorPickerChange('primaryColor', $event)" />
+          <input nz-input formControlName="primaryColor" placeholder="#0D5C2E" />
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="field-label">SECONDARY</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('secondaryColor')"
+                 (input)="onColorPickerChange('secondaryColor', $event)" />
+          <input nz-input formControlName="secondaryColor" placeholder="#4CAF50" />
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="field-label">ACCENT</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('accentColor')"
+                 (input)="onColorPickerChange('accentColor', $event)" />
+          <input nz-input formControlName="accentColor" placeholder="#FFC107" />
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="field-label">BUTTON</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('buttonColor')"
+                 (input)="onColorPickerChange('buttonColor', $event)" />
+          <input nz-input formControlName="buttonColor" placeholder="#0D5C2E" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ Text Colours ──────────────────────────────────────────────── -->
+  <div class="settings-card">
+    <div class="section-header">
+      <span class="section-badge">3</span>
+      <span class="section-title">Text Colours</span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="field-label">TEXT</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('textColor')"
+                 (input)="onColorPickerChange('textColor', $event)" />
+          <input nz-input formControlName="textColor" placeholder="#1a1a1a" />
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="field-label">TEXT MUTED</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('textMutedColor')"
+                 (input)="onColorPickerChange('textMutedColor', $event)" />
+          <input nz-input formControlName="textMutedColor" placeholder="#888888" />
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="field-label">LINK</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('linkColor')"
+                 (input)="onColorPickerChange('linkColor', $event)" />
+          <input nz-input formControlName="linkColor" placeholder="#0D5C2E" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ Backgrounds ───────────────────────────────────────────────── -->
+  <div class="settings-card">
+    <div class="section-header">
+      <span class="section-badge">4</span>
+      <span class="section-title">Backgrounds</span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="field-label">PAGE BACKGROUND</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('backgroundColor')"
+                 (input)="onColorPickerChange('backgroundColor', $event)" />
+          <input nz-input formControlName="backgroundColor" placeholder="#f5f5f5" />
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="field-label">CARD BACKGROUND</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('cardBgColor')"
+                 (input)="onColorPickerChange('cardBgColor', $event)" />
+          <input nz-input formControlName="cardBgColor" placeholder="#ffffff" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ Navbar ────────────────────────────────────────────────────── -->
+  <div class="settings-card">
+    <div class="section-header">
+      <span class="section-badge">5</span>
+      <span class="section-title">Navbar</span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="field-label">NAVBAR BACKGROUND</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('navbarBgColor')"
+                 (input)="onColorPickerChange('navbarBgColor', $event)" />
+          <input nz-input formControlName="navbarBgColor" placeholder="#0D5C2E" />
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="field-label">NAVBAR TEXT</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('navbarTextColor')"
+                 (input)="onColorPickerChange('navbarTextColor', $event)" />
+          <input nz-input formControlName="navbarTextColor" placeholder="#ffffff" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑥ Sidebar ───────────────────────────────────────────────────── -->
+  <div class="settings-card">
+    <div class="section-header">
+      <span class="section-badge">6</span>
+      <span class="section-title">Sidebar</span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="field-label">SIDEBAR BACKGROUND</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('sidebarBgColor')"
+                 (input)="onColorPickerChange('sidebarBgColor', $event)" />
+          <input nz-input formControlName="sidebarBgColor" placeholder="#1a1a2e" />
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="field-label">SIDEBAR TEXT</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('sidebarTextColor')"
+                 (input)="onColorPickerChange('sidebarTextColor', $event)" />
+          <input nz-input formControlName="sidebarTextColor" placeholder="#cccccc" />
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="field-label">SIDEBAR ACTIVE BG</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('sidebarActiveBgColor')"
+                 (input)="onColorPickerChange('sidebarActiveBgColor', $event)" />
+          <input nz-input formControlName="sidebarActiveBgColor" placeholder="#0D5C2E" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ Buttons ───────────────────────────────────────────────────── -->
+  <div class="settings-card">
+    <div class="section-header">
+      <span class="section-badge">7</span>
+      <span class="section-title">Primary Button</span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="field-label">BUTTON BACKGROUND</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('buttonPrimaryBgColor')"
+                 (input)="onColorPickerChange('buttonPrimaryBgColor', $event)" />
+          <input nz-input formControlName="buttonPrimaryBgColor" placeholder="#0D5C2E" />
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="field-label">BUTTON TEXT</div>
+        <div class="color-row">
+          <input type="color" class="color-swatch"
+                 [value]="colorValue('buttonPrimaryTextColor')"
+                 (input)="onColorPickerChange('buttonPrimaryTextColor', $event)" />
+          <input nz-input formControlName="buttonPrimaryTextColor" placeholder="#ffffff" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑧ Typography ────────────────────────────────────────────────── -->
+  <div class="settings-card">
+    <div class="section-header">
+      <span class="section-badge">8</span>
+      <span class="section-title">Typography</span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-8">
+        <div class="field-label">FONT FAMILY</div>
+        <input nz-input formControlName="fontFamily" placeholder="e.g. Inter, sans-serif" />
+      </div>
+      <div class="col-md-4">
+        <div class="field-label">BASE FONT SIZE</div>
+        <input nz-input formControlName="fontSizeBase" placeholder="e.g. 14px" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Status + Save row ─────────────────────────────────────────── -->
+  <div class="action-bar">
+    <label class="active-toggle">
+      <nz-switch formControlName="isActive" nzCheckedChildren="Active" nzUnCheckedChildren="Inactive"></nz-switch>
+      <span class="active-label">{{ form.get('isActive')?.value ? 'Configuration is active' : 'Configuration is inactive' }}</span>
+    </label>
+    <button nz-button nzType="primary" class="btn-save" (click)="save()" [nzLoading]="saving">
+      <span nz-icon nzType="save" nzTheme="outline"></span>
+      {{ hasRecord ? 'Save Changes' : 'Create Settings' }}
+    </button>
+  </div>
+
+</form>
+
+} <!-- end @else -->

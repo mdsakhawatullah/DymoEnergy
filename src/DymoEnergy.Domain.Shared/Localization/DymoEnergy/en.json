@@ -34,6 +34,8 @@
     "Menu:Home": "Home",
     "LongWelcomeMessage": "Welcome to the application. This is a startup project based on the ABP framework. For more information visit",
     "Welcome": "Welcome",
+    "Menu:AdminSiteSettings": "SiteSettings",
+    "Menu:AdminSiteSetting": "Site Setting",
     "Menu:Catalogues": "Catalogues",
     "Menu:Catalogue": "Catalogues",
     "Menu:Products": "Products",

@@ -29,6 +29,13 @@ export const APP_ROUTES: Routes = [
     canActivate: [authGuard, permissionGuard],
   },
 
+  // ── Admin Site Settings ────────────────────────────────────────────────────
+  {
+    path: 'admin-site-settings',
+    loadComponent: () => import('./pages/admin-site-settings/admin-site-settings.component').then(c => c.AdminSiteSettingsComponent),
+    canActivate: [authGuard],
+  },
+
   // ── Catalogues ─────────────────────────────────────────────────────────────
   {
     path: 'catalogues',

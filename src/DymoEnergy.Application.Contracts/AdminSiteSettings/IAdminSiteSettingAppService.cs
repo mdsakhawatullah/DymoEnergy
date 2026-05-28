@@ -1,20 +1,17 @@
-using System;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 
 namespace DymoEnergy.AdminSiteSettings;
 
-public interface IAdminSiteSettingAppService :
-    ICrudAppService<
-        AdminSiteSettingDto,
-        Guid,
-        PagedAndSortedResultRequestDto,
-        CreateUpdateAdminSiteSettingDto>
+public interface IAdminSiteSettingAppService : IApplicationService
 {
-    /// <summary>Returns the currently active site setting, or null if none is set.</summary>
-    Task<AdminSiteSettingDto> GetActiveAsync();
+    Task<AdminSiteSettingDto> GetAsync(int id);
+    Task<PagedResultDto<AdminSiteSettingDto>> GetListAsync(PagedAndSortedResultRequestDto input);
+    Task<AdminSiteSettingDto> CreateAsync(CreateUpdateAdminSiteSettingDto input);
+    Task<AdminSiteSettingDto> UpdateAsync(int id, CreateUpdateAdminSiteSettingDto input);
+    Task DeleteAsync(int id);
 
-    /// <summary>Marks the given setting as active and deactivates all others.</summary>
-    Task<AdminSiteSettingDto> SetActiveAsync(Guid id);
+    Task<AdminSiteSettingDto> GetActiveAsync();
+    Task<AdminSiteSettingDto> SetActiveAsync(int id);
 }

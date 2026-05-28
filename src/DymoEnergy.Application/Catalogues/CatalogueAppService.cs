@@ -97,7 +97,7 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
     // ── WRITE ─────────────────────────────────────────────────────────────
 
     [Authorize(DymoEnergyPermissions.Catalogues.Create)]
-    public async Task<CatalogueDto> CreateAsync(CreateUpdateCatalogueDto input)
+    public async Task<CatalogueDto> CreateCatalogueDataAsync(CreateUpdateCatalogueDto input)
     {
         if (!string.IsNullOrWhiteSpace(input.Slug))
             await EnsureSlugIsUniqueAsync(input.Slug);

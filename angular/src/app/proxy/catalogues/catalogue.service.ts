@@ -34,7 +34,7 @@ export class CatalogueService {
 
   create = (input: CreateUpdateCatalogueDto) =>
     this.restService.request<any, CatalogueDto>(
-      { method: 'POST', url: '/api/app/catalogue', body: input },
+      { method: 'POST', url: '/api/app/catalogue/catalogue-data', body: input },
       { apiName: this.apiName }
     );
 

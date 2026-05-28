@@ -1,11 +1,11 @@
-using System;
 using Volo.Abp.Application.Dtos;
 
 namespace DymoEnergy.AdminSiteSettings;
 
-public class AdminSiteSettingDto : AuditedEntityDto<Guid>
+public class AdminSiteSettingDto : AuditedEntityDto<int>
 {
     public string SiteName { get; set; }
+    public string ButtonColor { get; set; }
     public string Tagline { get; set; }
     public string LogoUrl { get; set; }
 

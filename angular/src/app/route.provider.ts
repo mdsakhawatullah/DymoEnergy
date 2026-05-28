@@ -20,12 +20,30 @@ function configureRoutes() {
       layout: eLayoutType.application,
     },
 
+    // ── Admin Site Settings (group) ──────────────────────────────────────────
+    {
+      path: '',
+      name: '::Menu:AdminSiteSettings',
+      iconClass: 'fas fa-sliders-h',
+      order: 2,
+      layout: eLayoutType.application,
+    },
+    {
+      path: '/admin-site-settings',
+      name: '::Menu:AdminSiteSetting',
+      parentName: '::Menu:AdminSiteSettings',
+      iconClass: 'fas fa-sliders-h',
+      order: 1,
+      layout: eLayoutType.application,
+      breadcrumbText: '::Menu:AdminSiteSetting',
+    },
+
     // ── Catalogues (group) ───────────────────────────────────────────────────
     {
       path: '',
       name: '::Menu:Catalogues',
       iconClass: 'fas fa-layer-group',
-      order: 2,
+      order: 3,
       layout: eLayoutType.application,
     },
     {
@@ -43,7 +61,7 @@ function configureRoutes() {
       path: '',
       name: '::Menu:Products',
       iconClass: 'fas fa-box-open',
-      order: 3,
+      order: 4,
       layout: eLayoutType.application,
     },
     {
@@ -79,7 +97,7 @@ function configureRoutes() {
       path: '',
       name: '::Menu:Sales',
       iconClass: 'fas fa-chart-line',
-      order: 4,
+      order: 5,
       layout: eLayoutType.application,
     },
     {
@@ -142,7 +160,7 @@ function configureRoutes() {
       path: '',
       name: '::Menu:ECommerce',
       iconClass: 'fas fa-shopping-cart',
-      order: 5,
+      order: 6,
       layout: eLayoutType.application,
     },
     {

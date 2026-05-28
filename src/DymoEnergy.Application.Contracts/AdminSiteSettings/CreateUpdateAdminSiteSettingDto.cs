@@ -7,6 +7,9 @@ public class CreateUpdateAdminSiteSettingDto
     [MaxLength(128)]
     public string SiteName { get; set; }
 
+    [MaxLength(32)]
+    public string ButtonColor { get; set; }
+
     [MaxLength(256)]
     public string Tagline { get; set; }
 

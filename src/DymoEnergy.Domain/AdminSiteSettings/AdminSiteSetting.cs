@@ -3,9 +3,11 @@ using Volo.Abp.Domain.Entities.Auditing;
 
 namespace DymoEnergy.AdminSiteSettings;
 
-public class AdminSiteSetting : FullAuditedAggregateRoot<Guid>
+public class AdminSiteSetting : FullAuditedAggregateRoot<int>
 {
     public string? SiteName { get; set; }
+    public int? PortalId { get; set; }
+    public string? ButtonColor { get; set; }
     public string? Tagline { get; set; }
     public string? LogoUrl { get; set; }
     public string? PrimaryColor { get; set; }

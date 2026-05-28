@@ -1,13 +1,14 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { SharedModule } from '../../shared/shared.module';
-import { CatalogueService } from '../../proxy/catalogues/catalogue.service';
-import { CatalogueDto, CatalogueLayoutTypeLabels } from '../../proxy/catalogues/models';
+import { SharedModule } from '../../../shared/shared.module';
+import { CatalogueService } from '../../../proxy/catalogues/catalogue.service';
+import { CatalogueDto, CatalogueLayoutTypeLabels } from '../../../proxy/catalogues/models';
 
 @Component({
   selector:    'catalogue-entry-drawer',
   templateUrl: './catalogue-entry-drawer.component.html',
+  styleUrl:    './catalogue-entry-drawer.component.css',
   imports:     [SharedModule],
 })
 export class CatalogueEntryDrawerComponent implements OnChanges {
@@ -18,7 +19,8 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
   @Output() handleCatalogueSaved         = new EventEmitter<void>();
 
   form!: FormGroup;
-  saving = false;
+  saving        = false;
+  publishNow    = false;
 
   layoutOptions = Object.entries(CatalogueLayoutTypeLabels).map(([value, label]) => ({
     value: +value,
@@ -26,9 +28,9 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
   }));
 
   constructor(
-    private fb:             FormBuilder,
-    private catalogueSvc:   CatalogueService,
-    private message:        NzMessageService,
+    private fb:           FormBuilder,
+    private catalogueSvc: CatalogueService,
+    private message:      NzMessageService,
   ) {
     this.buildForm();
   }
@@ -36,6 +38,7 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['input']) {
       if (this.input) {
+        this.publishNow = this.input.isPublished;
         this.form.patchValue({
           name:                      this.input.name,
           slug:                      this.input.slug,
@@ -53,6 +56,7 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
           metaKeywords:              this.input.metaKeywords,
         });
       } else {
+        this.publishNow = false;
         this.form.reset({ layoutType: 1, isPublished: false, isFeatured: false, displayOrder: 0 });
       }
     }
@@ -77,9 +81,13 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
     });
   }
 
+  onPublishNowChange(checked: boolean): void {
+    this.publishNow = checked;
+    this.form.patchValue({ isPublished: checked });
+  }
+
   save(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-
     this.saving = true;
     const payload = { ...this.form.value, images: [], overlayOpacity: 0.4 };
 
