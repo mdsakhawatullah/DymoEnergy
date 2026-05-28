@@ -116,7 +116,7 @@
         <th>DESCRIPTION</th>
         <th>TITLE</th>
         <th nzWidth="110px" nzAlign="center">STATUS</th>
-        <th nzWidth="80px" nzAlign="center">ACTION</th>
+        <th nzWidth="100px" nzAlign="center">ACTION</th>
       </tr>
     </thead>
     <tbody>
@@ -173,16 +173,33 @@
             }
           </td>
 
-          <!-- Edit action -->
+          <!-- Actions: Edit + Delete -->
           <td nzAlign="center">
-            <button
-              nz-button nzType="text" nzSize="small"
-              class="btn-edit"
-              nz-tooltip nzTooltipTitle="Edit"
-              (click)="openDrawerForEdit(item)"
-            >
-              <span nz-icon nzType="edit" nzTheme="outline"></span>
-            </button>
+            <div class="d-flex align-items-center justify-content-center gap-1">
+              <button
+                nz-button nzType="text" nzSize="small"
+                class="btn-edit"
+                nz-tooltip nzTooltipTitle="Edit"
+                (click)="openDrawerForEdit(item)"
+              >
+                <span nz-icon nzType="edit" nzTheme="outline"></span>
+              </button>
+
+              <button
+                nz-button nzType="text" nzSize="small"
+                nzDanger
+                nz-tooltip nzTooltipTitle="Delete"
+                nz-popconfirm
+                nzPopconfirmTitle="Delete this catalogue?"
+                nzOkText="Yes, delete"
+                nzOkDanger
+                nzCancelText="Cancel"
+                [nzLoading]="deletingIds.has(item.id)"
+                (nzOnConfirm)="deleteCatalogue(item.id)"
+              >
+                <span nz-icon nzType="delete" nzTheme="outline"></span>
+              </button>
+            </div>
           </td>
         </tr>
       } @empty {

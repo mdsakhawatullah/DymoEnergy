@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { forkJoin } from 'rxjs';
 import { SharedModule } from '../../shared/shared.module';
 import { CatalogueService } from '../../proxy/catalogues/catalogue.service';
@@ -45,7 +46,12 @@ export class CataloguesComponent implements OnInit {
   isDrawerOpen                 = false;
   selectedCatalogue: CatalogueDto | null = null;
 
-  constructor(private catalogueService: CatalogueService) {}
+  deletingIds = new Set<number>();
+
+  constructor(
+    private catalogueService: CatalogueService,
+    private message: NzMessageService,
+  ) {}
 
   ngOnInit(): void {
     this.loadStats();
@@ -105,6 +111,23 @@ export class CataloguesComponent implements OnInit {
         this.loading    = false;
       },
       error: () => { this.loading = false; },
+    });
+  }
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+  deleteCatalogue(id: number): void {
+    this.deletingIds.add(id);
+    this.catalogueService.delete(id).subscribe({
+      next: () => {
+        this.message.success('Catalogue deleted.');
+        this.deletingIds.delete(id);
+        this.loadStats();
+        this.loadData();
+      },
+      error: () => {
+        this.message.error('Failed to delete catalogue.');
+        this.deletingIds.delete(id);
+      },
     });
   }
 

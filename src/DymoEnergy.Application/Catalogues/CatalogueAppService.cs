@@ -180,7 +180,6 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
     [Authorize(DymoEnergyPermissions.Catalogues.Delete)]
     public async Task DeleteAsync(int id)
     {
-        // Cascade delete on the FK removes images automatically
         await _catalogueRepository.DeleteAsync(id, autoSave: true);
     }
 

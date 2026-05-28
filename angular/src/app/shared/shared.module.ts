@@ -14,6 +14,8 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
+import { NzPopconfirmDirective } from 'ng-zorro-antd/popconfirm';
+import { NzTooltipDirective } from 'ng-zorro-antd/tooltip';
 
 const MODULES = [
   CommonModule,
@@ -33,11 +35,14 @@ const MODULES = [
   NzDividerModule,
 ];
 
+// ng-zorro v17+ standalone directives (no module wrappers)
+const NZ_STANDALONE = [NzPopconfirmDirective, NzTooltipDirective];
+
 // Standalone pipes/directives that must appear in both imports and exports
 const STANDALONE = [DatePipe, LocalizationPipe];
 
 @NgModule({
-  imports:  [...MODULES, ...STANDALONE],
-  exports:  [...MODULES, ...STANDALONE],
+  imports:  [...MODULES, ...NZ_STANDALONE, ...STANDALONE],
+  exports:  [...MODULES, ...NZ_STANDALONE, ...STANDALONE],
 })
 export class SharedModule {}

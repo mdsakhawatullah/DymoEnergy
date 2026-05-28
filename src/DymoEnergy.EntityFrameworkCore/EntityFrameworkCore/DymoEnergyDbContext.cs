@@ -3,6 +3,7 @@ using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using DymoEnergy.Books;
 using DymoEnergy.AdminSiteSettings;
 using DymoEnergy.Catalogues;
+using DymoEnergy.Products;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
 using Volo.Abp.Data;
@@ -30,6 +31,9 @@ public class DymoEnergyDbContext :
     public DbSet<AdminSiteSetting> AdminSiteSettings { get; set; }
     public DbSet<Catalogue> Catalogues { get; set; }
     public DbSet<CatalogueImage> CatalogueImages { get; set; }
+    public DbSet<Product> Products{ get; set; }
+    public DbSet<ProductImage> ProductImages { get; set; }
+    public DbSet<ProductReview> ProductReviews { get; set; }
 
     #region Entities from the modules
 
@@ -105,6 +109,28 @@ public class DymoEnergyDbContext :
             b.ConfigureByConvention();
 
             b.Property(x => x.Id).ValueGeneratedOnAdd();   // auto-increment int PK
+        });
+
+        /* ── Products ────────────────────────────────────────────────── */
+        builder.Entity<Product>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "Products", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+        });
+
+        builder.Entity<ProductImage>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ProductImages", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+        });
+
+        builder.Entity<ProductReview>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ProductReviews", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
         });
     }
 }
