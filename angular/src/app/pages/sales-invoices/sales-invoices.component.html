@@ -1,12 +1,235 @@
-<div class="card">
-  <div class="card-header">
-    <div class="row">
-      <div class="col col-md-6">
-        <h5 class="card-title">{{ '::Menu:SalesInvoice' | abpLocalization }}</h5>
+<!-- ── Page header ─────────────────────────────────────────────────────── -->
+<div class="d-flex align-items-start justify-content-between mb-3">
+  <div>
+    <h4 class="mb-1 fw-bold">Sales Invoices</h4>
+    <span class="text-muted small">
+      {{ stats.total }} total &nbsp;·&nbsp;
+      {{ stats.paid }} paid &nbsp;·&nbsp;
+      {{ stats.overdue }} overdue
+    </span>
+  </div>
+  <button nz-button nzType="primary" class="btn-new-invoice" (click)="openDrawerForCreate()">
+    <span nz-icon nzType="plus" nzTheme="outline"></span> New Invoice
+  </button>
+</div>
+
+<!-- ── Stat cards ──────────────────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card stat-card--green">
+      <div class="stat-card__label">TOTAL INVOICES</div>
+      <div class="stat-card__value">{{ stats.total }}</div>
+      <div class="stat-card__sub">All records</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-card--dark">
+      <div class="stat-card__label">PAID</div>
+      <div class="stat-card__value">{{ stats.paid }}</div>
+      <div class="stat-card__sub text-success">
+        <span nz-icon nzType="check-circle" nzTheme="outline"></span> Settled
       </div>
     </div>
   </div>
-  <div class="card-body">
-    <p class="text-muted">Sales Invoices page — coming soon.</p>
+  <div class="col-md-3">
+    <div class="stat-card stat-card--orange">
+      <div class="stat-card__label">ISSUED / PENDING</div>
+      <div class="stat-card__value" [class.text-warning]="stats.issued > 0">{{ stats.issued }}</div>
+      <div class="stat-card__sub">
+        @if (stats.issued > 0) {
+          <span class="text-warning">Awaiting payment</span>
+        } @else {
+          <span class="text-muted">None</span>
+        }
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-card--red">
+      <div class="stat-card__label">OVERDUE</div>
+      <div class="stat-card__value" [class.text-danger]="stats.overdue > 0">{{ stats.overdue }}</div>
+      <div class="stat-card__sub">
+        @if (stats.overdue > 0) {
+          <span class="text-danger">Action required</span>
+        } @else {
+          <span class="text-muted">None</span>
+        }
+      </div>
+    </div>
   </div>
 </div>
+
+<!-- ── Main card ───────────────────────────────────────────────────────── -->
+<div class="card">
+
+  <!-- Tab strip -->
+  <div class="tab-strip">
+    @for (tab of tabs; track tab.key) {
+      <button
+        class="tab-strip__item"
+        [class.tab-strip__item--active]="activeTab === tab.key"
+        (click)="selectTab(tab.key)"
+      >
+        {{ tab.label }}
+        <span class="tab-strip__badge" [class.tab-strip__badge--active]="activeTab === tab.key">
+          {{ stats[tab.countKey] }}
+        </span>
+      </button>
+    }
+  </div>
+
+  <!-- Filter row -->
+  <div class="px-3 py-2 d-flex gap-2 align-items-center border-bottom">
+    <nz-input-group [nzPrefix]="searchPfx" style="max-width: 280px;">
+      <input
+        nz-input
+        placeholder="Search invoice no., customer..."
+        [(ngModel)]="filter"
+        (keyup.enter)="onSearch()"
+      />
+    </nz-input-group>
+    <ng-template #searchPfx>
+      <span nz-icon nzType="search" style="color:#bbb;"></span>
+    </ng-template>
+    <button nz-button (click)="resetFilters()" [disabled]="!filter && activeTab === 'all'">
+      Reset Filters
+    </button>
+  </div>
+
+  <!-- Table -->
+  <nz-table
+    [nzData]="invoices"
+    [nzTotal]="totalCount"
+    [nzPageIndex]="pageIndex"
+    [nzPageSize]="pageSize"
+    [nzLoading]="loading"
+    [nzFrontPagination]="false"
+    [nzShowSizeChanger]="true"
+    [nzPageSizeOptions]="[10, 20, 50]"
+    (nzPageIndexChange)="onPageIndexChange($event)"
+    (nzPageSizeChange)="onPageSizeChange($event)"
+    nzShowPaginationBottom
+    nzSize="small"
+  >
+    <thead>
+      <tr>
+        <th nzWidth="60px"  nzAlign="center">ID</th>
+        <th nzWidth="200px">INVOICE NO.</th>
+        <th>CUSTOMER</th>
+        <th nzWidth="110px">DATE</th>
+        <th nzWidth="110px">DUE DATE</th>
+        <th nzWidth="120px" nzAlign="right">GRAND TOTAL</th>
+        <th nzWidth="110px" nzAlign="right">BALANCE DUE</th>
+        <th nzWidth="130px" nzAlign="center">STATUS</th>
+        <th nzWidth="100px" nzAlign="center">ACTION</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of invoices; track item.id) {
+        <tr>
+          <td nzAlign="center" class="text-muted" style="font-size:12px;">{{ item.id }}</td>
+
+          <!-- Invoice number — plain href so new-tab works without router interference -->
+          <td>
+            <a
+              [href]="'/sales-invoices/' + item.id"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="invoice-no-link"
+            >
+              {{ item.invoiceNumber || '—' }}
+            </a>
+          </td>
+
+          <!-- Customer -->
+          <td>
+            <div class="fw-semibold" style="font-size:13px;">{{ item.customerName || '—' }}</div>
+            @if (item.customerEmail) {
+              <div style="font-size:11px; color:#888;">{{ item.customerEmail }}</div>
+            }
+          </td>
+
+          <!-- Invoice date -->
+          <td style="font-size:12px; color:#555;">
+            {{ item.invoiceDate | date:'dd MMM yyyy' }}
+          </td>
+
+          <!-- Due date -->
+          <td style="font-size:12px;"
+            [class.text-danger]="item.status === 5"
+            [class.text-muted]="item.status !== 5">
+            {{ item.dueDate ? (item.dueDate | date:'dd MMM yyyy') : '—' }}
+          </td>
+
+          <!-- Grand total -->
+          <td nzAlign="right">
+            <span class="fw-semibold">{{ item.currencyCode }} {{ item.grandTotal | number:'1.2-2' }}</span>
+          </td>
+
+          <!-- Balance due -->
+          <td nzAlign="right">
+            @if (item.balanceDue > 0) {
+              <span class="text-danger fw-semibold">{{ item.currencyCode }} {{ item.balanceDue | number:'1.2-2' }}</span>
+            } @else {
+              <span class="text-success fw-semibold">Settled</span>
+            }
+          </td>
+
+          <!-- Status -->
+          <td nzAlign="center">
+            <nz-tag [nzColor]="statusColors[item.status]">{{ statusLabels[item.status] }}</nz-tag>
+          </td>
+
+          <!-- Actions -->
+          <td nzAlign="center">
+            <div class="d-flex align-items-center justify-content-center gap-1">
+              <button
+                nz-button nzType="text" nzSize="small"
+                class="btn-edit"
+                nz-tooltip nzTooltipTitle="Edit"
+                (click)="openDrawerForEdit(item)"
+              >
+                <span nz-icon nzType="edit" nzTheme="outline"></span>
+              </button>
+
+              <button
+                nz-button nzType="text" nzSize="small"
+                nzDanger
+                nz-tooltip nzTooltipTitle="Delete"
+                nz-popconfirm
+                nzPopconfirmTitle="Delete this invoice?"
+                nzOkText="Yes, delete"
+                nzOkDanger
+                nzCancelText="Cancel"
+                [nzLoading]="deletingIds.has(item.id)"
+                (nzOnConfirm)="deleteInvoice(item.id)"
+              >
+                <span nz-icon nzType="delete" nzTheme="outline"></span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<!-- ── Create / Update Drawer ──────────────────────────────────────────── -->
+<nz-drawer
+  *ngIf="isDrawerOpen"
+  [nzVisible]="isDrawerOpen"
+  [nzBodyStyle]="{ overflow: 'auto' }"
+  [nzMaskClosable]="false"
+  [nzWidth]="1000"
+  nzTitle="{{ selectedInvoice?.id ? 'Update Invoice' : 'Create Invoice' }}"
+  (nzOnClose)="onDrawerClosed()"
+>
+  <div *nzDrawerContent>
+    <sales-invoice-entry-drawer
+      [input]="selectedInvoice"
+      [existingItems]="selectedItems"
+      (onDrawerClosed)="onDrawerClosed()"
+      (handleInvoiceSaved)="onInvoiceSaved()"
+    ></sales-invoice-entry-drawer>
+  </div>
+</nz-drawer>

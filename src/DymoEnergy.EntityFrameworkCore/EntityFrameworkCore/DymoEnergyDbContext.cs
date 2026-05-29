@@ -4,6 +4,7 @@ using DymoEnergy.Books;
 using DymoEnergy.AdminSiteSettings;
 using DymoEnergy.Catalogues;
 using DymoEnergy.Products;
+using DymoEnergy.SalesInvoices;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
 using Volo.Abp.Data;
@@ -34,6 +35,8 @@ public class DymoEnergyDbContext :
     public DbSet<Product> Products{ get; set; }
     public DbSet<ProductImage> ProductImages { get; set; }
     public DbSet<ProductReview> ProductReviews { get; set; }
+    public DbSet<SalesInvoice>     SalesInvoices     { get; set; }
+    public DbSet<SalesInvoiceItem> SalesInvoiceItems { get; set; }
 
     #region Entities from the modules
 
@@ -131,6 +134,23 @@ public class DymoEnergyDbContext :
             b.ToTable(DymoEnergyConsts.DbTablePrefix + "ProductReviews", DymoEnergyConsts.DbSchema);
             b.ConfigureByConvention();
             b.Property(x => x.Id).ValueGeneratedOnAdd();
+        });
+
+        /* ── Sales Invoices ──────────────────────────────────────────────── */
+        builder.Entity<SalesInvoice>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "SalesInvoices", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.HasIndex(x => x.InvoiceNumber).IsUnique();
+        });
+
+        builder.Entity<SalesInvoiceItem>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "SalesInvoiceItems", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.HasIndex(x => x.InvoiceId);
         });
     }
 }

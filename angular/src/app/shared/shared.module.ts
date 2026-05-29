@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { LocalizationPipe } from '@abp/ng.core';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTagModule } from 'ng-zorro-antd/tag';
@@ -14,6 +15,8 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { NzStepsModule } from 'ng-zorro-antd/steps';
 import { NzPopconfirmDirective } from 'ng-zorro-antd/popconfirm';
 import { NzTooltipDirective } from 'ng-zorro-antd/tooltip';
 
@@ -21,6 +24,7 @@ const MODULES = [
   CommonModule,
   FormsModule,
   ReactiveFormsModule,
+  RouterModule,
   NzTableModule,
   NzTagModule,
   NzInputModule,
@@ -33,6 +37,8 @@ const MODULES = [
   NzSwitchModule,
   NzInputNumberModule,
   NzDividerModule,
+  NzDatePickerModule,
+  NzStepsModule,
 ];
 
 // ng-zorro v17+ standalone directives (no module wrappers)

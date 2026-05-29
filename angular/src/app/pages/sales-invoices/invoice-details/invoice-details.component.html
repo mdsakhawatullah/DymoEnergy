@@ -1,0 +1,388 @@
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PAGE HEADER  (hidden on print)
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="page-head no-print">
+  <div class="page-head__left">
+    <button nz-button nzType="text" class="btn-back" (click)="goBack()">
+      <span nz-icon nzType="arrow-left"></span>
+    </button>
+    <div>
+      <div class="page-title">
+        Sales Invoice
+        @if (invoice?.invoiceNumber) {
+          <span class="inv-no-badge">{{ invoice!.invoiceNumber }}</span>
+        }
+      </div>
+      @if (invoice) {
+        <div class="page-subtitle">
+          @if (invoice.customerName) { <span>{{ invoice.customerName }}</span><span class="sep">·</span> }
+          <span>{{ fmtDate(invoice.invoiceDate) }}</span>
+          <span class="sep">·</span>
+          <nz-tag [nzColor]="statusColors[invoice.status]" class="status-tag">
+            {{ statusLabels[invoice.status] }}
+          </nz-tag>
+        </div>
+      }
+    </div>
+  </div>
+  <div class="page-head__right">
+    <button nz-button (click)="openEditDrawer()" [disabled]="loading">
+      <span nz-icon nzType="edit"></span> Edit Invoice
+    </button>
+    <button nz-button class="btn-print" (click)="print()">
+      <span nz-icon nzType="printer"></span> Print
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     STATUS STEPPER  (hidden on print)
+════════════════════════════════════════════════════════════════════════════ -->
+@if (!loading && invoice && !isSpecialStatus) {
+  <div class="stepper-card no-print">
+    <nz-steps [nzCurrent]="currentStep" nzSize="small">
+      <nz-step nzTitle="Draft"          nzIcon="file-text"></nz-step>
+      <nz-step nzTitle="Issued"         nzIcon="send"></nz-step>
+      <nz-step nzTitle="Partially Paid" nzIcon="dollar"></nz-step>
+      <nz-step nzTitle="Paid"           nzIcon="check-circle"></nz-step>
+    </nz-steps>
+  </div>
+}
+@if (!loading && invoice && isSpecialStatus) {
+  <div class="stepper-card no-print special-status-bar">
+    <span nz-icon
+      [nzType]="invoice!.status === 5 ? 'clock-circle' : 'close-circle'"
+      nzTheme="filled"
+      [style.color]="invoice!.status === 5 ? '#f97316' : '#e53e3e'"
+      style="font-size:20px;">
+    </span>
+    <span class="special-status-text">
+      {{ statusLabels[invoice!.status] }}
+      @if (invoice!.status === 5 && invoice!.dueDate) {
+        — Due date was {{ fmtDate(invoice!.dueDate) }}
+      }
+    </span>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     LOADING
+════════════════════════════════════════════════════════════════════════════ -->
+@if (loading) {
+  <div class="loading-wrap">
+    <nz-spin nzSize="large"></nz-spin>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MAIN CONTENT  — invoice paper  +  sidebar
+════════════════════════════════════════════════════════════════════════════ -->
+@if (!loading && invoice) {
+  <div class="main-layout">
+
+    <!-- ── Invoice Paper ──────────────────────────────────────────────────── -->
+    <div class="invoice-paper" id="print-invoice">
+
+      <!-- Company + INVOICE title -->
+      <div class="paper-top">
+        <div class="company-block">
+          <div class="company-name">DymoEnergy Solar</div>
+          <div class="company-info">Solar Energy Solutions</div>
+        </div>
+        <div class="invoice-title-block">
+          <div class="invoice-word">INVOICE</div>
+          <div class="invoice-number-lg">{{ invoice.invoiceNumber }}</div>
+          <nz-tag [nzColor]="statusColors[invoice.status]" class="status-tag-lg">
+            {{ statusLabels[invoice.status] }}
+          </nz-tag>
+        </div>
+      </div>
+
+      <hr class="paper-divider" />
+
+      <!-- Meta row: date | reference | payment method -->
+      <div class="meta-row">
+        <div class="meta-cell">
+          <div class="meta-label">INVOICE DATE</div>
+          <div class="meta-value">{{ fmtDateLong(invoice.invoiceDate) }}</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">DUE DATE</div>
+          <div class="meta-value" [class.text-danger]="invoice.status === 5">
+            {{ fmtDateLong(invoice.dueDate) }}
+          </div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">REFERENCE / PO</div>
+          <div class="meta-value">{{ invoice.referenceNumber || '—' }}</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">PAYMENT MODE</div>
+          <div class="meta-value">
+            {{ invoice.paymentMethod ? paymentMethodLabels[invoice.paymentMethod] : '—' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Bill To / Ship To -->
+      <div class="address-row">
+        <div class="address-cell">
+          <div class="addr-label">BILL TO</div>
+          @if (invoice.customerName) {
+            <div class="addr-name">{{ invoice.customerName }}</div>
+          }
+          @if (invoice.customerEmail) { <div class="addr-detail">{{ invoice.customerEmail }}</div> }
+          @if (invoice.customerPhone) { <div class="addr-detail">{{ invoice.customerPhone }}</div> }
+          @if (invoice.billingAddress) {
+            <div class="addr-detail mt-1" style="white-space:pre-line;">{{ invoice.billingAddress }}</div>
+          }
+        </div>
+        @if (invoice.shippingAddress) {
+          <div class="address-cell">
+            <div class="addr-label">SHIP TO</div>
+            <div class="addr-detail" style="white-space:pre-line;">{{ invoice.shippingAddress }}</div>
+          </div>
+        }
+      </div>
+
+      <!-- Line items table -->
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th class="th-no">#</th>
+            <th class="th-item">ITEM</th>
+            <th class="th-num">QTY</th>
+            <th class="th-num">RATE</th>
+            <th class="th-num">DISC.</th>
+            <th class="th-num">TAX</th>
+            <th class="th-num th-amount">AMOUNT</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items; track item.id; let i = $index) {
+            <tr>
+              <td class="td-no">{{ i + 1 }}</td>
+              <td class="td-item">
+                <div class="item-name">{{ item.productName || '—' }}</div>
+                @if (item.sku) { <div class="item-sub">{{ item.sku }}</div> }
+                @if (item.description) { <div class="item-sub">{{ item.description }}</div> }
+              </td>
+              <td class="td-num">{{ item.quantity }}</td>
+              <td class="td-num">{{ invoice.currencyCode }} {{ item.unitPrice | number:'1.2-2' }}</td>
+              <td class="td-num">{{ item.discountPercent | number:'1.1-1' }}%</td>
+              <td class="td-num">{{ item.taxRate | number:'1.1-1' }}%</td>
+              <td class="td-num td-amount">
+                {{ invoice.currencyCode }} {{ item.lineTotal | number:'1.2-2' }}
+              </td>
+            </tr>
+          }
+          @if (items.length === 0) {
+            <tr>
+              <td colspan="7" class="td-empty">No line items</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Totals -->
+      <div class="totals-section">
+        <div class="totals-inner">
+          <div class="totals-row">
+            <span>Subtotal ({{ items.length }} item{{ items.length !== 1 ? 's' : '' }})</span>
+            <span>{{ invoice.currencyCode }} {{ invoice.subtotal | number:'1.2-2' }}</span>
+          </div>
+          @if (invoice.discountTotal > 0) {
+            <div class="totals-row text-danger">
+              <span>Discount</span>
+              <span>− {{ invoice.currencyCode }} {{ invoice.discountTotal | number:'1.2-2' }}</span>
+            </div>
+          }
+          @if (invoice.taxTotal > 0) {
+            <div class="totals-row">
+              <span>Tax / VAT</span>
+              <span>+ {{ invoice.currencyCode }} {{ invoice.taxTotal | number:'1.2-2' }}</span>
+            </div>
+          }
+          @if (invoice.shippingCost > 0) {
+            <div class="totals-row">
+              <span>Shipping</span>
+              <span>{{ invoice.currencyCode }} {{ invoice.shippingCost | number:'1.2-2' }}</span>
+            </div>
+          }
+          <div class="totals-row totals-grand">
+            <span>Grand Total</span>
+            <span>{{ invoice.currencyCode }} {{ invoice.grandTotal | number:'1.2-2' }}</span>
+          </div>
+          <div class="totals-row totals-amount-paid" [class.totals-paid]="isFullyPaid">
+            <span>Amount Paid</span>
+            <span>{{ invoice.currencyCode }} {{ invoice.amountPaid | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes & Terms -->
+      @if (invoice.notes || invoice.terms) {
+        <div class="notes-row">
+          @if (invoice.notes) {
+            <div class="notes-cell">
+              <div class="notes-label">NOTES</div>
+              <div class="notes-body">{{ invoice.notes }}</div>
+            </div>
+          }
+          @if (invoice.terms) {
+            <div class="notes-cell">
+              <div class="notes-label">PAYMENT TERMS</div>
+              <div class="notes-body">{{ invoice.terms }}</div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Print-only footer -->
+      <div class="print-footer print-only">
+        DymoEnergy Solar &nbsp;·&nbsp; {{ invoice.invoiceNumber }} &nbsp;·&nbsp; Printed {{ fmtDate(null) }}
+      </div>
+
+    </div><!-- /invoice-paper -->
+
+    <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+    <aside class="sidebar no-print">
+
+      <!-- Payment Summary -->
+      <div class="sb-card">
+        <div class="sb-card__title">
+          <span nz-icon nzType="wallet" nzTheme="fill" style="color:#0D5C2E;"></span>
+          Payment summary
+        </div>
+        <div class="sb-summary-grid">
+          <div class="sb-summary-cell">
+            <div class="sb-summary-label">TOTAL</div>
+            <div class="sb-summary-amount">{{ invoice.currencyCode }} {{ invoice.grandTotal | number:'1.0-0' }}</div>
+          </div>
+          <div class="sb-summary-cell">
+            <div class="sb-summary-label">OUTSTANDING</div>
+            <div class="sb-summary-amount" [class.text-danger]="outstanding > 0" [class.text-success]="outstanding <= 0">
+              {{ invoice.currencyCode }} {{ outstanding | number:'1.0-0' }}
+            </div>
+          </div>
+        </div>
+        @if (invoice.amountPaid > 0 || invoice.paymentDate) {
+          <div class="sb-divider"></div>
+          <div class="sb-receipt-label">RECEIPTS</div>
+          <div class="sb-receipt-row">
+            <div>
+              <div class="sb-receipt-ref">PMT-{{ invoice.invoiceNumber }}</div>
+              @if (invoice.paymentDate) {
+                <div class="sb-receipt-date">{{ fmtDate(invoice.paymentDate) }}</div>
+              }
+            </div>
+            <div class="sb-receipt-amount text-success">
+              {{ invoice.currencyCode }} {{ invoice.amountPaid | number:'1.0-0' }}
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Customer -->
+      <div class="sb-card">
+        <div class="sb-card__title">
+          <span nz-icon nzType="team" nzTheme="outline" style="color:#6366f1;"></span>
+          Customer
+        </div>
+        <div class="sb-customer">
+          <div class="sb-avatar">{{ customerInitials || '?' }}</div>
+          <div class="sb-cust-info">
+            <div class="sb-cust-name">
+              {{ invoice.customerName || '—' }}
+              @if (invoice.customerName) { <span style="color:#aaa; font-weight:400;">→</span> }
+            </div>
+            @if (invoice.billingAddress) {
+              <div class="sb-cust-detail">{{ invoice.billingAddress.split('\n')[0] }}</div>
+            } @else if (invoice.customerEmail) {
+              <div class="sb-cust-detail">{{ invoice.customerEmail }}</div>
+            }
+            <nz-tag [nzColor]="statusColors[invoice.status]" style="margin-top:6px;">
+              {{ statusLabels[invoice.status] }}
+            </nz-tag>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity -->
+      <div class="sb-card">
+        <div class="sb-card__title">
+          <span nz-icon nzType="history" style="color:#888;"></span>
+          Activity
+        </div>
+        <ul class="sb-activity">
+          @if (invoice.amountPaid > 0) {
+            <li class="sb-act-item">
+              <div class="sb-act-icon sb-act-icon--green">
+                <span nz-icon nzType="dollar-circle" nzTheme="fill"></span>
+              </div>
+              <div>
+                <div class="sb-act-text">
+                  Payment of {{ invoice.currencyCode }} {{ invoice.amountPaid | number:'1.0-0' }} recorded
+                </div>
+                <div class="sb-act-time">{{ fmtDateTime(invoice.paymentDate ?? invoice.lastModificationTime) }}</div>
+              </div>
+            </li>
+          }
+          @if (invoice.status >= 2) {
+            <li class="sb-act-item">
+              <div class="sb-act-icon sb-act-icon--check">
+                <span nz-icon nzType="check-circle" nzTheme="fill"></span>
+              </div>
+              <div>
+                <div class="sb-act-text">Invoice delivered</div>
+                <div class="sb-act-time">{{ fmtDateTime(invoice.lastModificationTime) }}</div>
+              </div>
+            </li>
+          }
+          <li class="sb-act-item">
+            <div class="sb-act-icon sb-act-icon--blue">
+              <span nz-icon nzType="mail" nzTheme="fill"></span>
+            </div>
+            <div>
+              <div class="sb-act-text">Invoice submitted</div>
+              <div class="sb-act-time">{{ fmtDateTime(invoice.creationTime) }}</div>
+            </div>
+          </li>
+          <li class="sb-act-item">
+            <div class="sb-act-icon sb-act-icon--grey">
+              <span nz-icon nzType="file-add" nzTheme="fill"></span>
+            </div>
+            <div>
+              <div class="sb-act-text">Invoice created</div>
+              <div class="sb-act-time">{{ fmtDateTime(invoice.creationTime) }}</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </aside>
+
+  </div><!-- /main-layout -->
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     EDIT DRAWER
+════════════════════════════════════════════════════════════════════════════ -->
+<nz-drawer
+  *ngIf="isDrawerOpen"
+  [nzVisible]="isDrawerOpen"
+  [nzBodyStyle]="{ overflow: 'auto' }"
+  [nzMaskClosable]="false"
+  [nzWidth]="1000"
+  nzTitle="Update Invoice"
+  (nzOnClose)="onDrawerClosed()"
+>
+  <div *nzDrawerContent>
+    <sales-invoice-entry-drawer
+      [input]="invoice"
+      [existingItems]="items"
+      (onDrawerClosed)="onDrawerClosed()"
+      (handleInvoiceSaved)="onInvoiceSaved()"
+    ></sales-invoice-entry-drawer>
+  </div>
+</nz-drawer>

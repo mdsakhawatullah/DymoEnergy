@@ -4,6 +4,7 @@ using DymoEnergy.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Volo.Abp.EntityFrameworkCore;
 
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace DymoEnergy.Migrations
 {
     [DbContext(typeof(DymoEnergyDbContext))]
-    partial class DymoEnergyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260529082959_add_saleInvoice_table")]
+    partial class add_saleInvoice_table
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -678,9 +681,6 @@ namespace DymoEnergy.Migrations
 
                     b.Property<string>("ShippingAddress")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("ShippingCost")
-                        .HasColumnType("float");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");

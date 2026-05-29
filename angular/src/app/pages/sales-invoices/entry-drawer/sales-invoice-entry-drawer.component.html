@@ -1,0 +1,238 @@
+<form nz-form [formGroup]="form" nzLayout="vertical" class="entry-form">
+
+  <!-- ① Invoice Details ───────────────────────────────────────────────── -->
+  <div class="section-header">
+    <span class="section-badge">1</span>
+    <span class="section-title">Invoice Details</span>
+  </div>
+
+  <div class="row g-3">
+    @if (input?.id) {
+      <div class="col-md-4">
+        <div class="field-label">INVOICE NUMBER</div>
+        <div class="invoice-no-readonly">{{ input?.invoiceNumber }}</div>
+      </div>
+    }
+    <div class="col-md-4">
+      <div class="field-label">INVOICE DATE</div>
+      <nz-date-picker formControlName="invoiceDate" style="width:100%;" nzFormat="dd/MM/yyyy"></nz-date-picker>
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">DUE DATE</div>
+      <nz-date-picker formControlName="dueDate" style="width:100%;" nzFormat="dd/MM/yyyy"></nz-date-picker>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-md-4">
+      <div class="field-label">STATUS</div>
+      <nz-select formControlName="status" style="width:100%;">
+        @for (opt of statusOptions; track opt.value) {
+          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+        }
+      </nz-select>
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">REFERENCE / PO NO.</div>
+      <input nz-input formControlName="referenceNumber" placeholder="e.g. PO-1234" />
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">CURRENCY</div>
+      <input nz-input formControlName="currencyCode" placeholder="BDT" />
+    </div>
+  </div>
+
+  <!-- ② Customer ──────────────────────────────────────────────────────── -->
+  <div class="section-header mt-4">
+    <span class="section-badge">2</span>
+    <span class="section-title">Customer</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="field-label">CUSTOMER NAME</div>
+      <input nz-input formControlName="customerName" placeholder="Full name or company" />
+    </div>
+    <div class="col-md-3">
+      <div class="field-label">EMAIL</div>
+      <input nz-input formControlName="customerEmail" placeholder="email@example.com" />
+    </div>
+    <div class="col-md-3">
+      <div class="field-label">PHONE</div>
+      <input nz-input formControlName="customerPhone" placeholder="+44..." />
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-md-6">
+      <div class="field-label">BILLING ADDRESS</div>
+      <textarea nz-input formControlName="billingAddress"
+        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Street, City, Postcode..."></textarea>
+    </div>
+    <div class="col-md-6">
+      <div class="field-label">SHIPPING ADDRESS</div>
+      <textarea nz-input formControlName="shippingAddress"
+        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Leave blank if same as billing"></textarea>
+    </div>
+  </div>
+
+  <!-- ③ Line Items ─────────────────────────────────────────────────────── -->
+  <div class="section-header mt-4">
+    <span class="section-badge">3</span>
+    <span class="section-title">Line Items</span>
+  </div>
+
+  <div class="line-items-table">
+    <!-- Header -->
+    <div class="li-header">
+      <div class="li-col li-col--desc">PRODUCT / DESCRIPTION</div>
+      <div class="li-col li-col--sku">SKU</div>
+      <div class="li-col li-col--num">QTY</div>
+      <div class="li-col li-col--num">UNIT PRICE</div>
+      <div class="li-col li-col--num">DISC %</div>
+      <div class="li-col li-col--num">TAX %</div>
+      <div class="li-col li-col--num">LINE TOTAL</div>
+      <div class="li-col li-col--action"></div>
+    </div>
+
+    <!-- Rows -->
+    <div formArrayName="items">
+      @for (row of items.controls; track $index; let i = $index) {
+        <div class="li-row" [formGroupName]="i">
+          <div class="li-col li-col--desc">
+            <input nz-input formControlName="productName" placeholder="Product / item name" />
+            <input nz-input formControlName="description" placeholder="Description (optional)"
+              class="mt-1" style="font-size:11px; color:#888;" />
+          </div>
+          <div class="li-col li-col--sku">
+            <input nz-input formControlName="sku" placeholder="SKU" />
+          </div>
+          <div class="li-col li-col--num">
+            <nz-input-number formControlName="quantity" [nzMin]="0" [nzStep]="1"
+              style="width:100%;" (ngModelChange)="recalcRow(i)"></nz-input-number>
+          </div>
+          <div class="li-col li-col--num">
+            <nz-input-number formControlName="unitPrice" [nzMin]="0" [nzStep]="0.01"
+              style="width:100%;" (ngModelChange)="recalcRow(i)"></nz-input-number>
+          </div>
+          <div class="li-col li-col--num">
+            <nz-input-number formControlName="discountPercent" [nzMin]="0" [nzMax]="100"
+              style="width:100%;" (ngModelChange)="recalcRow(i)"></nz-input-number>
+          </div>
+          <div class="li-col li-col--num">
+            <nz-input-number formControlName="taxRate" [nzMin]="0" [nzMax]="100"
+              style="width:100%;" (ngModelChange)="recalcRow(i)"></nz-input-number>
+          </div>
+          <div class="li-col li-col--num li-total">
+            {{ form.get('currencyCode')?.value || '৳' }}
+            {{ row.get('lineTotal')?.value | number:'1.2-2' }}
+          </div>
+          <div class="li-col li-col--action">
+            <button nz-button nzType="text" nzSize="small" nzDanger (click)="removeItem(i)">
+              <span nz-icon nzType="delete" nzTheme="outline"></span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Add row -->
+    <div class="li-add-row">
+      <button nz-button nzType="dashed" nzSize="small" (click)="addItem()">
+        <span nz-icon nzType="plus" nzTheme="outline"></span> Add Line Item
+      </button>
+    </div>
+  </div>
+
+  <!-- ④ Totals ─────────────────────────────────────────────────────────── -->
+  <div class="totals-box mt-3">
+    <div class="totals-row">
+      <span class="totals-label">Subtotal</span>
+      <span class="totals-value">{{ form.get('currencyCode')?.value }} {{ subtotal | number:'1.2-2' }}</span>
+    </div>
+    <div class="totals-row">
+      <span class="totals-label">Discount</span>
+      <span class="totals-value text-danger">− {{ form.get('currencyCode')?.value }} {{ discountTotal | number:'1.2-2' }}</span>
+    </div>
+    <div class="totals-row">
+      <span class="totals-label">Tax (VAT)</span>
+      <span class="totals-value">+ {{ form.get('currencyCode')?.value }} {{ taxTotal | number:'1.2-2' }}</span>
+    </div>
+    <div class="totals-row totals-row--shipping">
+      <span class="totals-label">Shipping</span>
+      <nz-input-number formControlName="shippingCost" [nzMin]="0" [nzStep]="0.01"
+        nzSize="small" style="width:120px;"
+        (ngModelChange)="onShippingCostChange()"></nz-input-number>
+    </div>
+    <div class="totals-row totals-row--grand">
+      <span class="totals-label">Grand Total</span>
+      <span class="totals-value fw-bold">{{ form.get('currencyCode')?.value }} {{ grandTotal | number:'1.2-2' }}</span>
+    </div>
+  </div>
+
+  <!-- ⑤ Payment ────────────────────────────────────────────────────────── -->
+  <div class="section-header mt-4">
+    <span class="section-badge">5</span>
+    <span class="section-title">Payment</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="field-label">PAYMENT METHOD</div>
+      <nz-select formControlName="paymentMethod" nzAllowClear nzPlaceHolder="Select method" style="width:100%;">
+        @for (opt of paymentMethodOptions; track opt.value) {
+          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+        }
+      </nz-select>
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">PAYMENT DATE</div>
+      <nz-date-picker formControlName="paymentDate" style="width:100%;" nzFormat="dd/MM/yyyy"></nz-date-picker>
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">AMOUNT PAID</div>
+      <nz-input-number formControlName="amountPaid" [nzMin]="0" [nzStep]="0.01"
+        style="width:100%;" (ngModelChange)="onAmountPaidChange()"></nz-input-number>
+    </div>
+  </div>
+
+  <div class="balance-due-row mt-2">
+    <span class="field-label mb-0">BALANCE DUE:</span>
+    <span class="balance-amount" [class.balance-zero]="balanceDue <= 0">
+      {{ form.get('currencyCode')?.value }} {{ balanceDue | number:'1.2-2' }}
+    </span>
+  </div>
+
+  <!-- ⑥ Notes & Terms ─────────────────────────────────────────────────── -->
+  <div class="section-header mt-4">
+    <span class="section-badge">6</span>
+    <span class="section-title">Notes &amp; Terms</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="field-label">NOTES</div>
+      <textarea nz-input formControlName="notes"
+        [nzAutosize]="{ minRows: 3, maxRows: 5 }" placeholder="Internal notes..."></textarea>
+    </div>
+    <div class="col-md-6">
+      <div class="field-label">PAYMENT TERMS</div>
+      <textarea nz-input formControlName="terms"
+        [nzAutosize]="{ minRows: 3, maxRows: 5 }" placeholder="e.g. Payment due within 30 days..."></textarea>
+    </div>
+  </div>
+
+</form>
+
+<!-- ── Footer ──────────────────────────────────────────────────────────── -->
+<div class="drawer-footer">
+  <span class="text-muted" style="font-size:13px;">
+    {{ input?.id ? 'Editing invoice #' + input?.invoiceNumber : 'New invoice' }}
+  </span>
+  <div class="d-flex gap-2">
+    <button nz-button (click)="close()" [disabled]="saving">Cancel</button>
+    <button nz-button nzType="primary" class="btn-save" (click)="save()" [nzLoading]="saving">
+      {{ input?.id ? 'Update Invoice' : 'Save Invoice' }}
+    </button>
+  </div>
+</div>

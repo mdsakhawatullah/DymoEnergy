@@ -36,4 +36,12 @@ public static class DymoEnergyPermissions
         public const string Edit    = Default + ".Edit";
         public const string Delete  = Default + ".Delete";
     }
+
+    public static class SalesInvoices
+    {
+        public const string Default = GroupName + ".SalesInvoices";
+        public const string Create  = Default + ".Create";
+        public const string Edit    = Default + ".Edit";
+        public const string Delete  = Default + ".Delete";
+    }
 }

@@ -1,0 +1,130 @@
+.entry-form { padding: 4px 0 16px; }
+
+/* ── Section headers ─────────────────────────────────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.section-badge {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #0D5C2E;
+  color: #fff;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.section-title { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+.field-label {
+  font-size: 11px; font-weight: 600; color: #888;
+  letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 6px;
+}
+
+/* ── Line items table ────────────────────────────────────────────────────── */
+.line-items-table {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.li-header {
+  display: flex;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 6px 10px;
+  gap: 8px;
+  font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.li-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 8px 10px;
+  gap: 8px;
+  border-bottom: 1px solid #f9f9f9;
+}
+.li-row:last-of-type { border-bottom: none; }
+.li-col--desc  { flex: 2.5; min-width: 0; }
+.li-col--sku   { flex: 1; min-width: 0; }
+.li-col--num   { flex: 0.8; min-width: 60px; }
+.li-col--action { flex: 0 0 32px; display: flex; align-items: center; justify-content: center; padding-top: 4px; }
+.li-total { font-weight: 600; font-size: 13px; color: #1a1a1a; display: flex; align-items: center; }
+
+.li-add-row {
+  padding: 10px 12px;
+  background: #fafafa;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* ── Totals box ──────────────────────────────────────────────────────────── */
+.totals-box {
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  max-width: 340px;
+  margin-left: auto;
+}
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 13px;
+  color: #555;
+}
+.totals-row--grand {
+  border-top: 1px solid #e0e0e0;
+  margin-top: 6px;
+  padding-top: 8px;
+  font-size: 15px;
+  color: #1a1a1a;
+}
+.totals-label { color: #888; }
+.totals-value { font-variant-numeric: tabular-nums; }
+
+/* ── Balance due ─────────────────────────────────────────────────────────── */
+.balance-due-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 340px;
+  margin-left: auto;
+  padding: 6px 0;
+}
+.balance-amount {
+  font-size: 16px; font-weight: 700; color: #e53e3e;
+}
+.balance-amount.balance-zero { color: #0D5C2E; }
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.drawer-footer {
+  position: sticky;
+  bottom: -24px;
+  margin: 0 -24px -24px;
+  padding: 14px 24px;
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.invoice-no-readonly {
+  font-family: monospace; font-size: 14px; font-weight: 600;
+  color: #1a1a1a; background: #f9f9f9; border: 1px solid #d9d9d9;
+  border-radius: 6px; padding: 4px 11px; min-height: 32px;
+  display: flex; align-items: center;
+}
+
+.btn-save {
+  background-color: #0D5C2E !important;
+  border-color: #0D5C2E !important;
+  color: #fff !important;
+  font-weight: 600;
+  border-radius: 6px !important;
+}
+.btn-save:hover, .btn-save:focus {
+  background-color: #0a4a25 !important;
+  border-color: #0a4a25 !important;
+}

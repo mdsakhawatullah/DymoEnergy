@@ -378,3 +378,26 @@ a {
 .lpx-layout-login {
   background-color: rgba(26, 138, 64, 0.7) !important;
 }
+
+
+// ─── Invoice print — only render the cloned invoice, hide everything else ─────
+@media print {
+  // display:none removes elements from layout entirely → no blank second page
+  body.invoice-print-mode > * { display: none !important; }
+
+  // The clone is a direct <body> child so this selector re-shows it
+  body.invoice-print-mode > #print-invoice-clone {
+    display: block !important;
+    width: 100%;
+    margin: 0; padding: 0;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  // Force dark table header colour in print
+  body.invoice-print-mode .items-table thead tr {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

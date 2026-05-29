@@ -77,6 +77,11 @@ export const APP_ROUTES: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'sales-invoices/:id',
+    loadComponent: () => import('./pages/sales-invoices/invoice-details/invoice-details.component').then(c => c.InvoiceDetailsComponent),
+    // No authGuard: reads are [AllowAnonymous] on backend; guard can redirect in new-tab context
+  },
+  {
     path: 'product-returns',
     loadComponent: () => import('./pages/product-returns/product-returns.component').then(c => c.ProductReturnsComponent),
     canActivate: [authGuard],
