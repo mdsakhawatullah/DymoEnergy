@@ -1,12 +1,224 @@
-<div class="card">
-  <div class="card-header">
-    <div class="row">
-      <div class="col col-md-6">
-        <h5 class="card-title">{{ '::Menu:Product' | abpLocalization }}</h5>
+<!-- ── Page header ─────────────────────────────────────────────────────── -->
+<div class="d-flex align-items-start justify-content-between mb-3">
+  <div>
+    <h4 class="mb-1 fw-bold">Products</h4>
+    <span class="text-muted small">
+      {{ stats.total }} total &nbsp;·&nbsp;
+      {{ stats.active }} active &nbsp;·&nbsp;
+      {{ stats.featured }} featured
+    </span>
+  </div>
+  <div class="d-flex gap-2">
+    <button nz-button nzType="primary" class="btn-new-product" (click)="openDrawerForCreate()">
+      <span nz-icon nzType="plus" nzTheme="outline"></span> New Product
+    </button>
+  </div>
+</div>
+
+<!-- ── Stat cards ──────────────────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card stat-card--green">
+      <div class="stat-card__label">TOTAL PRODUCTS</div>
+      <div class="stat-card__value">{{ stats.total }}</div>
+      <div class="stat-card__sub">All records</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-card--dark">
+      <div class="stat-card__label">ACTIVE</div>
+      <div class="stat-card__value">{{ stats.active }}</div>
+      <div class="stat-card__sub text-success">
+        <span nz-icon nzType="check-circle" nzTheme="outline"></span> Live
       </div>
     </div>
   </div>
-  <div class="card-body">
-    <p class="text-muted">Products page — coming soon.</p>
+  <div class="col-md-3">
+    <div class="stat-card stat-card--orange">
+      <div class="stat-card__label">DRAFT</div>
+      <div class="stat-card__value" [class.text-warning]="stats.draft > 0">
+        {{ stats.draft }}
+      </div>
+      <div class="stat-card__sub">
+        @if (stats.draft > 0) {
+          <span class="text-warning">{{ stats.draft }} unpublished</span>
+        } @else {
+          <span class="text-muted">None</span>
+        }
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-card--purple">
+      <div class="stat-card__label">FEATURED</div>
+      <div class="stat-card__value">{{ stats.featured }}</div>
+      <div class="stat-card__sub">Highlighted</div>
+    </div>
   </div>
 </div>
+
+<!-- ── Main card ───────────────────────────────────────────────────────── -->
+<div class="card">
+
+  <!-- Tab strip -->
+  <div class="tab-strip">
+    @for (tab of tabs; track tab.key) {
+      <button
+        class="tab-strip__item"
+        [class.tab-strip__item--active]="activeTab === tab.key"
+        (click)="selectTab(tab.key)"
+      >
+        {{ tab.label }}
+        <span class="tab-strip__badge" [class.tab-strip__badge--active]="activeTab === tab.key">
+          {{ stats[tab.countKey] }}
+        </span>
+      </button>
+    }
+  </div>
+
+  <!-- Filter row -->
+  <div class="px-3 py-2 d-flex gap-2 align-items-center border-bottom">
+    <nz-input-group [nzPrefix]="searchPfx" style="max-width: 260px;">
+      <input
+        nz-input
+        placeholder="Search name, SKU, slug..."
+        [(ngModel)]="filter"
+        (keyup.enter)="onSearch()"
+      />
+    </nz-input-group>
+    <ng-template #searchPfx>
+      <span nz-icon nzType="search" style="color:#bbb;"></span>
+    </ng-template>
+    <button nz-button (click)="resetFilters()" [disabled]="!filter && activeTab === 'all'">
+      Reset Filters
+    </button>
+  </div>
+
+  <!-- Table -->
+  <nz-table
+    [nzData]="products"
+    [nzTotal]="totalCount"
+    [nzPageIndex]="pageIndex"
+    [nzPageSize]="pageSize"
+    [nzLoading]="loading"
+    [nzFrontPagination]="false"
+    [nzShowSizeChanger]="true"
+    [nzPageSizeOptions]="[10, 20, 50]"
+    (nzPageIndexChange)="onPageIndexChange($event)"
+    (nzPageSizeChange)="onPageSizeChange($event)"
+    nzShowPaginationBottom
+    nzSize="small"
+  >
+    <thead>
+      <tr>
+        <th nzWidth="60px" nzAlign="center">ID</th>
+        <th>NAME</th>
+        <th nzWidth="120px">SKU</th>
+        <th nzWidth="140px">PRICE</th>
+        <th nzWidth="130px" nzAlign="center">STATUS</th>
+        <th nzWidth="100px" nzAlign="center">ACTION</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of products; track item.id) {
+        <tr>
+          <td nzAlign="center" class="text-muted" style="font-size:12px;">{{ item.id }}</td>
+
+          <!-- Name + primary image -->
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              @if (item.primaryImage) {
+                <img
+                  [src]="item.primaryImage"
+                  width="38" height="38"
+                  style="object-fit:cover; border-radius:6px; flex-shrink:0;"
+                  [alt]="item.name"
+                />
+              } @else {
+                <div class="thumb-placeholder">
+                  <span nz-icon nzType="shop" nzTheme="outline"></span>
+                </div>
+              }
+              <div>
+                <div class="fw-semibold" style="font-size:13px;">{{ item.name || '—' }}</div>
+                @if (item.slug) {
+                  <div style="font-size:11px; color:#888;">{{ item.slug }}</div>
+                }
+              </div>
+            </div>
+          </td>
+
+          <!-- SKU -->
+          <td>
+            <span style="font-size:12px; font-family:monospace; color:#555;">
+              {{ item.sku || '—' }}
+            </span>
+          </td>
+
+          <!-- Price -->
+          <td>
+            @if (item.discountPrice) {
+              <div class="fw-semibold" style="font-size:13px;">£{{ item.discountPrice | number:'1.2-2' }}</div>
+              <div style="font-size:11px; color:#aaa; text-decoration:line-through;">£{{ item.price | number:'1.2-2' }}</div>
+            } @else {
+              <div class="fw-semibold" style="font-size:13px;">£{{ item.price | number:'1.2-2' }}</div>
+            }
+          </td>
+
+          <!-- Status -->
+          <td nzAlign="center">
+            <nz-tag [nzColor]="statusColors[item.status]">{{ statusLabels[item.status] }}</nz-tag>
+          </td>
+
+          <!-- Actions -->
+          <td nzAlign="center">
+            <div class="d-flex align-items-center justify-content-center gap-1">
+              <button
+                nz-button nzType="text" nzSize="small"
+                class="btn-edit"
+                nz-tooltip nzTooltipTitle="Edit"
+                (click)="openDrawerForEdit(item)"
+              >
+                <span nz-icon nzType="edit" nzTheme="outline"></span>
+              </button>
+
+              <button
+                nz-button nzType="text" nzSize="small"
+                nzDanger
+                nz-tooltip nzTooltipTitle="Delete"
+                nz-popconfirm
+                nzPopconfirmTitle="Delete this product?"
+                nzOkText="Yes, delete"
+                nzOkDanger
+                nzCancelText="Cancel"
+                [nzLoading]="deletingIds.has(item.id)"
+                (nzOnConfirm)="deleteProduct(item.id)"
+              >
+                <span nz-icon nzType="delete" nzTheme="outline"></span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<!-- ── Create / Update Drawer ──────────────────────────────────────────── -->
+<nz-drawer
+  *ngIf="isDrawerOpen"
+  [nzVisible]="isDrawerOpen"
+  [nzBodyStyle]="{ overflow: 'auto' }"
+  [nzMaskClosable]="false"
+  [nzWidth]="880"
+  nzTitle="{{ selectedProduct?.id ? 'Update' : 'Create' }} Product"
+  (nzOnClose)="onDrawerClosed()"
+>
+  <div *nzDrawerContent>
+    <product-entry-drawer
+      [input]="selectedProduct"
+      (onProductEntryDrawerClosed)="onDrawerClosed()"
+      (handleProductSaved)="onProductSaved()"
+    ></product-entry-drawer>
+  </div>
+</nz-drawer>

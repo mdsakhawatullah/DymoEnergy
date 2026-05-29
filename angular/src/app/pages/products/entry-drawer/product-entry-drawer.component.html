@@ -1,0 +1,178 @@
+<form nz-form [formGroup]="form" nzLayout="vertical" class="entry-form">
+
+  <!-- ① Basic Information ─────────────────────────────────────────────── -->
+  <div class="section-header">
+    <span class="section-badge">1</span>
+    <span class="section-title">Basic Information</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="field-label">NAME</div>
+      <input nz-input formControlName="name" placeholder="e.g. Solar Panel 400W" />
+    </div>
+    <div class="col-md-6">
+      <div class="field-label">SLUG</div>
+      <input nz-input formControlName="slug" placeholder="e.g. solar-panel-400w" />
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-md-6">
+      <div class="field-label">SKU</div>
+      <input nz-input formControlName="sku" placeholder="e.g. SP-400W-001" />
+    </div>
+    <div class="col-md-6">
+      <div class="field-label">CATALOGUE ID</div>
+      <nz-input-number formControlName="catalogueId" [nzMin]="1" style="width:100%;" placeholder="Catalogue ID"></nz-input-number>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-12">
+      <div class="field-label">SUMMARY</div>
+      <textarea
+        nz-input
+        formControlName="summary"
+        [nzAutosize]="{ minRows: 2, maxRows: 4 }"
+        placeholder="Short product summary..."
+      ></textarea>
+    </div>
+  </div>
+
+  <!-- ② Pricing & Inventory ───────────────────────────────────────────── -->
+  <div class="section-header mt-4">
+    <span class="section-badge">2</span>
+    <span class="section-title">Pricing &amp; Inventory</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="field-label">PRICE (£)</div>
+      <nz-input-number formControlName="price" [nzMin]="0" [nzStep]="0.01" style="width:100%;"></nz-input-number>
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">DISCOUNT PRICE (£)</div>
+      <nz-input-number formControlName="discountPrice" [nzMin]="0" [nzStep]="0.01" style="width:100%;"></nz-input-number>
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">STOCK QUANTITY</div>
+      <nz-input-number formControlName="stockQuantity" [nzMin]="0" style="width:100%;"></nz-input-number>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-md-4">
+      <div class="field-label">WEIGHT</div>
+      <input nz-input formControlName="weight" placeholder="e.g. 22kg" />
+    </div>
+  </div>
+
+  <!-- ③ Images & Media ────────────────────────────────────────────────── -->
+  <div class="section-header mt-4">
+    <span class="section-badge">3</span>
+    <span class="section-title">Images &amp; Media</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="field-label">PRIMARY IMAGE</div>
+      <div class="thumb-upload-box">
+        @if (form.get('primaryImage')?.value) {
+          <img [src]="form.get('primaryImage')?.value" alt="Primary" class="thumb-preview" />
+        } @else {
+          <span nz-icon nzType="picture" nzTheme="outline" class="thumb-icon"></span>
+          <span class="thumb-hint">Paste URL below</span>
+        }
+      </div>
+      <input
+        nz-input
+        formControlName="primaryImage"
+        placeholder="https://..."
+        class="mt-2"
+        style="font-size:12px;"
+      />
+    </div>
+    <div class="col-md-8">
+      <div class="field-label">DESCRIPTION</div>
+      <textarea
+        nz-input
+        formControlName="description"
+        [nzAutosize]="{ minRows: 5, maxRows: 10 }"
+        placeholder="Full product description..."
+      ></textarea>
+    </div>
+  </div>
+
+  <!-- ④ Settings ───────────────────────────────────────────────────────── -->
+  <div class="section-header mt-4">
+    <span class="section-badge">4</span>
+    <span class="section-title">Settings</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="field-label">STATUS</div>
+      <nz-select formControlName="status" style="width:100%">
+        @for (opt of statusOptions; track opt.value) {
+          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+        }
+      </nz-select>
+    </div>
+    <div class="col-md-6">
+      <div class="field-label">DISPLAY ORDER</div>
+      <nz-input-number formControlName="displayOrder" [nzMin]="0" style="width:100%;"></nz-input-number>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-md-6">
+      <div class="field-label">ACTIVE</div>
+      <nz-switch formControlName="isActive" nzCheckedChildren="Yes" nzUnCheckedChildren="No"></nz-switch>
+    </div>
+    <div class="col-md-6">
+      <div class="field-label">FEATURED</div>
+      <nz-switch formControlName="isFeatured" nzCheckedChildren="Yes" nzUnCheckedChildren="No"></nz-switch>
+    </div>
+  </div>
+
+  <!-- ⑤ SEO ────────────────────────────────────────────────────────────── -->
+  <div class="section-header mt-4">
+    <span class="section-badge">5</span>
+    <span class="section-title">SEO</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="field-label">META TITLE</div>
+      <input nz-input formControlName="metaTitle" placeholder="SEO page title" />
+    </div>
+    <div class="col-12">
+      <div class="field-label">META DESCRIPTION</div>
+      <textarea
+        nz-input
+        formControlName="metaDescription"
+        [nzAutosize]="{ minRows: 2, maxRows: 3 }"
+        placeholder="SEO description"
+      ></textarea>
+    </div>
+    <div class="col-12">
+      <div class="field-label">META KEYWORDS</div>
+      <input nz-input formControlName="metaKeywords" placeholder="keyword1, keyword2, keyword3" />
+    </div>
+  </div>
+
+</form>
+
+<!-- ── Footer ──────────────────────────────────────────────────────────── -->
+<div class="drawer-footer">
+  <span class="text-muted" style="font-size:13px;">
+    {{ input?.id ? 'Editing product #' + input?.id : 'New product' }}
+  </span>
+  <div class="d-flex gap-2">
+    <button nz-button (click)="close()" [disabled]="saving">Cancel</button>
+    <button nz-button nzType="primary" class="btn-save" (click)="save()" [nzLoading]="saving">
+      {{ input?.id ? 'Update Product' : 'Save Product' }}
+    </button>
+  </div>
+</div>
