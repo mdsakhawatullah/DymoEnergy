@@ -24,6 +24,15 @@ export interface AdminSiteSettingDto {
   fontFamily?: string;
   fontSizeBase?: string;
   isActive: boolean;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+  phone?: string;
+  email?: string;
+  supportEmail?: string;
+  whatsApp?: string;
 }
 
 export interface CreateUpdateAdminSiteSettingDto {
@@ -49,6 +58,15 @@ export interface CreateUpdateAdminSiteSettingDto {
   fontFamily?: string;
   fontSizeBase?: string;
   isActive: boolean;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+  phone?: string;
+  email?: string;
+  supportEmail?: string;
+  whatsApp?: string;
 }
 
 export interface PagedAdminSiteSettingResultDto {

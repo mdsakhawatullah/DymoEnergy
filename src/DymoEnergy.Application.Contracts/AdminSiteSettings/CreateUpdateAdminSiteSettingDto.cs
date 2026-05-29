@@ -75,4 +75,33 @@ public class CreateUpdateAdminSiteSettingDto
     public string FontSizeBase { get; set; }
 
     public bool IsActive { get; set; }
+
+    // ── Location ──────────────────────────────────────────────────────────
+    [MaxLength(256)]
+    public string Address { get; set; }
+
+    [MaxLength(100)]
+    public string City { get; set; }
+
+    [MaxLength(100)]
+    public string State { get; set; }
+
+    [MaxLength(20)]
+    public string ZipCode { get; set; }
+
+    [MaxLength(100)]
+    public string Country { get; set; }
+
+    // ── Contact ───────────────────────────────────────────────────────────
+    [MaxLength(32)]
+    public string Phone { get; set; }
+
+    [MaxLength(256)]
+    public string Email { get; set; }
+
+    [MaxLength(256)]
+    public string SupportEmail { get; set; }
+
+    [MaxLength(32)]
+    public string WhatsApp { get; set; }
 }

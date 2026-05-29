@@ -13,6 +13,10 @@ namespace DymoEnergy.SalesInvoices;
 [Authorize(DymoEnergyPermissions.SalesInvoices.Default)]
 public class SalesInvoiceAppService : ApplicationService, ISalesInvoiceAppService
 {
+    // Serializes invoice-number generation + insert so two concurrent requests
+    // cannot read the same sequence counter before either has saved.
+    private static readonly SemaphoreSlim _invoiceLock = new(1, 1);
+
     private readonly IRepository<SalesInvoice, int>     _invoiceRepository;
     private readonly IRepository<SalesInvoiceItem, int> _itemRepository;
 
@@ -78,21 +82,29 @@ public class SalesInvoiceAppService : ApplicationService, ISalesInvoiceAppServic
     [Authorize(DymoEnergyPermissions.SalesInvoices.Create)]
     public async Task<SalesInvoiceDto> CreateInvoiceDataAsync(CreateUpdateSalesInvoiceDto input)
     {
-        var invoice = new SalesInvoice();
-        ApplyInput(invoice, input);
-        invoice.InvoiceNumber = await GenerateInvoiceNumberAsync();
-
-        await _invoiceRepository.InsertAsync(invoice, autoSave: true);
-
-        if (input.Items.Count > 0)
+        await _invoiceLock.WaitAsync();
+        try
         {
-            var items = input.Items
-                .Select((dto, idx) => MapToItem(dto, invoice.Id, idx))
-                .ToList();
-            await _itemRepository.InsertManyAsync(items, autoSave: true);
-        }
+            var invoice = new SalesInvoice();
+            ApplyInput(invoice, input);
+            invoice.InvoiceNumber = await GenerateInvoiceNumberAsync();
 
-        return MapToDto(invoice);
+            await _invoiceRepository.InsertAsync(invoice, autoSave: true);
+
+            if (input.Items.Count > 0)
+            {
+                var items = input.Items
+                    .Select((dto, idx) => MapToItem(dto, invoice.Id, idx))
+                    .ToList();
+                await _itemRepository.InsertManyAsync(items, autoSave: true);
+            }
+
+            return MapToDto(invoice);
+        }
+        finally
+        {
+            _invoiceLock.Release();
+        }
     }
 
     [Authorize(DymoEnergyPermissions.SalesInvoices.Edit)]
@@ -154,9 +166,20 @@ public class SalesInvoiceAppService : ApplicationService, ISalesInvoiceAppServic
         var today  = DateTime.Today;
         var prefix = $"INV-{today:yyyyMMdd}-";
         var query  = await _invoiceRepository.GetQueryableAsync();
-        var count  = await AsyncExecuter.CountAsync(
-            query.Where(i => i.InvoiceNumber != null && i.InvoiceNumber.StartsWith(prefix)));
-        return $"{prefix}{(count + 1):D4}";
+
+        // Pull the raw number strings so we can parse the sequence suffix in memory.
+        // Using MAX on the suffix (not COUNT) means soft-deleted invoices never
+        // cause the sequence to go backwards and reuse an old number.
+        var numbers = await AsyncExecuter.ToListAsync(
+            query.Where(i => i.InvoiceNumber != null && i.InvoiceNumber.StartsWith(prefix))
+                 .Select(i => i.InvoiceNumber));
+
+        var maxSeq = numbers
+            .Select(n => int.TryParse(n!.AsSpan(prefix.Length), out var v) ? v : 0)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        return $"{prefix}{(maxSeq + 1):D4}";
     }
 
     private static void ApplyInput(SalesInvoice inv, CreateUpdateSalesInvoiceDto input)

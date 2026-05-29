@@ -67,6 +67,17 @@ export class AdminSiteSettingsComponent implements OnInit {
       fontSizeBase: [null],
       // ── Status ───────────────────────────────────────────────────────────
       isActive: [true],
+      // ── Location ─────────────────────────────────────────────────────────
+      address:      [null],
+      city:         [null],
+      state:        [null],
+      zipCode:      [null],
+      country:      [null],
+      // ── Contact ──────────────────────────────────────────────────────────
+      phone:        [null],
+      email:        [null],
+      supportEmail: [null],
+      whatsApp:     [null],
     });
   }
 
@@ -108,6 +119,15 @@ export class AdminSiteSettingsComponent implements OnInit {
       fontFamily:             dto.fontFamily,
       fontSizeBase:           dto.fontSizeBase,
       isActive:               dto.isActive,
+      address:                dto.address,
+      city:                   dto.city,
+      state:                  dto.state,
+      zipCode:                dto.zipCode,
+      country:                dto.country,
+      phone:                  dto.phone,
+      email:                  dto.email,
+      supportEmail:           dto.supportEmail,
+      whatsApp:               dto.whatsApp,
     });
   }
 

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { forkJoin } from 'rxjs';
+import { catchError, of } from 'rxjs';
 import { SharedModule } from '../../../shared/shared.module';
 import { SalesInvoiceService } from '../../../proxy/sales-invoices/sales-invoice.service';
 import {
@@ -12,6 +13,8 @@ import {
   SalesInvoicePaymentMethodLabels,
 } from '../../../proxy/sales-invoices/models';
 import { SalesInvoiceEntryDrawerComponent } from '../entry-drawer/sales-invoice-entry-drawer.component';
+import { AdminSiteSettingService } from '../../../proxy/admin-site-settings/admin-site-setting.service';
+import { AdminSiteSettingDto } from '../../../proxy/admin-site-settings/models';
 
 @Component({
   selector:    'app-invoice-details',
@@ -24,6 +27,7 @@ export class InvoiceDetailsComponent implements OnInit {
   invoiceId = 0;
   invoice: SalesInvoiceDto | null = null;
   items: SalesInvoiceItemDto[] = [];
+  siteSettings: AdminSiteSettingDto | null = null;
   loading = true;
 
   isDrawerOpen = false;
@@ -57,6 +61,15 @@ export class InvoiceDetailsComponent implements OnInit {
       .join('');
   }
 
+  /** Builds a comma-separated address line from site settings */
+  get companyAddressLine(): string {
+    const s = this.siteSettings;
+    if (!s) return '';
+    return [s.address, s.city, s.state, s.zipCode, s.country]
+      .filter(v => !!v)
+      .join(', ');
+  }
+
   get isFullyPaid(): boolean {
     return (this.invoice?.balanceDue ?? 1) <= 0;
   }
@@ -66,10 +79,11 @@ export class InvoiceDetailsComponent implements OnInit {
   }
 
   constructor(
-    private route:          ActivatedRoute,
-    private router:         Router,
-    private invoiceService: SalesInvoiceService,
-    private message:        NzMessageService,
+    private route:           ActivatedRoute,
+    private router:          Router,
+    private invoiceService:  SalesInvoiceService,
+    private siteSettingSvc:  AdminSiteSettingService,
+    private message:         NzMessageService,
   ) {}
 
   ngOnInit(): void {
@@ -81,13 +95,15 @@ export class InvoiceDetailsComponent implements OnInit {
   loadData(): void {
     this.loading = true;
     forkJoin({
-      invoice: this.invoiceService.get(this.invoiceId),
-      items:   this.invoiceService.getItems(this.invoiceId),
+      invoice:      this.invoiceService.get(this.invoiceId),
+      items:        this.invoiceService.getItems(this.invoiceId),
+      siteSettings: this.siteSettingSvc.getActive().pipe(catchError(() => of(null))),
     }).subscribe({
-      next: ({ invoice, items }) => {
-        this.invoice = invoice;
-        this.items   = items.sort((a, b) => a.displayOrder - b.displayOrder);
-        this.loading = false;
+      next: ({ invoice, items, siteSettings }) => {
+        this.invoice      = invoice;
+        this.items        = items.sort((a, b) => a.displayOrder - b.displayOrder);
+        this.siteSettings = siteSettings;
+        this.loading      = false;
       },
       error: () => {
         this.message.error('Invoice not found.');

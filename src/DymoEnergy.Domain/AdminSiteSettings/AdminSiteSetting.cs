@@ -28,4 +28,17 @@ public class AdminSiteSetting : FullAuditedAggregateRoot<int>
     public string? FontFamily { get; set; }
     public string? FontSizeBase { get; set; }
     public bool IsActive { get; set; }
+
+    // ── Location ─────────────────────────────────────────────────────────
+    public string? Address { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? ZipCode { get; set; }
+    public string? Country { get; set; }
+
+    // ── Contact ──────────────────────────────────────────────────────────
+    public string? Phone { get; set; }
+    public string? Email { get; set; }
+    public string? SupportEmail { get; set; }
+    public string? WhatsApp { get; set; }
 }

@@ -86,8 +86,20 @@
       <!-- Company + INVOICE title -->
       <div class="paper-top">
         <div class="company-block">
-          <div class="company-name">DymoEnergy Solar</div>
-          <div class="company-info">Solar Energy Solutions</div>
+          <div class="company-name">{{ siteSettings?.siteName || 'DymoEnergy Solar' }}</div>
+          @if (siteSettings?.tagline) {
+            <div class="company-info">{{ siteSettings!.tagline }}</div>
+          }
+          @if (companyAddressLine) {
+            <div class="company-address">{{ companyAddressLine }}</div>
+          }
+          @if (siteSettings?.phone || siteSettings?.email) {
+            <div class="company-contact">
+              @if (siteSettings?.phone) { <span>{{ siteSettings!.phone }}</span> }
+              @if (siteSettings?.phone && siteSettings?.email) { <span class="contact-sep">·</span> }
+              @if (siteSettings?.email) { <span>{{ siteSettings!.email }}</span> }
+            </div>
+          }
         </div>
         <div class="invoice-title-block">
           <div class="invoice-word">INVOICE</div>
@@ -240,7 +252,7 @@
 
       <!-- Print-only footer -->
       <div class="print-footer print-only">
-        DymoEnergy Solar &nbsp;·&nbsp; {{ invoice.invoiceNumber }} &nbsp;·&nbsp; Printed {{ fmtDate(null) }}
+        {{ siteSettings?.siteName || 'DymoEnergy Solar' }} &nbsp;·&nbsp; {{ invoice.invoiceNumber }} &nbsp;·&nbsp; Printed {{ fmtDate(null) }}
       </div>
 
     </div><!-- /invoice-paper -->

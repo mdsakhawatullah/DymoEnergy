@@ -47,6 +47,17 @@
   margin-bottom: 6px;
 }
 
+/* ── Sub-section labels (Location, Contact) ────────────────────────────── */
+.field-section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0D5C2E;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e8f5e9;
+  padding-bottom: 4px;
+}
+
 /* ── Colour row (swatch + text input) ───────────────────────────────────── */
 .color-row {
   display: flex;

@@ -95,8 +95,11 @@
   align-items: flex-start;
   padding: 28px 32px 20px;
 }
-.company-name { font-size: 20px; font-weight: 700; color: #1a1a1a; }
-.company-info { font-size: 13px; color: #888; margin-top: 3px; }
+.company-name    { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+.company-info    { font-size: 13px; color: #888; margin-top: 3px; }
+.company-address { font-size: 12px; color: #999; margin-top: 4px; }
+.company-contact { font-size: 12px; color: #999; margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+.contact-sep     { color: #ccc; }
 
 .invoice-title-block { text-align: right; }
 .invoice-word {
