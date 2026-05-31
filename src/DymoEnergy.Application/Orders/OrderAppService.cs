@@ -83,7 +83,7 @@ public class OrderAppService : ApplicationService, IOrderAppService
 
     // ── WRITE ─────────────────────────────────────────────────────────────
 
-    [Authorize(DymoEnergyPermissions.Orders.Create)]
+    [AllowAnonymous]
     public async Task<OrderDto> CreateOrderDataAsync(CreateUpdateOrderDto input)
     {
         await _orderLock.WaitAsync();
