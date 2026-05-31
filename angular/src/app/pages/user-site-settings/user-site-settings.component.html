@@ -1,9 +1,9 @@
 <!-- ── Page header ─────────────────────────────────────────────────────── -->
 <div class="d-flex align-items-start justify-content-between mb-4">
   <div>
-    <h4 class="mb-1 fw-bold">Admin Site Settings</h4>
+    <h4 class="mb-1 fw-bold">User Site Settings</h4>
     <span class="text-muted small">
-      {{ hasRecord ? 'Update your site appearance and branding.' : 'No settings found. Create your site configuration below.' }}
+      {{ hasRecord ? 'Update your user-facing sidebar appearance.' : 'No settings found. Create your sidebar configuration below.' }}
     </span>
   </div>
   @if (!hasRecord && !loading) {
@@ -30,68 +30,21 @@
     </div>
 
     <div class="row g-3">
-      <div class="col-md-6">
-        <div class="field-label">SITE NAME</div>
-        <input nz-input formControlName="siteName" placeholder="e.g. DymoEnergy Admin" />
-      </div>
-      <div class="col-md-6">
-        <div class="field-label">TAGLINE</div>
-        <input nz-input formControlName="tagline" placeholder="e.g. Powering a Sustainable Future" />
-      </div>
       <div class="col-12">
-        <div class="field-label">LOGO URL</div>
+        <div class="field-label">BACKGROUND IMAGE URL</div>
         <div class="d-flex align-items-center gap-3">
-          <input nz-input formControlName="logoUrl" placeholder="https://..." class="flex-grow-1" />
-          @if (form.get('logoUrl')?.value) {
-            <img [src]="form.get('logoUrl')?.value" alt="Logo preview" class="logo-preview" />
+          <input nz-input formControlName="backgroundImage" placeholder="https://..." class="flex-grow-1" />
+          @if (form.get('backgroundImage')?.value) {
+            <img [src]="form.get('backgroundImage')?.value" alt="Background preview" class="img-preview" />
           }
         </div>
       </div>
-
-      <!-- ── Location ──────────────────────────────────────────────────── -->
-      <div class="col-12 mt-2">
-        <div class="field-section-label">LOCATION</div>
-      </div>
       <div class="col-12">
-        <div class="field-label">ADDRESS</div>
-        <input nz-input formControlName="address" placeholder="e.g. 123 Main Street" />
-      </div>
-      <div class="col-md-6">
-        <div class="field-label">CITY</div>
-        <input nz-input formControlName="city" placeholder="e.g. Dhaka" />
-      </div>
-      <div class="col-md-6">
-        <div class="field-label">STATE / REGION</div>
-        <input nz-input formControlName="state" placeholder="e.g. Dhaka Division" />
-      </div>
-      <div class="col-md-6">
-        <div class="field-label">ZIP / POSTAL CODE</div>
-        <input nz-input formControlName="zipCode" placeholder="e.g. 1200" />
-      </div>
-      <div class="col-md-6">
-        <div class="field-label">COUNTRY</div>
-        <input nz-input formControlName="country" placeholder="e.g. Bangladesh" />
-      </div>
-
-      <!-- ── Contact ───────────────────────────────────────────────────── -->
-      <div class="col-12 mt-2">
-        <div class="field-section-label">CONTACT</div>
-      </div>
-      <div class="col-md-6">
-        <div class="field-label">PHONE</div>
-        <input nz-input formControlName="phone" placeholder="e.g. +880 1700-000000" />
-      </div>
-      <div class="col-md-6">
-        <div class="field-label">WHATSAPP</div>
-        <input nz-input formControlName="whatsApp" placeholder="e.g. +880 1700-000000" />
-      </div>
-      <div class="col-md-6">
-        <div class="field-label">EMAIL</div>
-        <input nz-input formControlName="email" placeholder="e.g. info@dymo.energy" />
-      </div>
-      <div class="col-md-6">
-        <div class="field-label">SUPPORT EMAIL</div>
-        <input nz-input formControlName="supportEmail" placeholder="e.g. support@dymo.energy" />
+        <div class="field-label">DESCRIPTION</div>
+        <textarea nz-input formControlName="description"
+                  placeholder="Short description shown in the sidebar..."
+                  [nzAutosize]="{ minRows: 3, maxRows: 6 }">
+        </textarea>
       </div>
     </div>
   </div>
@@ -104,7 +57,7 @@
     </div>
 
     <div class="row g-3">
-      <div class="col-md-3">
+      <div class="col-md-4">
         <div class="field-label">PRIMARY</div>
         <div class="color-row">
           <input type="color" class="color-swatch"
@@ -113,25 +66,16 @@
           <input nz-input formControlName="primaryColor" placeholder="#0D5C2E" />
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="field-label">SECONDARY</div>
+      <div class="col-md-4">
+        <div class="field-label">BODY</div>
         <div class="color-row">
           <input type="color" class="color-swatch"
-                 [value]="colorValue('secondaryColor')"
-                 (input)="onColorPickerChange('secondaryColor', $event)" />
-          <input nz-input formControlName="secondaryColor" placeholder="#4CAF50" />
+                 [value]="colorValue('bodyColor')"
+                 (input)="onColorPickerChange('bodyColor', $event)" />
+          <input nz-input formControlName="bodyColor" placeholder="#f8f9fa" />
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="field-label">ACCENT</div>
-        <div class="color-row">
-          <input type="color" class="color-swatch"
-                 [value]="colorValue('accentColor')"
-                 (input)="onColorPickerChange('accentColor', $event)" />
-          <input nz-input formControlName="accentColor" placeholder="#FFC107" />
-        </div>
-      </div>
-      <div class="col-md-3">
+      <div class="col-md-4">
         <div class="field-label">BUTTON</div>
         <div class="color-row">
           <input type="color" class="color-swatch"
@@ -143,48 +87,10 @@
     </div>
   </div>
 
-  <!-- ③ Text Colours ──────────────────────────────────────────────── -->
+  <!-- ③ Backgrounds ───────────────────────────────────────────────── -->
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">3</span>
-      <span class="section-title">Text Colours</span>
-    </div>
-
-    <div class="row g-3">
-      <div class="col-md-4">
-        <div class="field-label">TEXT</div>
-        <div class="color-row">
-          <input type="color" class="color-swatch"
-                 [value]="colorValue('textColor')"
-                 (input)="onColorPickerChange('textColor', $event)" />
-          <input nz-input formControlName="textColor" placeholder="#1a1a1a" />
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="field-label">TEXT MUTED</div>
-        <div class="color-row">
-          <input type="color" class="color-swatch"
-                 [value]="colorValue('textMutedColor')"
-                 (input)="onColorPickerChange('textMutedColor', $event)" />
-          <input nz-input formControlName="textMutedColor" placeholder="#888888" />
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="field-label">LINK</div>
-        <div class="color-row">
-          <input type="color" class="color-swatch"
-                 [value]="colorValue('linkColor')"
-                 (input)="onColorPickerChange('linkColor', $event)" />
-          <input nz-input formControlName="linkColor" placeholder="#0D5C2E" />
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ④ Backgrounds ───────────────────────────────────────────────── -->
-  <div class="settings-card">
-    <div class="section-header">
-      <span class="section-badge">4</span>
       <span class="section-title">Backgrounds</span>
     </div>
 
@@ -210,10 +116,10 @@
     </div>
   </div>
 
-  <!-- ⑤ Navbar ────────────────────────────────────────────────────── -->
+  <!-- ④ Navbar ────────────────────────────────────────────────────── -->
   <div class="settings-card">
     <div class="section-header">
-      <span class="section-badge">5</span>
+      <span class="section-badge">4</span>
       <span class="section-title">Navbar</span>
     </div>
 
@@ -239,11 +145,11 @@
     </div>
   </div>
 
-  <!-- ⑥ Sidebar ───────────────────────────────────────────────────── -->
+  <!-- ⑤ Sidebar ───────────────────────────────────────────────────── -->
   <div class="settings-card">
     <div class="section-header">
-      <span class="section-badge">6</span>
-      <span class="section-title">User Site Settings</span>
+      <span class="section-badge">5</span>
+      <span class="section-title">Sidebar</span>
     </div>
 
     <div class="row g-3">
@@ -277,10 +183,10 @@
     </div>
   </div>
 
-  <!-- ⑦ Buttons ───────────────────────────────────────────────────── -->
+  <!-- ⑥ Primary Button ────────────────────────────────────────────── -->
   <div class="settings-card">
     <div class="section-header">
-      <span class="section-badge">7</span>
+      <span class="section-badge">6</span>
       <span class="section-title">Primary Button</span>
     </div>
 
@@ -306,10 +212,10 @@
     </div>
   </div>
 
-  <!-- ⑧ Typography ────────────────────────────────────────────────── -->
+  <!-- ⑦ Typography ────────────────────────────────────────────────── -->
   <div class="settings-card">
     <div class="section-header">
-      <span class="section-badge">8</span>
+      <span class="section-badge">7</span>
       <span class="section-title">Typography</span>
     </div>
 
@@ -322,6 +228,64 @@
         <div class="field-label">BASE FONT SIZE</div>
         <input nz-input formControlName="fontSizeBase" placeholder="e.g. 14px" />
       </div>
+    </div>
+  </div>
+
+  <!-- ⑧ Images ─────────────────────────────────────────────────────── -->
+  <div class="settings-card">
+    <div class="section-header">
+      <span class="section-badge">8</span>
+      <span class="section-title">Images</span>
+      <button nz-button nzSize="small" class="btn-add-image ms-auto" (click)="addImage()" type="button">
+        <span nz-icon nzType="plus" nzTheme="outline"></span> Add Image
+      </button>
+    </div>
+
+    @if (imagesArray.length === 0) {
+      <div class="empty-images">
+        <span nz-icon nzType="picture" nzTheme="outline" class="empty-icon"></span>
+        <p class="text-muted mb-0">No images added yet. Click <strong>Add Image</strong> to get started.</p>
+      </div>
+    }
+
+    <div formArrayName="images">
+      @for (imgGroup of imagesArray.controls; track $index; let i = $index) {
+        <div [formGroupName]="i" class="image-row">
+          <div class="image-row-index">{{ i + 1 }}</div>
+
+          <div class="row g-2 flex-grow-1">
+            <div class="col-md-5">
+              <div class="field-label">IMAGE URL</div>
+              <div class="d-flex align-items-center gap-2">
+                @if (imgGroup.get('imageUrl')?.value) {
+                  <img [src]="imgGroup.get('imageUrl')?.value" alt="preview" class="img-thumb" />
+                }
+                <input nz-input formControlName="imageUrl" placeholder="https://..." class="flex-grow-1" />
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="field-label">TITLE</div>
+              <input nz-input formControlName="title" placeholder="Image title" />
+            </div>
+            <div class="col-md-2">
+              <div class="field-label">ALT TEXT</div>
+              <input nz-input formControlName="altText" placeholder="Alt text" />
+            </div>
+            <div class="col-md-1">
+              <div class="field-label">ORDER</div>
+              <nz-input-number formControlName="displayOrder" [nzMin]="0" style="width:100%"></nz-input-number>
+            </div>
+            <div class="col-md-1 d-flex flex-column align-items-center justify-content-end gap-1">
+              <div class="field-label" style="text-align:center">ACTIVE</div>
+              <nz-switch formControlName="isActive" nzSize="small"></nz-switch>
+            </div>
+          </div>
+
+          <button nz-button nzDanger nzSize="small" class="btn-remove" (click)="removeImage(i)" type="button">
+            <span nz-icon nzType="delete" nzTheme="outline"></span>
+          </button>
+        </div>
+      }
     </div>
   </div>
 

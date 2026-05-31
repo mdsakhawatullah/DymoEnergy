@@ -34,6 +34,16 @@ public class DymoEnergyPermissionDefinitionProvider : PermissionDefinitionProvid
         salesInvoicesPermission.AddChild(DymoEnergyPermissions.SalesInvoices.Create, L("Permission:SalesInvoices.Create"));
         salesInvoicesPermission.AddChild(DymoEnergyPermissions.SalesInvoices.Edit,   L("Permission:SalesInvoices.Edit"));
         salesInvoicesPermission.AddChild(DymoEnergyPermissions.SalesInvoices.Delete, L("Permission:SalesInvoices.Delete"));
+
+        var userSiteSettingsPermission = myGroup.AddPermission(DymoEnergyPermissions.UserSiteSettings.Default, L("Permission:UserSiteSettings"));
+        userSiteSettingsPermission.AddChild(DymoEnergyPermissions.UserSiteSettings.Create, L("Permission:UserSiteSettings.Create"));
+        userSiteSettingsPermission.AddChild(DymoEnergyPermissions.UserSiteSettings.Edit,   L("Permission:UserSiteSettings.Edit"));
+        userSiteSettingsPermission.AddChild(DymoEnergyPermissions.UserSiteSettings.Delete, L("Permission:UserSiteSettings.Delete"));
+
+        var ordersPermission = myGroup.AddPermission(DymoEnergyPermissions.Orders.Default, L("Permission:Orders"));
+        ordersPermission.AddChild(DymoEnergyPermissions.Orders.Create, L("Permission:Orders.Create"));
+        ordersPermission.AddChild(DymoEnergyPermissions.Orders.Edit,   L("Permission:Orders.Edit"));
+        ordersPermission.AddChild(DymoEnergyPermissions.Orders.Delete, L("Permission:Orders.Delete"));
     }
 
     private static LocalizableString L(string name)

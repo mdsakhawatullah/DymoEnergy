@@ -1,0 +1,309 @@
+<form nz-form [formGroup]="form" nzLayout="vertical" class="entry-form">
+
+  <!-- ① Order Details ──────────────────────────────────────────────────── -->
+  <div class="section-header">
+    <span class="section-badge">1</span>
+    <span class="section-title">Order Details</span>
+  </div>
+
+  <div class="row g-3">
+    @if (input?.id) {
+      <div class="col-md-4">
+        <div class="field-label">ORDER NUMBER</div>
+        <div class="order-no-readonly">{{ input?.orderNumber }}</div>
+      </div>
+    }
+    <div class="col-md-4">
+      <div class="field-label">ORDER DATE</div>
+      <nz-date-picker formControlName="orderDate" style="width:100%;" nzFormat="dd/MM/yyyy"></nz-date-picker>
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">EST. DELIVERY DATE</div>
+      <nz-date-picker formControlName="estimatedDeliveryDate" style="width:100%;" nzFormat="dd/MM/yyyy"></nz-date-picker>
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">ACTUAL DELIVERY DATE</div>
+      <nz-date-picker formControlName="actualDeliveryDate" style="width:100%;" nzFormat="dd/MM/yyyy"></nz-date-picker>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-md-3">
+      <div class="field-label">STATUS</div>
+      <nz-select formControlName="status" style="width:100%;">
+        @for (opt of statusOptions; track opt.value) {
+          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+        }
+      </nz-select>
+    </div>
+    <div class="col-md-3">
+      <div class="field-label">STAGE</div>
+      <nz-select formControlName="stage" style="width:100%;">
+        @for (opt of stageOptions; track opt.value) {
+          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+        }
+      </nz-select>
+    </div>
+    <div class="col-md-3">
+      <div class="field-label">PRIORITY</div>
+      <nz-select formControlName="priority" style="width:100%;">
+        @for (opt of priorityOptions; track opt.value) {
+          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+        }
+      </nz-select>
+    </div>
+    <div class="col-md-3">
+      <div class="field-label">SHIPMENT TYPE</div>
+      <nz-select formControlName="shipmentType" style="width:100%;">
+        @for (opt of shipmentTypeOptions; track opt.value) {
+          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+        }
+      </nz-select>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-md-4">
+      <div class="field-label">CREATE METHOD</div>
+      <nz-select formControlName="createMethod" style="width:100%;">
+        @for (opt of createMethodOptions; track opt.value) {
+          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+        }
+      </nz-select>
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">CREATED HOW (CHANNEL)</div>
+      <input nz-input formControlName="createdHow" placeholder="e.g. Solar calculator form" />
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">CURRENCY</div>
+      <input nz-input formControlName="currencyCode" placeholder="BDT" />
+    </div>
+  </div>
+
+  <!-- ② Customer ──────────────────────────────────────────────────────── -->
+  <div class="section-header mt-4">
+    <span class="section-badge">2</span>
+    <span class="section-title">Customer</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-5">
+      <div class="field-label">CUSTOMER NAME</div>
+      <input nz-input formControlName="customerName" placeholder="Full name or company" />
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">EMAIL</div>
+      <input nz-input formControlName="customerEmail" placeholder="email@example.com" />
+    </div>
+    <div class="col-md-3">
+      <div class="field-label">PHONE</div>
+      <input nz-input formControlName="customerPhone" placeholder="+880..." />
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-md-6">
+      <div class="field-label">CUSTOMER REFERENCE / PO NO.</div>
+      <input nz-input formControlName="customerReference" placeholder="e.g. PO-2024-001" />
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-md-6">
+      <div class="field-label">BILLING ADDRESS</div>
+      <textarea nz-input formControlName="billingAddress"
+        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Street, City, Postcode..."></textarea>
+    </div>
+    <div class="col-md-6">
+      <div class="field-label">DELIVERY ADDRESS</div>
+      <textarea nz-input formControlName="deliveryAddress"
+        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Leave blank if same as billing"></textarea>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-md-6">
+      <div class="field-label">DELIVERY CONTACT</div>
+      <input nz-input formControlName="deliveryContact" placeholder="Recipient name" />
+    </div>
+    <div class="col-md-6">
+      <div class="field-label">DELIVERY PHONE</div>
+      <input nz-input formControlName="deliveryPhone" placeholder="+880..." />
+    </div>
+  </div>
+
+  <!-- ③ Line Items ─────────────────────────────────────────────────────── -->
+  <div class="section-header mt-4">
+    <span class="section-badge">3</span>
+    <span class="section-title">Line Items</span>
+  </div>
+
+  <div class="line-items-table">
+    <div class="li-header">
+      <div class="li-col li-col--desc">PRODUCT / DESCRIPTION</div>
+      <div class="li-col li-col--sku">SKU</div>
+      <div class="li-col li-col--num">QTY</div>
+      <div class="li-col li-col--num">UNIT PRICE</div>
+      <div class="li-col li-col--num">DISC %</div>
+      <div class="li-col li-col--num">TAX %</div>
+      <div class="li-col li-col--num">LINE TOTAL</div>
+      <div class="li-col li-col--action"></div>
+    </div>
+
+    <div formArrayName="items">
+      @for (row of items.controls; track $index; let i = $index) {
+        <div class="li-row" [formGroupName]="i">
+          <div class="li-col li-col--desc">
+            <input nz-input formControlName="productName" placeholder="Product / item name" />
+            <input nz-input formControlName="description" placeholder="Description (optional)"
+              class="mt-1" style="font-size:11px; color:#888;" />
+          </div>
+          <div class="li-col li-col--sku">
+            <input nz-input formControlName="sku" placeholder="SKU" />
+          </div>
+          <div class="li-col li-col--num">
+            <nz-input-number formControlName="quantity" [nzMin]="0" [nzStep]="1"
+              style="width:100%;"></nz-input-number>
+          </div>
+          <div class="li-col li-col--num">
+            <nz-input-number formControlName="unitPrice" [nzMin]="0" [nzStep]="0.01"
+              style="width:100%;"></nz-input-number>
+          </div>
+          <div class="li-col li-col--num">
+            <nz-input-number formControlName="discountPercent" [nzMin]="0" [nzMax]="100"
+              style="width:100%;"></nz-input-number>
+          </div>
+          <div class="li-col li-col--num">
+            <nz-input-number formControlName="taxRate" [nzMin]="0" [nzMax]="100"
+              style="width:100%;"></nz-input-number>
+          </div>
+          <div class="li-col li-col--num li-total">
+            {{ form.get('currencyCode')?.value || '৳' }}
+            {{ row.get('lineTotal')?.value | number:'1.2-2' }}
+          </div>
+          <div class="li-col li-col--action">
+            <button nz-button nzType="text" nzSize="small" nzDanger (click)="removeItem(i)">
+              <span nz-icon nzType="delete" nzTheme="outline"></span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="li-add-row">
+      <button nz-button nzType="dashed" nzSize="small" (click)="addItem()">
+        <span nz-icon nzType="plus" nzTheme="outline"></span> Add Line Item
+      </button>
+    </div>
+  </div>
+
+  <!-- ④ Totals ─────────────────────────────────────────────────────────── -->
+  <div class="totals-box mt-3">
+    <div class="totals-row">
+      <span class="totals-label">Subtotal</span>
+      <span class="totals-value">{{ form.get('currencyCode')?.value }} {{ subtotal | number:'1.2-2' }}</span>
+    </div>
+    <div class="totals-row">
+      <span class="totals-label">Discount</span>
+      <span class="totals-value text-danger">− {{ form.get('currencyCode')?.value }} {{ discountTotal | number:'1.2-2' }}</span>
+    </div>
+    <div class="totals-row">
+      <span class="totals-label">Tax</span>
+      <span class="totals-value">+ {{ form.get('currencyCode')?.value }} {{ taxTotal | number:'1.2-2' }}</span>
+    </div>
+    <div class="totals-row totals-row--shipping">
+      <span class="totals-label">Shipping Cost</span>
+      <nz-input-number formControlName="shippingCost" [nzMin]="0" [nzStep]="0.01"
+        nzSize="small" style="width:130px;"></nz-input-number>
+    </div>
+    <div class="totals-row totals-row--voucher">
+      <span class="totals-label">
+        Voucher
+        <input nz-input formControlName="voucherCode" placeholder="Code" class="voucher-code-input" />
+      </span>
+      <nz-input-number formControlName="voucherAmount" [nzMin]="0" [nzStep]="0.01"
+        nzSize="small" style="width:130px;"></nz-input-number>
+    </div>
+    <div class="totals-row totals-row--grand">
+      <span class="totals-label">Grand Total</span>
+      <span class="totals-value fw-bold">{{ form.get('currencyCode')?.value }} {{ grandTotal | number:'1.2-2' }}</span>
+    </div>
+  </div>
+
+  <!-- ⑤ Payment ────────────────────────────────────────────────────────── -->
+  <div class="section-header mt-4">
+    <span class="section-badge">5</span>
+    <span class="section-title">Payment</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="field-label">PAYMENT TYPE</div>
+      <nz-select formControlName="paymentType" nzAllowClear nzPlaceHolder="Select type" style="width:100%;">
+        @for (opt of paymentTypeOptions; track opt.value) {
+          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+        }
+      </nz-select>
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">PAYMENT DATE</div>
+      <nz-date-picker formControlName="paymentDate" style="width:100%;" nzFormat="dd/MM/yyyy"></nz-date-picker>
+    </div>
+    <div class="col-md-4">
+      <div class="field-label">AMOUNT PAID</div>
+      <nz-input-number formControlName="amountPaid" [nzMin]="0" [nzStep]="0.01"
+        style="width:100%;"></nz-input-number>
+    </div>
+  </div>
+
+  <div class="balance-due-row mt-2">
+    <span class="field-label mb-0">BALANCE DUE:</span>
+    <span class="balance-amount" [class.balance-zero]="balanceDue <= 0">
+      {{ form.get('currencyCode')?.value }} {{ balanceDue | number:'1.2-2' }}
+    </span>
+  </div>
+
+  <!-- ⑥ Notes ──────────────────────────────────────────────────────────── -->
+  <div class="section-header mt-4">
+    <span class="section-badge">6</span>
+    <span class="section-title">Notes &amp; Terms</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="field-label">NOTES</div>
+      <textarea nz-input formControlName="notes"
+        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="General order notes..."></textarea>
+    </div>
+    <div class="col-md-6">
+      <div class="field-label">INVOICE NOTES</div>
+      <textarea nz-input formControlName="notesInvoice"
+        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Notes shown on invoice..."></textarea>
+    </div>
+    <div class="col-md-6">
+      <div class="field-label">PAYMENT TERMS</div>
+      <textarea nz-input formControlName="terms"
+        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="e.g. Payment due within 30 days..."></textarea>
+    </div>
+    <div class="col-md-6">
+      <div class="field-label">INTERNAL NOTES</div>
+      <textarea nz-input formControlName="internalNotes"
+        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Staff-only notes (not printed)..."></textarea>
+    </div>
+  </div>
+
+</form>
+
+<!-- ── Footer ──────────────────────────────────────────────────────────── -->
+<div class="drawer-footer">
+  <span class="text-muted" style="font-size:13px;">
+    {{ input?.id ? 'Editing order #' + input?.orderNumber : 'New order' }}
+  </span>
+  <div class="d-flex gap-2">
+    <button nz-button (click)="close()" [disabled]="saving">Cancel</button>
+    <button nz-button nzType="primary" class="btn-save" (click)="save()" [nzLoading]="saving">
+      {{ input?.id ? 'Update Order' : 'Save Order' }}
+    </button>
+  </div>
+</div>

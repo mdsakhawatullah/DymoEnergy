@@ -1,0 +1,441 @@
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PAGE HEADER  (hidden on print)
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="page-head no-print">
+  <div class="page-head__left">
+    <button nz-button nzType="text" class="btn-back" (click)="goBack()">
+      <span nz-icon nzType="arrow-left"></span>
+    </button>
+    <div>
+      <div class="page-title">
+        Order Invoice
+        @if (order?.orderNumber) {
+          <span class="inv-no-badge">{{ order!.orderNumber }}</span>
+        }
+      </div>
+      @if (order) {
+        <div class="page-subtitle">
+          @if (order.customerName) { <span>{{ order.customerName }}</span><span class="sep">·</span> }
+          <span>{{ fmtDate(order.orderDate) }}</span>
+          <span class="sep">·</span>
+          <nz-tag [nzColor]="statusColors[order.status]" class="status-tag">
+            {{ statusLabels[order.status] }}
+          </nz-tag>
+          <nz-tag [nzColor]="stageColors[order.stage]" class="status-tag">
+            {{ stageLabels[order.stage] }}
+          </nz-tag>
+        </div>
+      }
+    </div>
+  </div>
+  <div class="page-head__right">
+    <button nz-button (click)="openEditDrawer()" [disabled]="loading || notFound">
+      <span nz-icon nzType="edit"></span> Edit Order
+    </button>
+    <button nz-button class="btn-print" (click)="print()">
+      <span nz-icon nzType="printer"></span> Print
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     STAGE STEPPER  (hidden on print)
+════════════════════════════════════════════════════════════════════════════ -->
+@if (!loading && order && !isSpecialStatus) {
+  <div class="stepper-card no-print">
+    <nz-steps [nzCurrent]="currentStep" nzSize="small">
+      <nz-step nzTitle="New"           nzIcon="file-add"></nz-step>
+      <nz-step nzTitle="Processing"    nzIcon="tool"></nz-step>
+      <nz-step nzTitle="Ready to Ship" nzIcon="gift"></nz-step>
+      <nz-step nzTitle="In Transit"    nzIcon="car"></nz-step>
+      <nz-step nzTitle="Delivered"     nzIcon="check-circle"></nz-step>
+    </nz-steps>
+  </div>
+}
+@if (!loading && order && isSpecialStatus) {
+  <div class="stepper-card no-print special-status-bar">
+    <span nz-icon
+      [nzType]="order!.status === 7 ? 'close-circle' : 'info-circle'"
+      nzTheme="filled"
+      [style.color]="order!.status === 7 ? '#e53e3e' : '#f97316'"
+      style="font-size:20px;">
+    </span>
+    <span class="special-status-text">
+      {{ statusLabels[order!.status] }}
+    </span>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     LOADING
+════════════════════════════════════════════════════════════════════════════ -->
+@if (loading) {
+  <div class="loading-wrap">
+    <nz-spin nzSize="large"></nz-spin>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     NOT FOUND
+════════════════════════════════════════════════════════════════════════════ -->
+@if (!loading && notFound) {
+  <div class="not-found-wrap no-print">
+    <span nz-icon nzType="file-unknown" nzTheme="outline" style="font-size:56px; color:#d1d5db;"></span>
+    <div style="font-size:20px; font-weight:700; color:#1a1a1a; margin-top:8px;">Order not found</div>
+    <div style="font-size:14px; color:#888;">The order you are looking for does not exist or was deleted.</div>
+    <button nz-button nzType="primary" (click)="goBack()" style="margin-top:16px;">
+      <span nz-icon nzType="arrow-left"></span> Back to Orders
+    </button>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MAIN CONTENT  — invoice paper  +  sidebar
+════════════════════════════════════════════════════════════════════════════ -->
+@if (!loading && order) {
+  <div class="main-layout">
+
+    <!-- ── Invoice Paper ──────────────────────────────────────────────────── -->
+    <div class="invoice-paper" id="print-invoice">
+
+      <!-- Company + ORDER title -->
+      <div class="paper-top">
+        <div class="company-block">
+          <div class="company-name">{{ siteSettings?.siteName || 'DymoEnergy Solar' }}</div>
+          @if (siteSettings?.tagline) {
+            <div class="company-info">{{ siteSettings!.tagline }}</div>
+          }
+          @if (companyAddressLine) {
+            <div class="company-address">{{ companyAddressLine }}</div>
+          }
+          @if (siteSettings?.phone || siteSettings?.email) {
+            <div class="company-contact">
+              @if (siteSettings?.phone) { <span>{{ siteSettings!.phone }}</span> }
+              @if (siteSettings?.phone && siteSettings?.email) { <span class="contact-sep">·</span> }
+              @if (siteSettings?.email) { <span>{{ siteSettings!.email }}</span> }
+            </div>
+          }
+        </div>
+        <div class="invoice-title-block">
+          <div class="invoice-word">ORDER</div>
+          <div class="invoice-number-lg">{{ order.orderNumber }}</div>
+          <nz-tag [nzColor]="statusColors[order.status]" class="status-tag-lg">
+            {{ statusLabels[order.status] }}
+          </nz-tag>
+        </div>
+      </div>
+
+      <hr class="paper-divider" />
+
+      <!-- Meta row: order date | est. delivery | reference | payment type -->
+      <div class="meta-row">
+        <div class="meta-cell">
+          <div class="meta-label">ORDER DATE</div>
+          <div class="meta-value">{{ fmtDateLong(order.orderDate) }}</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">EST. DELIVERY</div>
+          <div class="meta-value">{{ fmtDateLong(order.estimatedDeliveryDate) }}</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">REFERENCE / PO</div>
+          <div class="meta-value">{{ order.customerReference || '—' }}</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">PAYMENT TYPE</div>
+          <div class="meta-value">
+            {{ order.paymentType ? paymentTypeLabels[order.paymentType] : '—' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Bill To / Deliver To -->
+      <div class="address-row">
+        <div class="address-cell">
+          <div class="addr-label">BILL TO</div>
+          @if (order.customerName) {
+            <div class="addr-name">{{ order.customerName }}</div>
+          }
+          @if (order.customerEmail) { <div class="addr-detail">{{ order.customerEmail }}</div> }
+          @if (order.customerPhone) { <div class="addr-detail">{{ order.customerPhone }}</div> }
+          @if (order.billingAddress) {
+            <div class="addr-detail mt-1" style="white-space:pre-line;">{{ order.billingAddress }}</div>
+          }
+        </div>
+        @if (order.deliveryAddress || order.deliveryContact) {
+          <div class="address-cell">
+            <div class="addr-label">DELIVER TO</div>
+            @if (order.deliveryContact) { <div class="addr-name">{{ order.deliveryContact }}</div> }
+            @if (order.deliveryPhone)   { <div class="addr-detail">{{ order.deliveryPhone }}</div> }
+            @if (order.deliveryAddress) {
+              <div class="addr-detail mt-1" style="white-space:pre-line;">{{ order.deliveryAddress }}</div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Line items table -->
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th class="th-no">#</th>
+            <th class="th-item">ITEM</th>
+            <th class="th-num">QTY</th>
+            <th class="th-num">RATE</th>
+            <th class="th-num">DISC.</th>
+            <th class="th-num">TAX</th>
+            <th class="th-num th-amount">AMOUNT</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items; track item.id; let i = $index) {
+            <tr>
+              <td class="td-no">{{ i + 1 }}</td>
+              <td class="td-item">
+                <div class="item-name">{{ item.productName || '—' }}</div>
+                @if (item.sku) { <div class="item-sub">SKU: {{ item.sku }}</div> }
+                @if (item.description) { <div class="item-sub">{{ item.description }}</div> }
+              </td>
+              <td class="td-num">{{ item.quantity }}</td>
+              <td class="td-num">{{ order.currencyCode }} {{ item.unitPrice | number:'1.2-2' }}</td>
+              <td class="td-num">{{ item.discountPercent | number:'1.1-1' }}%</td>
+              <td class="td-num">{{ item.taxRate | number:'1.1-1' }}%</td>
+              <td class="td-num td-amount">
+                {{ order.currencyCode }} {{ item.lineTotal | number:'1.2-2' }}
+              </td>
+            </tr>
+          }
+          @if (items.length === 0) {
+            <tr>
+              <td colspan="7" class="td-empty">No line items</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Totals -->
+      <div class="totals-section">
+        <div class="totals-inner">
+          <div class="totals-row">
+            <span>Subtotal ({{ items.length }} item{{ items.length !== 1 ? 's' : '' }})</span>
+            <span>{{ order.currencyCode }} {{ order.subtotal | number:'1.2-2' }}</span>
+          </div>
+          @if (order.discountTotal > 0) {
+            <div class="totals-row text-danger">
+              <span>Discount</span>
+              <span>− {{ order.currencyCode }} {{ order.discountTotal | number:'1.2-2' }}</span>
+            </div>
+          }
+          @if (order.taxTotal > 0) {
+            <div class="totals-row">
+              <span>Tax / VAT</span>
+              <span>+ {{ order.currencyCode }} {{ order.taxTotal | number:'1.2-2' }}</span>
+            </div>
+          }
+          @if (order.shippingCost > 0) {
+            <div class="totals-row">
+              <span>Shipping</span>
+              <span>{{ order.currencyCode }} {{ order.shippingCost | number:'1.2-2' }}</span>
+            </div>
+          }
+          @if (order.voucherAmount > 0) {
+            <div class="totals-row text-danger">
+              <span>Voucher{{ order.voucherCode ? ' (' + order.voucherCode + ')' : '' }}</span>
+              <span>− {{ order.currencyCode }} {{ order.voucherAmount | number:'1.2-2' }}</span>
+            </div>
+          }
+          <div class="totals-row totals-grand">
+            <span>Grand Total</span>
+            <span>{{ order.currencyCode }} {{ order.grandTotal | number:'1.2-2' }}</span>
+          </div>
+          <div class="totals-row totals-amount-paid" [class.totals-paid]="isFullyPaid">
+            <span>Amount Paid</span>
+            <span>{{ order.currencyCode }} {{ order.amountPaid | number:'1.2-2' }}</span>
+          </div>
+          @if (!isFullyPaid) {
+            <div class="totals-row totals-balance-due">
+              <span>Balance Due</span>
+              <span class="balance-due-value">{{ order.currencyCode }} {{ outstanding | number:'1.2-2' }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Notes / Invoice Notes / Terms -->
+      @if (order.notesInvoice || order.notes || order.terms) {
+        <div class="notes-row">
+          @if (order.notesInvoice) {
+            <div class="notes-cell">
+              <div class="notes-label">INVOICE NOTES</div>
+              <div class="notes-body">{{ order.notesInvoice }}</div>
+            </div>
+          }
+          @if (order.notes) {
+            <div class="notes-cell">
+              <div class="notes-label">NOTES</div>
+              <div class="notes-body">{{ order.notes }}</div>
+            </div>
+          }
+          @if (order.terms) {
+            <div class="notes-cell">
+              <div class="notes-label">PAYMENT TERMS</div>
+              <div class="notes-body">{{ order.terms }}</div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Print-only footer -->
+      <div class="print-footer print-only">
+        {{ siteSettings?.siteName || 'DymoEnergy Solar' }}
+        &nbsp;·&nbsp; Order {{ order.orderNumber }}
+        &nbsp;·&nbsp; Printed {{ fmtDate(order.orderDate) }}
+      </div>
+
+    </div><!-- /invoice-paper -->
+
+    <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+    <aside class="sidebar no-print">
+
+      <!-- Payment Summary -->
+      <div class="sb-card">
+        <div class="sb-card__title">
+          <span nz-icon nzType="wallet" nzTheme="fill" style="color:#0D5C2E;"></span>
+          Payment summary
+        </div>
+        <div class="sb-summary-grid">
+          <div class="sb-summary-cell">
+            <div class="sb-summary-label">TOTAL</div>
+            <div class="sb-summary-amount">{{ order.currencyCode }} {{ order.grandTotal | number:'1.0-0' }}</div>
+          </div>
+          <div class="sb-summary-cell">
+            <div class="sb-summary-label">OUTSTANDING</div>
+            <div class="sb-summary-amount"
+              [class.text-danger]="outstanding > 0"
+              [class.text-success]="outstanding <= 0">
+              {{ outstanding > 0 ? (order.currencyCode + ' ' + (outstanding | number:'1.0-0')) : 'Settled' }}
+            </div>
+          </div>
+        </div>
+        @if (order.amountPaid > 0 || order.paymentDate) {
+          <div class="sb-divider"></div>
+          <div class="sb-receipt-label">RECEIPTS</div>
+          <div class="sb-receipt-row">
+            <div>
+              <div class="sb-receipt-ref">PMT-{{ order.orderNumber }}</div>
+              @if (order.paymentDate) {
+                <div class="sb-receipt-date">{{ fmtDate(order.paymentDate) }}</div>
+              }
+              @if (order.paymentType) {
+                <div class="sb-receipt-date">{{ paymentTypeLabels[order.paymentType] }}</div>
+              }
+            </div>
+            <div class="sb-receipt-amount text-success">
+              {{ order.currencyCode }} {{ order.amountPaid | number:'1.0-0' }}
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Customer -->
+      <div class="sb-card">
+        <div class="sb-card__title">
+          <span nz-icon nzType="team" nzTheme="outline" style="color:#6366f1;"></span>
+          Customer
+        </div>
+        <div class="sb-customer">
+          <div class="sb-avatar">{{ customerInitials || '?' }}</div>
+          <div class="sb-cust-info">
+            <div class="sb-cust-name">{{ order.customerName || '—' }}</div>
+            @if (order.customerReference) {
+              <div class="sb-cust-detail">Ref: {{ order.customerReference }}</div>
+            } @else if (order.customerEmail) {
+              <div class="sb-cust-detail">{{ order.customerEmail }}</div>
+            }
+            <nz-tag [nzColor]="statusColors[order.status]" style="margin-top:6px;">
+              {{ statusLabels[order.status] }}
+            </nz-tag>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity -->
+      <div class="sb-card">
+        <div class="sb-card__title">
+          <span nz-icon nzType="history" style="color:#888;"></span>
+          Activity
+        </div>
+        <ul class="sb-activity">
+          @if (order.amountPaid > 0) {
+            <li class="sb-act-item">
+              <div class="sb-act-icon sb-act-icon--green">
+                <span nz-icon nzType="dollar-circle" nzTheme="fill"></span>
+              </div>
+              <div>
+                <div class="sb-act-text">
+                  Payment of {{ order.currencyCode }} {{ order.amountPaid | number:'1.0-0' }} recorded
+                </div>
+                <div class="sb-act-time">{{ fmtDateTime(order.paymentDate ?? order.lastModificationTime) }}</div>
+              </div>
+            </li>
+          }
+          @if (order.stage >= 5) {
+            <li class="sb-act-item">
+              <div class="sb-act-icon sb-act-icon--check">
+                <span nz-icon nzType="car" nzTheme="fill"></span>
+              </div>
+              <div>
+                <div class="sb-act-text">Order dispatched</div>
+                <div class="sb-act-time">{{ fmtDateTime(order.lastModificationTime) }}</div>
+              </div>
+            </li>
+          }
+          @if (order.status >= 2) {
+            <li class="sb-act-item">
+              <div class="sb-act-icon sb-act-icon--check">
+                <span nz-icon nzType="check-circle" nzTheme="fill"></span>
+              </div>
+              <div>
+                <div class="sb-act-text">Order confirmed</div>
+                <div class="sb-act-time">{{ fmtDateTime(order.lastModificationTime) }}</div>
+              </div>
+            </li>
+          }
+          <li class="sb-act-item">
+            <div class="sb-act-icon sb-act-icon--blue">
+              <span nz-icon nzType="file-add" nzTheme="fill"></span>
+            </div>
+            <div>
+              <div class="sb-act-text">Order created</div>
+              <div class="sb-act-time">{{ fmtDateTime(order.creationTime) }}</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </aside>
+
+  </div><!-- /main-layout -->
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     EDIT DRAWER
+════════════════════════════════════════════════════════════════════════════ -->
+<nz-drawer
+  *ngIf="isDrawerOpen"
+  [nzVisible]="isDrawerOpen"
+  [nzBodyStyle]="{ overflow: 'auto' }"
+  [nzMaskClosable]="false"
+  [nzWidth]="1100"
+  nzTitle="Update Order — {{ order?.orderNumber }}"
+  (nzOnClose)="onDrawerClosed()"
+>
+  <div *nzDrawerContent>
+    <order-entry-drawer
+      [input]="order"
+      [existingItems]="items"
+      (onDrawerClosed)="onDrawerClosed()"
+      (handleOrderSaved)="onOrderSaved()"
+    ></order-entry-drawer>
+  </div>
+</nz-drawer>

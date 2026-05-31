@@ -4,6 +4,7 @@ using DymoEnergy.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Volo.Abp.EntityFrameworkCore;
 
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace DymoEnergy.Migrations
 {
     [DbContext(typeof(DymoEnergyDbContext))]
-    partial class DymoEnergyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260530090429_Add_Orders_Table")]
+    partial class Add_Orders_Table
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

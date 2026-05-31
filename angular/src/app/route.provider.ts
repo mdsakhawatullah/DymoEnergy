@@ -37,6 +37,15 @@ function configureRoutes() {
       layout: eLayoutType.application,
       breadcrumbText: '::Menu:AdminSiteSetting',
     },
+    {
+      path: '/user-site-settings',
+      name: '::Menu:UserSiteSetting',
+      parentName: '::Menu:AdminSiteSettings',
+      iconClass: 'fas fa-paint-brush',
+      order: 2,
+      layout: eLayoutType.application,
+      breadcrumbText: '::Menu:UserSiteSetting',
+    },
 
     // ── Catalogues (group) ───────────────────────────────────────────────────
     {

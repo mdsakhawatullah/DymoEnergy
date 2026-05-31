@@ -5,6 +5,8 @@ using DymoEnergy.AdminSiteSettings;
 using DymoEnergy.Catalogues;
 using DymoEnergy.Products;
 using DymoEnergy.SalesInvoices;
+using DymoEnergy.Orders;
+using DymoEnergy.UserSiteSettings;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
 using Volo.Abp.Data;
@@ -37,6 +39,10 @@ public class DymoEnergyDbContext :
     public DbSet<ProductReview> ProductReviews { get; set; }
     public DbSet<SalesInvoice>     SalesInvoices     { get; set; }
     public DbSet<SalesInvoiceItem> SalesInvoiceItems { get; set; }
+    public DbSet<Order>     Orders     { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<UserSiteSetting>      UserSiteSettings      { get; set; }
+    public DbSet<UserSiteSettingImage> UserSiteSettingImages { get; set; }
 
     #region Entities from the modules
 
@@ -151,6 +157,41 @@ public class DymoEnergyDbContext :
             b.ConfigureByConvention();
             b.Property(x => x.Id).ValueGeneratedOnAdd();
             b.HasIndex(x => x.InvoiceId);
+        });
+
+        /* ── Orders ─────────────────────────────────────────────────────── */
+        builder.Entity<Order>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "Orders", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.HasIndex(x => x.OrderNumber).IsUnique();
+            b.HasIndex(x => x.CustomerId);
+            b.HasIndex(x => x.Status);
+        });
+
+        builder.Entity<OrderItem>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "OrderItems", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.HasIndex(x => x.OrderId);
+        });
+
+        /* ── User Site Settings ──────────────────────────────────────────── */
+        builder.Entity<UserSiteSetting>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "UserSiteSettings", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+        });
+
+        builder.Entity<UserSiteSettingImage>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "UserSiteSettingImages", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.HasIndex(x => x.UserSiteSettingId);
         });
     }
 }

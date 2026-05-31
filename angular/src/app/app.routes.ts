@@ -36,6 +36,13 @@ export const APP_ROUTES: Routes = [
     canActivate: [authGuard],
   },
 
+  // ── User Site Settings ────────────────────────────────────────────────────
+  {
+    path: 'user-site-settings',
+    loadComponent: () => import('./pages/user-site-settings/user-site-settings.component').then(c => c.UserSiteSettingsComponent),
+    canActivate: [authGuard],
+  },
+
   // ── Catalogues ─────────────────────────────────────────────────────────────
   {
     path: 'catalogues',
@@ -98,6 +105,12 @@ export const APP_ROUTES: Routes = [
   },
 
   // ── E-Commerce ─────────────────────────────────────────────────────────────
+  // IMPORTANT: specific route must come before the generic 'orders' prefix route
+  {
+    path: 'orders/:id/invoice',
+    loadComponent: () => import('./pages/orders/invoice/order-invoice.component').then(c => c.OrderInvoiceComponent),
+    // No authGuard: GET endpoints are [AllowAnonymous]; guard can redirect in new-tab context
+  },
   {
     path: 'orders',
     loadComponent: () => import('./pages/orders/orders.component').then(c => c.OrdersComponent),
