@@ -89,3 +89,8 @@ export interface DymoPagedResultDto<T> {
   totalCount: number;
   items: T[];
 }
+
+export interface SelectListDto {
+  value: number;
+  displayText: string;
+}

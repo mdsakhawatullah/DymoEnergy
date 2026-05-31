@@ -23,8 +23,18 @@
       <input nz-input formControlName="sku" placeholder="e.g. SP-400W-001" />
     </div>
     <div class="col-md-6">
-      <div class="field-label">CATALOGUE ID</div>
-      <nz-input-number formControlName="catalogueId" [nzMin]="1" style="width:100%;" placeholder="Catalogue ID"></nz-input-number>
+      <div class="field-label">CATALOGUE</div>
+      <nz-select
+        formControlName="catalogueId"
+        nzShowSearch
+        nzAllowClear
+        nzPlaceHolder="Select catalogue"
+        style="width:100%;"
+      >
+        @for (opt of catalogueOptions; track opt.value) {
+          <nz-option [nzValue]="opt.value" [nzLabel]="opt.displayText"></nz-option>
+        }
+      </nz-select>
     </div>
   </div>
 

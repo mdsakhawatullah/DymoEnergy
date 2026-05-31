@@ -94,6 +94,21 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
         return new DymoPagedResultDto<CatalogueDto>(totalCount, catalogues.Select(MapToDto).ToList());
     }
 
+    [AllowAnonymous]
+    public async Task<IEnumerable<SelectListDto>> GetSelectListAsync()
+    {
+        var query = (await _catalogueRepository.GetQueryableAsync())
+            .OrderBy(c => c.DisplayOrder)
+            .ThenBy(c => c.Name)
+            .Select(c => new SelectListDto
+            {
+                Value       = c.Id,
+                DisplayText = c.Name ?? string.Empty,
+            });
+
+        return await AsyncExecuter.ToListAsync(query);
+    }
+
     // ── WRITE ─────────────────────────────────────────────────────────────
 
     [Authorize(DymoEnergyPermissions.Catalogues.Create)]

@@ -1,9 +1,11 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModule } from '../../../shared/shared.module';
 import { ProductService } from '../../../proxy/products/product.service';
 import { ProductDto, ProductStatusLabels } from '../../../proxy/products/models';
+import { CatalogueService } from '../../../proxy/catalogues/catalogue.service';
+import { SelectListDto } from '../../../proxy/catalogues/models';
 
 @Component({
   selector:    'product-entry-drawer',
@@ -11,7 +13,7 @@ import { ProductDto, ProductStatusLabels } from '../../../proxy/products/models'
   styleUrl:    './product-entry-drawer.component.css',
   imports:     [SharedModule],
 })
-export class ProductEntryDrawerComponent implements OnChanges {
+export class ProductEntryDrawerComponent implements OnChanges, OnInit {
 
   @Input()  input: ProductDto | null = null;
 
@@ -20,6 +22,7 @@ export class ProductEntryDrawerComponent implements OnChanges {
 
   form!: FormGroup;
   saving = false;
+  catalogueOptions: SelectListDto[] = [];
 
   statusOptions = Object.entries(ProductStatusLabels).map(([value, label]) => ({
     value: +value,
@@ -27,11 +30,19 @@ export class ProductEntryDrawerComponent implements OnChanges {
   }));
 
   constructor(
-    private fb:         FormBuilder,
-    private productSvc: ProductService,
-    private message:    NzMessageService,
+    private fb:           FormBuilder,
+    private productSvc:   ProductService,
+    private catalogueSvc: CatalogueService,
+    private message:      NzMessageService,
   ) {
     this.buildForm();
+  }
+
+  ngOnInit(): void {
+    this.catalogueSvc.getSelectList().subscribe({
+      next: items => this.catalogueOptions = items,
+      error: () => this.message.warning('Could not load catalogues.'),
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {

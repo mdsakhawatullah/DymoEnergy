@@ -1,4 +1,4 @@
-import type { CatalogueDto, CatalogueFilterDto, CreateUpdateCatalogueDto, DymoPagedResultDto } from './models';
+import type { CatalogueDto, CatalogueFilterDto, CreateUpdateCatalogueDto, DymoPagedResultDto, SelectListDto } from './models';
 import { RestService } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
 
@@ -23,6 +23,12 @@ export class CatalogueService {
           maxResultCount: input.maxResultCount,
         },
       },
+      { apiName: this.apiName }
+    );
+
+  getSelectList = () =>
+    this.restService.request<any, SelectListDto[]>(
+      { method: 'GET', url: '/api/app/catalogue/select-list' },
       { apiName: this.apiName }
     );
 
