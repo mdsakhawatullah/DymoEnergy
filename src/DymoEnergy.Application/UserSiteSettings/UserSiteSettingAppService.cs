@@ -44,6 +44,7 @@ public class UserSiteSettingAppService : ApplicationService, IUserSiteSettingApp
             items.Select(s => MapToDto(s, new List<UserSiteSettingImage>())).ToList());
     }
 
+    [AllowAnonymous]
     public async Task<UserSiteSettingDto> GetActiveAsync()
     {
         var entity = await _repository.FindAsync(s => s.IsActive);

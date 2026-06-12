@@ -56,6 +56,7 @@ public class AdminSiteSettingAppService : ApplicationService, IAdminSiteSettingA
         await _repository.DeleteAsync(id, autoSave: true);
     }
 
+    [AllowAnonymous]
     public async Task<AdminSiteSettingDto> GetActiveAsync()
     {
         var entity = await _repository.FindAsync(x => x.IsActive);

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using DymoEnergy.Permissions;
 using DymoEnergy.Shared;
@@ -14,10 +13,6 @@ namespace DymoEnergy.Orders;
 [Authorize(DymoEnergyPermissions.Orders.Default)]
 public class OrderAppService : ApplicationService, IOrderAppService
 {
-    // Serialises order-number generation so two concurrent requests
-    // cannot read the same sequence counter before either has saved.
-    private static readonly SemaphoreSlim _orderLock = new(1, 1);
-
     private readonly IRepository<Order, int>     _orderRepository;
     private readonly IRepository<OrderItem, int> _itemRepository;
 
@@ -86,29 +81,25 @@ public class OrderAppService : ApplicationService, IOrderAppService
     [AllowAnonymous]
     public async Task<OrderDto> CreateOrderDataAsync(CreateUpdateOrderDto input)
     {
-        await _orderLock.WaitAsync();
-        try
+        var order = new Order();
+        ApplyInput(order, input);
+
+        // Insert first so the database assigns the auto-increment Id
+        await _orderRepository.InsertAsync(order, autoSave: true);
+
+        // Build order number from today's date + the new Id  (e.g. ORD-20260601-0007)
+        order.OrderNumber = $"ORD-{DateTime.Today:yyyyMMdd}-{order.Id:D4}";
+        await _orderRepository.UpdateAsync(order, autoSave: true);
+
+        if (input.Items.Count > 0)
         {
-            var order = new Order();
-            ApplyInput(order, input);
-            order.OrderNumber = await GenerateOrderNumberAsync();
-
-            await _orderRepository.InsertAsync(order, autoSave: true);
-
-            if (input.Items.Count > 0)
-            {
-                var items = input.Items
-                    .Select((dto, idx) => MapToItem(dto, order.Id, idx))
-                    .ToList();
-                await _itemRepository.InsertManyAsync(items, autoSave: true);
-            }
-
-            return MapToDto(order);
+            var items = input.Items
+                .Select((dto, idx) => MapToItem(dto, order.Id, idx))
+                .ToList();
+            await _itemRepository.InsertManyAsync(items, autoSave: true);
         }
-        finally
-        {
-            _orderLock.Release();
-        }
+
+        return MapToDto(order);
     }
 
     [Authorize(DymoEnergyPermissions.Orders.Edit)]
@@ -181,24 +172,6 @@ public class OrderAppService : ApplicationService, IOrderAppService
     }
 
     // ── PRIVATE HELPERS ───────────────────────────────────────────────────
-
-    private async Task<string> GenerateOrderNumberAsync()
-    {
-        var today  = DateTime.Today;
-        var prefix = $"ORD-{today:yyyyMMdd}-";
-        var query  = await _orderRepository.GetQueryableAsync();
-
-        var numbers = await AsyncExecuter.ToListAsync(
-            query.Where(o => o.OrderNumber != null && o.OrderNumber.StartsWith(prefix))
-                 .Select(o => o.OrderNumber));
-
-        var maxSeq = numbers
-            .Select(n => int.TryParse(n!.AsSpan(prefix.Length), out var v) ? v : 0)
-            .DefaultIfEmpty(0)
-            .Max();
-
-        return $"{prefix}{(maxSeq + 1):D4}";
-    }
 
     private static void ApplyInput(Order o, CreateUpdateOrderDto input)
     {
