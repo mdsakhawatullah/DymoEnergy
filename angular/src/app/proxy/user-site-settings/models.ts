@@ -36,6 +36,9 @@ export interface UserSiteSettingDto {
   // ── Typography ────────────────────────────────────────────────────────
   fontFamily?: string;
   fontSizeBase?: string;
+  // ── About Section ─────────────────────────────────────────────────────
+  aboutTitle?: string;
+  aboutDescription?: string;
   isActive: boolean;
   images: UserSiteSettingImageDto[];
 }
@@ -67,6 +70,8 @@ export interface CreateUpdateUserSiteSettingDto {
   buttonPrimaryTextColor?: string;
   fontFamily?: string;
   fontSizeBase?: string;
+  aboutTitle?: string;
+  aboutDescription?: string;
   isActive: boolean;
   images: CreateUpdateUserSiteSettingImageDto[];
 }

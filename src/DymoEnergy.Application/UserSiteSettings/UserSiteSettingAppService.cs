@@ -166,6 +166,8 @@ public class UserSiteSettingAppService : ApplicationService, IUserSiteSettingApp
         entity.ButtonPrimaryTextColor = input.ButtonPrimaryTextColor;
         entity.FontFamily             = input.FontFamily;
         entity.FontSizeBase           = input.FontSizeBase;
+        entity.AboutTitle             = input.AboutTitle;
+        entity.AboutDescription       = input.AboutDescription;
         entity.IsActive               = input.IsActive;
     }
 
@@ -215,6 +217,8 @@ public class UserSiteSettingAppService : ApplicationService, IUserSiteSettingApp
         ButtonPrimaryTextColor = s.ButtonPrimaryTextColor,
         FontFamily            = s.FontFamily,
         FontSizeBase          = s.FontSizeBase,
+        AboutTitle            = s.AboutTitle,
+        AboutDescription      = s.AboutDescription,
         IsActive              = s.IsActive,
         Images = images.Select(i => new UserSiteSettingImageDto
         {

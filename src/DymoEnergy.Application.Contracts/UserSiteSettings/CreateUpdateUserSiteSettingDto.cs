@@ -62,6 +62,13 @@ public class CreateUpdateUserSiteSettingDto
     [MaxLength(16)]
     public string? FontSizeBase { get; set; }
 
+    // ── About Section ─────────────────────────────────────────────────────
+    [MaxLength(256)]
+    public string? AboutTitle { get; set; }
+
+    [MaxLength(4000)]
+    public string? AboutDescription { get; set; }
+
     public bool IsActive { get; set; }
 
     // ── Images ────────────────────────────────────────────────────────────

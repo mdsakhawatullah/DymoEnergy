@@ -63,6 +63,9 @@ export class UserSiteSettingsComponent implements OnInit {
       // ── Typography ───────────────────────────────────────────────────────
       fontFamily:             [null],
       fontSizeBase:           [null],
+      // ── About Section ────────────────────────────────────────────────────
+      aboutTitle:             [null],
+      aboutDescription:       [null],
       // ── Status ───────────────────────────────────────────────────────────
       isActive: [true],
       // ── Images ───────────────────────────────────────────────────────────
@@ -106,6 +109,8 @@ export class UserSiteSettingsComponent implements OnInit {
       buttonPrimaryTextColor: dto.buttonPrimaryTextColor,
       fontFamily:             dto.fontFamily,
       fontSizeBase:           dto.fontSizeBase,
+      aboutTitle:             dto.aboutTitle,
+      aboutDescription:       dto.aboutDescription,
       isActive:               dto.isActive,
     });
 

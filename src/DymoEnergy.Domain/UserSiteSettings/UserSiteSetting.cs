@@ -36,5 +36,10 @@ public class UserSiteSetting : FullAuditedAggregateRoot<int>
     // ── Typography ────────────────────────────────────────────────────────
     public string? FontFamily  { get; set; }
     public string? FontSizeBase { get; set; }
+
+    // ── About Section ─────────────────────────────────────────────────────
+    public string? AboutTitle       { get; set; }
+    public string? AboutDescription { get; set; }
+
     public bool IsActive { get; set; }
 }

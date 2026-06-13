@@ -231,10 +231,32 @@
     </div>
   </div>
 
-  <!-- ⑧ Images ─────────────────────────────────────────────────────── -->
+  <!-- ⑧ About Section ────────────────────────────────────────────────── -->
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">8</span>
+      <span class="section-title">About Section</span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="field-label">ABOUT TITLE</div>
+        <input nz-input formControlName="aboutTitle" placeholder="e.g. About Dymo Energy" />
+      </div>
+      <div class="col-12">
+        <div class="field-label">ABOUT DESCRIPTION</div>
+        <textarea nz-input formControlName="aboutDescription"
+                  placeholder="Describe your company or portal in a few sentences..."
+                  [nzAutosize]="{ minRows: 4, maxRows: 10 }">
+        </textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑨ Images ─────────────────────────────────────────────────────── -->
+  <div class="settings-card">
+    <div class="section-header">
+      <span class="section-badge">9</span>
       <span class="section-title">Images</span>
       <button nz-button nzSize="small" class="btn-add-image ms-auto" (click)="addImage()" type="button">
         <span nz-icon nzType="plus" nzTheme="outline"></span> Add Image
