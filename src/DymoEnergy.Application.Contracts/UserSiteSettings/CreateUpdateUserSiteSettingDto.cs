@@ -69,6 +69,20 @@ public class CreateUpdateUserSiteSettingDto
     [MaxLength(4000)]
     public string? AboutDescription { get; set; }
 
+    // ── Catalogues Section ────────────────────────────────────────────────
+    [MaxLength(256)]
+    public string? CataloguesTitle { get; set; }
+
+    [MaxLength(1000)]
+    public string? CataloguesDescription { get; set; }
+
+    // ── Social Media ──────────────────────────────────────────────────────
+    [MaxLength(512)] public string? SocialLinkedinUrl  { get; set; }
+    [MaxLength(512)] public string? SocialInstagramUrl { get; set; }
+    [MaxLength(512)] public string? SocialFacebookUrl  { get; set; }
+    [MaxLength(512)] public string? SocialTwitterUrl   { get; set; }
+    [MaxLength(512)] public string? SocialYoutubeUrl   { get; set; }
+
     public bool IsActive { get; set; }
 
     // ── Images ────────────────────────────────────────────────────────────

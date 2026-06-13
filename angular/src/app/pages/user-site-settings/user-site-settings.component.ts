@@ -66,6 +66,15 @@ export class UserSiteSettingsComponent implements OnInit {
       // ── About Section ────────────────────────────────────────────────────
       aboutTitle:             [null],
       aboutDescription:       [null],
+      // ── Catalogues Section ───────────────────────────────────────────────
+      cataloguesTitle:        [null],
+      cataloguesDescription:  [null],
+      // ── Social Media ─────────────────────────────────────────────────────
+      socialLinkedinUrl:      [null],
+      socialInstagramUrl:     [null],
+      socialFacebookUrl:      [null],
+      socialTwitterUrl:       [null],
+      socialYoutubeUrl:       [null],
       // ── Status ───────────────────────────────────────────────────────────
       isActive: [true],
       // ── Images ───────────────────────────────────────────────────────────
@@ -111,6 +120,13 @@ export class UserSiteSettingsComponent implements OnInit {
       fontSizeBase:           dto.fontSizeBase,
       aboutTitle:             dto.aboutTitle,
       aboutDescription:       dto.aboutDescription,
+      cataloguesTitle:        dto.cataloguesTitle,
+      cataloguesDescription:  dto.cataloguesDescription,
+      socialLinkedinUrl:      dto.socialLinkedinUrl,
+      socialInstagramUrl:     dto.socialInstagramUrl,
+      socialFacebookUrl:      dto.socialFacebookUrl,
+      socialTwitterUrl:       dto.socialTwitterUrl,
+      socialYoutubeUrl:       dto.socialYoutubeUrl,
       isActive:               dto.isActive,
     });
 

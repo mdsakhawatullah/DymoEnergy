@@ -41,5 +41,16 @@ public class UserSiteSetting : FullAuditedAggregateRoot<int>
     public string? AboutTitle       { get; set; }
     public string? AboutDescription { get; set; }
 
+    // ── Catalogues Section ────────────────────────────────────────────────
+    public string? CataloguesTitle       { get; set; }
+    public string? CataloguesDescription { get; set; }
+
+    // ── Social Media ──────────────────────────────────────────────────────
+    public string? SocialLinkedinUrl  { get; set; }
+    public string? SocialInstagramUrl { get; set; }
+    public string? SocialFacebookUrl  { get; set; }
+    public string? SocialTwitterUrl   { get; set; }
+    public string? SocialYoutubeUrl   { get; set; }
+
     public bool IsActive { get; set; }
 }

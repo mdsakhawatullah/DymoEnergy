@@ -253,10 +253,63 @@
     </div>
   </div>
 
-  <!-- ⑨ Images ─────────────────────────────────────────────────────── -->
+  <!-- ⑨ Catalogues Section ───────────────────────────────────────────── -->
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">9</span>
+      <span class="section-title">Catalogues Section</span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="field-label">CATALOGUES TITLE</div>
+        <input nz-input formControlName="cataloguesTitle" placeholder="e.g. Our Catalogues" />
+      </div>
+      <div class="col-12">
+        <div class="field-label">CATALOGUES DESCRIPTION</div>
+        <textarea nz-input formControlName="cataloguesDescription"
+                  placeholder="Brief description shown above the catalogues grid..."
+                  [nzAutosize]="{ minRows: 3, maxRows: 6 }">
+        </textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑩ Social Media ─────────────────────────────────────────────────── -->
+  <div class="settings-card">
+    <div class="section-header">
+      <span class="section-badge">10</span>
+      <span class="section-title">Social Media</span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="field-label">LINKEDIN URL</div>
+        <input nz-input formControlName="socialLinkedinUrl" placeholder="https://linkedin.com/company/..." />
+      </div>
+      <div class="col-md-6">
+        <div class="field-label">INSTAGRAM URL</div>
+        <input nz-input formControlName="socialInstagramUrl" placeholder="https://instagram.com/..." />
+      </div>
+      <div class="col-md-6">
+        <div class="field-label">FACEBOOK URL</div>
+        <input nz-input formControlName="socialFacebookUrl" placeholder="https://facebook.com/..." />
+      </div>
+      <div class="col-md-6">
+        <div class="field-label">X / TWITTER URL</div>
+        <input nz-input formControlName="socialTwitterUrl" placeholder="https://x.com/..." />
+      </div>
+      <div class="col-md-6">
+        <div class="field-label">YOUTUBE URL</div>
+        <input nz-input formControlName="socialYoutubeUrl" placeholder="https://youtube.com/@..." />
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑪ Images ─────────────────────────────────────────────────────── -->
+  <div class="settings-card">
+    <div class="section-header">
+      <span class="section-badge">11</span>
       <span class="section-title">Images</span>
       <button nz-button nzSize="small" class="btn-add-image ms-auto" (click)="addImage()" type="button">
         <span nz-icon nzType="plus" nzTheme="outline"></span> Add Image

@@ -168,6 +168,13 @@ public class UserSiteSettingAppService : ApplicationService, IUserSiteSettingApp
         entity.FontSizeBase           = input.FontSizeBase;
         entity.AboutTitle             = input.AboutTitle;
         entity.AboutDescription       = input.AboutDescription;
+        entity.CataloguesTitle        = input.CataloguesTitle;
+        entity.CataloguesDescription  = input.CataloguesDescription;
+        entity.SocialLinkedinUrl      = input.SocialLinkedinUrl;
+        entity.SocialInstagramUrl     = input.SocialInstagramUrl;
+        entity.SocialFacebookUrl      = input.SocialFacebookUrl;
+        entity.SocialTwitterUrl       = input.SocialTwitterUrl;
+        entity.SocialYoutubeUrl       = input.SocialYoutubeUrl;
         entity.IsActive               = input.IsActive;
     }
 
@@ -219,6 +226,13 @@ public class UserSiteSettingAppService : ApplicationService, IUserSiteSettingApp
         FontSizeBase          = s.FontSizeBase,
         AboutTitle            = s.AboutTitle,
         AboutDescription      = s.AboutDescription,
+        CataloguesTitle       = s.CataloguesTitle,
+        CataloguesDescription = s.CataloguesDescription,
+        SocialLinkedinUrl     = s.SocialLinkedinUrl,
+        SocialInstagramUrl    = s.SocialInstagramUrl,
+        SocialFacebookUrl     = s.SocialFacebookUrl,
+        SocialTwitterUrl      = s.SocialTwitterUrl,
+        SocialYoutubeUrl      = s.SocialYoutubeUrl,
         IsActive              = s.IsActive,
         Images = images.Select(i => new UserSiteSettingImageDto
         {

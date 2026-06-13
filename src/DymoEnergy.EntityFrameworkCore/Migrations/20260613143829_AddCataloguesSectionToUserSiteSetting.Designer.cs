@@ -4,6 +4,7 @@ using DymoEnergy.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Volo.Abp.EntityFrameworkCore;
 
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace DymoEnergy.Migrations
 {
     [DbContext(typeof(DymoEnergyDbContext))]
-    partial class DymoEnergyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260613143829_AddCataloguesSectionToUserSiteSetting")]
+    partial class AddCataloguesSectionToUserSiteSetting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1199,21 +1202,6 @@ namespace DymoEnergy.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SidebarTextColor")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SocialFacebookUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SocialInstagramUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SocialLinkedinUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SocialTwitterUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SocialYoutubeUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
