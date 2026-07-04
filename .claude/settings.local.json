@@ -24,7 +24,20 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git branch *)",
-      "Bash(git remote *)"
+      "Bash(git remote *)",
+      "Bash(del \"H:\\\\SolarShop\\\\DymoEnergy\\\\angular\\\\src\\\\app\\\\pages\\\\catalogues\\\\catalogue-entry-drawer.component.ts\" \"H:\\\\SolarShop\\\\DymoEnergy\\\\angular\\\\src\\\\app\\\\pages\\\\catalogues\\\\catalogue-entry-drawer.component.html\")",
+      "Bash(Get-ChildItem -Path \"H:\\\\SolarShop\\\\DymoEnergy\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(xargs grep -l \"enum\")",
+      "Bash(xargs grep -l \"IRepository\\\\|Repository\\\\|IAppService\\\\|AppService\")",
+      "Bash(xargs grep -l \"Repository\")",
+      "Bash(ng version *)",
+      "Bash(ng new *)",
+      "Bash(Start-Sleep -Seconds 30)",
+      "Bash(Get-Content \"C:\\\\Users\\\\ASUS\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\H--SolarShop-DymoEnergy\\\\9886602a-2b71-4ad5-9d7e-ab07d27cdf99\\\\tasks\\\\bg9gz8spb.output\" -Tail 5)",
+      "Bash(xargs grep -l \"AdminSiteSettings\\\\|AdminSiteSetting\")",
+      "Bash(Get-ChildItem -Path \"H:\\\\SolarShop\\\\DymoEnergy\\\\src\\\\DymoEnergy.Domain.Shared\" -Recurse -Filter \"*.cs\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://localhost:44371/api/app/order/2/order-items\" --insecure)"
     ]
   }
 }

@@ -18,6 +18,7 @@ import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzStepsModule } from 'ng-zorro-antd/steps';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzPopconfirmDirective } from 'ng-zorro-antd/popconfirm';
 import { NzTooltipDirective } from 'ng-zorro-antd/tooltip';
 
@@ -41,6 +42,7 @@ const MODULES = [
   NzDatePickerModule,
   NzStepsModule,
   NzAlertModule,
+  NzTabsModule,
 ];
 
 // ng-zorro v17+ standalone directives (no module wrappers)

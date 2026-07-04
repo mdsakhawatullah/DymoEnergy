@@ -1,0 +1,217 @@
+<!-- ── Page header ─────────────────────────────────────────────────────── -->
+<div class="d-flex align-items-start justify-content-between mb-3">
+  <div>
+    <h4 class="mb-1 fw-bold">Companies</h4>
+    <span class="text-muted small">
+      {{ stats.total }} total &nbsp;·&nbsp;
+      {{ stats.active }} active &nbsp;·&nbsp;
+      {{ stats.parent }} parent
+    </span>
+  </div>
+  <div class="d-flex gap-2">
+    <button nz-button nzType="primary" class="btn-new-company" (click)="openDrawerForCreate()">
+      <span nz-icon nzType="plus" nzTheme="outline"></span> New Company
+    </button>
+  </div>
+</div>
+
+<!-- ── Stat cards ──────────────────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card stat-card--green">
+      <div class="stat-card__label">TOTAL COMPANIES</div>
+      <div class="stat-card__value">{{ stats.total }}</div>
+      <div class="stat-card__sub">All records</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-card--dark">
+      <div class="stat-card__label">ACTIVE</div>
+      <div class="stat-card__value">{{ stats.active }}</div>
+      <div class="stat-card__sub text-success">
+        <span nz-icon nzType="check-circle" nzTheme="outline"></span> Live
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-card--orange">
+      <div class="stat-card__label">PARENT COMPANIES</div>
+      <div class="stat-card__value">{{ stats.parent }}</div>
+      <div class="stat-card__sub">Have child accounts</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-card--purple">
+      <div class="stat-card__label">CHILD COMPANIES</div>
+      <div class="stat-card__value">{{ stats.child }}</div>
+      <div class="stat-card__sub">Linked to a parent</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main card ───────────────────────────────────────────────────────── -->
+<div class="card">
+
+  <!-- Tab strip -->
+  <div class="tab-strip">
+    @for (tab of tabs; track tab.key) {
+      <button
+        class="tab-strip__item"
+        [class.tab-strip__item--active]="activeTab === tab.key"
+        (click)="selectTab(tab.key)"
+      >
+        {{ tab.label }}
+        <span class="tab-strip__badge" [class.tab-strip__badge--active]="activeTab === tab.key">
+          {{ stats[tab.countKey] }}
+        </span>
+      </button>
+    }
+  </div>
+
+  <!-- Filter row -->
+  <div class="px-3 py-2 d-flex gap-2 align-items-center border-bottom">
+    <nz-input-group [nzPrefix]="searchPfx" style="max-width: 260px;">
+      <input
+        nz-input
+        placeholder="Search name, code, email..."
+        [(ngModel)]="filter"
+        (keyup.enter)="onSearch()"
+      />
+    </nz-input-group>
+    <ng-template #searchPfx>
+      <span nz-icon nzType="search" style="color:#bbb;"></span>
+    </ng-template>
+    <button nz-button (click)="resetFilters()" [disabled]="!filter && activeTab === 'all'">
+      Reset Filters
+    </button>
+  </div>
+
+  <!-- Table -->
+  <nz-table
+    [nzData]="companies"
+    [nzTotal]="totalCount"
+    [nzPageIndex]="pageIndex"
+    [nzPageSize]="pageSize"
+    [nzLoading]="loading"
+    [nzFrontPagination]="false"
+    [nzShowSizeChanger]="true"
+    [nzPageSizeOptions]="[10, 20, 50]"
+    (nzPageIndexChange)="onPageIndexChange($event)"
+    (nzPageSizeChange)="onPageSizeChange($event)"
+    nzShowPaginationBottom
+    nzSize="small"
+  >
+    <thead>
+      <tr>
+        <th nzWidth="60px" nzAlign="center">ID</th>
+        <th>COMPANY</th>
+        <th>CONTACT</th>
+        <th>SEND STATEMENTS TO</th>
+        <th nzWidth="130px" nzAlign="center">RELATION</th>
+        <th nzWidth="110px" nzAlign="center">STATUS</th>
+        <th nzWidth="100px" nzAlign="center">ACTION</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of companies; track item.id) {
+        <tr>
+          <td nzAlign="center" class="text-muted" style="font-size:12px;">{{ item.id }}</td>
+
+          <!-- Company name -->
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="thumb-placeholder">
+                <span nz-icon nzType="bank" nzTheme="outline"></span>
+              </div>
+              <div>
+                <div class="fw-semibold" style="font-size:13px;">{{ item.companyName || '—' }}</div>
+                @if (item.companyCode) {
+                  <div style="font-size:11px; color:#888;">{{ item.companyCode }}</div>
+                }
+              </div>
+            </div>
+          </td>
+
+          <!-- Contact -->
+          <td>
+            <div style="font-size:12px;">{{ item.contactPersonName || item.email || '—' }}</div>
+            @if (item.phone) {
+              <div style="font-size:11px; color:#888;">{{ item.phone }}</div>
+            }
+          </td>
+
+          <!-- Send Statements To -->
+          <td>
+            <span style="font-size:12px; color:#555;">{{ item.sendStatementTo || '—' }}</span>
+          </td>
+
+          <!-- Relation -->
+          <td nzAlign="center">
+            @if (item.isParentCompany) {
+              <nz-tag nzColor="orange">Parent</nz-tag>
+            }
+            @if (item.parentCompanyId) {
+              <nz-tag nzColor="purple">Child</nz-tag>
+            }
+            @if (!item.isParentCompany && !item.parentCompanyId) {
+              <span class="text-muted" style="font-size:12px;">—</span>
+            }
+          </td>
+
+          <!-- Status -->
+          <td nzAlign="center">
+            <nz-tag [nzColor]="statusColors[item.status]">{{ statusLabels[item.status] }}</nz-tag>
+          </td>
+
+          <!-- Actions -->
+          <td nzAlign="center">
+            <div class="d-flex align-items-center justify-content-center gap-1">
+              <button
+                nz-button nzType="text" nzSize="small"
+                class="btn-edit"
+                nz-tooltip nzTooltipTitle="Edit"
+                (click)="openDrawerForEdit(item)"
+              >
+                <span nz-icon nzType="edit" nzTheme="outline"></span>
+              </button>
+
+              <button
+                nz-button nzType="text" nzSize="small"
+                nzDanger
+                nz-tooltip nzTooltipTitle="Delete"
+                nz-popconfirm
+                nzPopconfirmTitle="Delete this company?"
+                nzOkText="Yes, delete"
+                nzOkDanger
+                nzCancelText="Cancel"
+                [nzLoading]="deletingIds.has(item.id)"
+                (nzOnConfirm)="deleteCompany(item.id)"
+              >
+                <span nz-icon nzType="delete" nzTheme="outline"></span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<!-- ── Create / Update Drawer ──────────────────────────────────────────── -->
+<nz-drawer
+  *ngIf="isDrawerOpen"
+  [nzVisible]="isDrawerOpen"
+  [nzBodyStyle]="{ overflow: 'auto' }"
+  [nzMaskClosable]="false"
+  [nzWidth]="880"
+  nzTitle="{{ selectedCompany?.id ? 'Update' : 'Create' }} Company"
+  (nzOnClose)="onDrawerClosed()"
+>
+  <div *nzDrawerContent>
+    <company-entry-drawer
+      [input]="selectedCompany"
+      (onCompanyEntryDrawerClosed)="onDrawerClosed()"
+      (handleCompanySaved)="onCompanySaved()"
+    ></company-entry-drawer>
+  </div>
+</nz-drawer>

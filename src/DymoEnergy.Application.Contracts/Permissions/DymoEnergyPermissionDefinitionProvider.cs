@@ -44,6 +44,11 @@ public class DymoEnergyPermissionDefinitionProvider : PermissionDefinitionProvid
         ordersPermission.AddChild(DymoEnergyPermissions.Orders.Create, L("Permission:Orders.Create"));
         ordersPermission.AddChild(DymoEnergyPermissions.Orders.Edit,   L("Permission:Orders.Edit"));
         ordersPermission.AddChild(DymoEnergyPermissions.Orders.Delete, L("Permission:Orders.Delete"));
+
+        var companiesPermission = myGroup.AddPermission(DymoEnergyPermissions.Companies.Default, L("Permission:Companies"));
+        companiesPermission.AddChild(DymoEnergyPermissions.Companies.Create, L("Permission:Companies.Create"));
+        companiesPermission.AddChild(DymoEnergyPermissions.Companies.Edit,   L("Permission:Companies.Edit"));
+        companiesPermission.AddChild(DymoEnergyPermissions.Companies.Delete, L("Permission:Companies.Delete"));
     }
 
     private static LocalizableString L(string name)

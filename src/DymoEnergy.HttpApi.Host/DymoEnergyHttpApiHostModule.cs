@@ -127,6 +127,10 @@ public class DymoEnergyHttpApiHostModule : AbpModule
         ConfigureSwagger(context, configuration);
         ConfigureVirtualFileSystem(context);
         ConfigureCors(context, configuration);
+
+        context.Services.Configure<DymoEnergy.Chat.OpenAISettings>(
+            configuration.GetSection("OpenAI"));
+        context.Services.AddHttpClient();
     }
 
     private void ConfigureStudio(IHostEnvironment hostingEnvironment)

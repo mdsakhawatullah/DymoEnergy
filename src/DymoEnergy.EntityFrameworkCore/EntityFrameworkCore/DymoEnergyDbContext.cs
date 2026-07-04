@@ -6,6 +6,7 @@ using DymoEnergy.Catalogues;
 using DymoEnergy.Products;
 using DymoEnergy.SalesInvoices;
 using DymoEnergy.Orders;
+using DymoEnergy.Companies;
 using DymoEnergy.UserSiteSettings;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
@@ -41,6 +42,7 @@ public class DymoEnergyDbContext :
     public DbSet<SalesInvoiceItem> SalesInvoiceItems { get; set; }
     public DbSet<Order>     Orders     { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Company>   Companies  { get; set; }
     public DbSet<UserSiteSetting>      UserSiteSettings      { get; set; }
     public DbSet<UserSiteSettingImage> UserSiteSettingImages { get; set; }
 
@@ -176,6 +178,16 @@ public class DymoEnergyDbContext :
             b.ConfigureByConvention();
             b.Property(x => x.Id).ValueGeneratedOnAdd();
             b.HasIndex(x => x.OrderId);
+        });
+
+        /* ── Companies ──────────────────────────────────────────────────── */
+        builder.Entity<Company>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "Companies", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.HasIndex(x => x.CompanyName);
+            b.HasIndex(x => x.ParentCompanyId);
         });
 
         /* ── User Site Settings ──────────────────────────────────────────── */

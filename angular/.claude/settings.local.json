@@ -46,7 +46,9 @@
       "Bash(grep -o '\\\\\\\\\\\\\\\\r\\\\\\\\\\\\\\\\nclass=\\\\\\\\\"lpx-[^\"]*\\\\\\\\\"' \"H:/SolarShop/DymoEnergy/angular/node_modules/@volo/ngx-lepton-x.lite/fesm2022/volo-ngx-lepton-x.lite-layouts.mjs\")",
       "Bash(Powershell -Command \"\\(Select-String -Path 'H:/SolarShop/DymoEnergy/angular/node_modules/@volo/ngx-lepton-x.lite/fesm2022/volo-ngx-lepton-x.lite-layouts.mjs' -Pattern 'lpx-breadcrumb-container' -SimpleMatch\\).Line.Substring\\(0, [Math]::Min\\(2000, \\(Select-String -Path 'H:/SolarShop/DymoEnergy/angular/node_modules/@volo/ngx-lepton-x.lite/fesm2022/volo-ngx-lepton-x.lite-layouts.mjs' -Pattern 'lpx-breadcrumb-container' -SimpleMatch\\).Line.Length\\)\\)\")",
       "Bash(xargs grep -l \"lpx-breadcrumb-wrapper\\\\|BreadcrumbComponent\")",
-      "Bash(grep -o 'BreadcrumbComponent[^.]*ɵcmp[^`]*template:[^,]*' \"H:/SolarShop/DymoEnergy/angular/node_modules/@volo/ngx-lepton-x.core/fesm2022/volo-ngx-lepton-x.core.mjs\")"
+      "Bash(grep -o 'BreadcrumbComponent[^.]*ɵcmp[^`]*template:[^,]*' \"H:/SolarShop/DymoEnergy/angular/node_modules/@volo/ngx-lepton-x.core/fesm2022/volo-ngx-lepton-x.core.mjs\")",
+      "Bash(Select-String -Pattern \"\\\\\"@angular/core\\\\\"|\\\\\"ng-zorro\\\\\"\")",
+      "Bash(npx ng *)"
     ]
   }
 }

@@ -1,0 +1,244 @@
+<form nz-form [formGroup]="form" nzLayout="vertical" class="entry-form">
+
+  <nz-tabset>
+
+    <!-- ① General ─────────────────────────────────────────────────────── -->
+    <nz-tab nzTitle="General">
+      <div class="tab-body">
+
+        <div class="section-header">
+          <span class="section-badge">1</span>
+          <span class="section-title">Company Information</span>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="field-label">COMPANY NAME</div>
+            <input nz-input formControlName="companyName" placeholder="e.g. Acme Solar Ltd." />
+          </div>
+          <div class="col-md-6">
+            <div class="field-label">COMPANY CODE</div>
+            <input nz-input formControlName="companyCode" placeholder="e.g. ACME-001" />
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-4">
+            <div class="field-label">EMAIL</div>
+            <input nz-input formControlName="email" placeholder="company@example.com" />
+          </div>
+          <div class="col-md-4">
+            <div class="field-label">PHONE</div>
+            <input nz-input formControlName="phone" placeholder="+880 1XXXXXXXXX" />
+          </div>
+          <div class="col-md-4">
+            <div class="field-label">WEBSITE</div>
+            <input nz-input formControlName="website" placeholder="https://example.com" />
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-4">
+            <div class="field-label">TAX ID</div>
+            <input nz-input formControlName="taxId" placeholder="e.g. TIN/VAT number" />
+          </div>
+          <div class="col-md-8">
+            <div class="field-label">ADDRESS</div>
+            <input nz-input formControlName="address" placeholder="Street address" />
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-3">
+            <div class="field-label">CITY</div>
+            <input nz-input formControlName="city" />
+          </div>
+          <div class="col-md-3">
+            <div class="field-label">STATE</div>
+            <input nz-input formControlName="state" />
+          </div>
+          <div class="col-md-3">
+            <div class="field-label">POSTAL CODE</div>
+            <input nz-input formControlName="postalCode" />
+          </div>
+          <div class="col-md-3">
+            <div class="field-label">COUNTRY</div>
+            <input nz-input formControlName="country" />
+          </div>
+        </div>
+
+        <!-- ② Contact Person -->
+        <div class="section-header mt-4">
+          <span class="section-badge">2</span>
+          <span class="section-title">Contact Person</span>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="field-label">NAME</div>
+            <input nz-input formControlName="contactPersonName" />
+          </div>
+          <div class="col-md-4">
+            <div class="field-label">EMAIL</div>
+            <input nz-input formControlName="contactPersonEmail" />
+          </div>
+          <div class="col-md-4">
+            <div class="field-label">PHONE</div>
+            <input nz-input formControlName="contactPersonPhone" />
+          </div>
+        </div>
+
+        <!-- ③ Statements & Relationships -->
+        <div class="section-header mt-4">
+          <span class="section-badge">3</span>
+          <span class="section-title">Statements &amp; Relationships</span>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="field-label">SEND STATEMENTS TO</div>
+            <input nz-input formControlName="sendStatementTo" placeholder="statements@example.com" />
+          </div>
+          <div class="col-md-3">
+            <div class="field-label">IS PARENT COMPANY</div>
+            <nz-switch formControlName="isParentCompany" nzCheckedChildren="Yes" nzUnCheckedChildren="No"></nz-switch>
+          </div>
+          <div class="col-md-3">
+            <div class="field-label">HAS CHILD COMPANY</div>
+            <nz-switch formControlName="hasChildCompany" nzCheckedChildren="Yes" nzUnCheckedChildren="No"></nz-switch>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            <div class="field-label">PARENT COMPANY</div>
+            <nz-select
+              formControlName="parentCompanyId"
+              nzShowSearch
+              nzAllowClear
+              nzPlaceHolder="Select parent company (if this is a child company)"
+              style="width:100%;"
+            >
+              @for (opt of parentCompanyOptions; track opt.value) {
+                <nz-option [nzValue]="opt.value" [nzLabel]="opt.displayText"></nz-option>
+              }
+            </nz-select>
+          </div>
+          <div class="col-md-6">
+            <div class="field-label">STATUS</div>
+            <nz-select formControlName="status" style="width:100%">
+              @for (opt of statusOptions; track opt.value) {
+                <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+              }
+            </nz-select>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-12">
+            <div class="field-label">NOTES</div>
+            <textarea
+              nz-input
+              formControlName="notes"
+              [nzAutosize]="{ minRows: 2, maxRows: 4 }"
+              placeholder="Internal notes about this company..."
+            ></textarea>
+          </div>
+        </div>
+
+      </div>
+    </nz-tab>
+
+    <!-- ② Shipping Fee ────────────────────────────────────────────────── -->
+    <nz-tab nzTitle="Shipping Fee">
+      <div class="tab-body">
+
+        <div class="section-header">
+          <span class="section-badge">1</span>
+          <span class="section-title">Shipping Fee Settings</span>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="field-label">DEFAULT SHIPPING FEE</div>
+            <nz-input-number formControlName="defaultShippingFee" [nzMin]="0" [nzStep]="0.01" style="width:100%;"></nz-input-number>
+          </div>
+          <div class="col-md-4">
+            <div class="field-label">FREE SHIPPING THRESHOLD</div>
+            <nz-input-number formControlName="freeShippingThreshold" [nzMin]="0" [nzStep]="0.01" style="width:100%;"></nz-input-number>
+          </div>
+          <div class="col-md-4">
+            <div class="field-label">CURRENCY CODE</div>
+            <input nz-input formControlName="shippingCurrencyCode" placeholder="e.g. BDT" />
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            <div class="field-label">FLAT RATE SHIPPING</div>
+            <nz-switch formControlName="isFlatRateShipping" nzCheckedChildren="Yes" nzUnCheckedChildren="No"></nz-switch>
+          </div>
+        </div>
+
+      </div>
+    </nz-tab>
+
+    <!-- ③ Integration ─────────────────────────────────────────────────── -->
+    <nz-tab nzTitle="Integration">
+      <div class="tab-body">
+
+        <div class="section-header">
+          <span class="section-badge">1</span>
+          <span class="section-title">External System Integration</span>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="field-label">EXTERNAL ACCOUNT ID</div>
+            <input nz-input formControlName="externalAccountId" placeholder="ID in the external system" />
+          </div>
+          <div class="col-md-6">
+            <div class="field-label">API KEY</div>
+            <input nz-input formControlName="apiKey" placeholder="API key / token" />
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-12">
+            <div class="field-label">WEBHOOK URL</div>
+            <input nz-input formControlName="webhookUrl" placeholder="https://..." />
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            <div class="field-label">SYNC ENABLED</div>
+            <nz-switch formControlName="isSyncEnabled" nzCheckedChildren="Yes" nzUnCheckedChildren="No"></nz-switch>
+          </div>
+          <div class="col-md-6">
+            <div class="field-label">LAST SYNCED AT</div>
+            <div style="font-size:13px; padding-top:6px; color:#555;">
+              {{ input?.lastSyncedAt ? (input?.lastSyncedAt | date:'medium') : 'Never synced' }}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </nz-tab>
+
+  </nz-tabset>
+
+</form>
+
+<!-- ── Footer ──────────────────────────────────────────────────────────── -->
+<div class="drawer-footer">
+  <span class="text-muted" style="font-size:13px;">
+    {{ input?.id ? 'Editing company #' + input?.id : 'New company' }}
+  </span>
+  <div class="d-flex gap-2">
+    <button nz-button (click)="close()" [disabled]="saving">Cancel</button>
+    <button nz-button nzType="primary" class="btn-save" (click)="save()" [nzLoading]="saving">
+      {{ input?.id ? 'Update Company' : 'Save Company' }}
+    </button>
+  </div>
+</div>

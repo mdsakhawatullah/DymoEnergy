@@ -1,0 +1,72 @@
+.entry-form {
+  padding: 4px 0 16px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.section-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #0D5C2E;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.tab-body {
+  padding: 16px 4px 4px;
+}
+
+.drawer-footer {
+  position: sticky;
+  bottom: -24px;
+  margin: 0 -24px -24px;
+  padding: 14px 24px;
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-save {
+  background-color: #0D5C2E !important;
+  border-color: #0D5C2E !important;
+  color: #fff !important;
+  font-weight: 600;
+  border-radius: 6px !important;
+}
+
+.btn-save:hover,
+.btn-save:focus {
+  background-color: #0a4a25 !important;
+  border-color: #0a4a25 !important;
+  color: #fff !important;
+}
