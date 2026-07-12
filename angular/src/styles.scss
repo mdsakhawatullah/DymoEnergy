@@ -380,6 +380,96 @@ a {
 }
 
 
+// ─── Sidebar: colourful icons per menu item ───────────────────────────────────
+.lpx-nav-menu .lpx-inner-menu-item .lpx-menu-item-link {
+  .lpx-menu-item-icon {
+    // Home
+    &.fa-home           { color: #f59e0b !important; }  // amber
+
+    // Companies
+    &.fa-building       { color: #3b82f6 !important; }  // blue
+
+    // Site Settings
+    &.fa-sliders-h      { color: #8b5cf6 !important; }  // purple
+    &.fa-paint-brush    { color: #ec4899 !important; }  // pink
+
+    // Project Planning
+    &.fa-project-diagram  { color: #10b981 !important; } // emerald
+    &.fa-timeline         { color: #06b6d4 !important; } // cyan
+    &.fa-flag-checkered   { color: #f59e0b !important; } // amber
+    &.fa-user-tie         { color: #6366f1 !important; } // indigo
+    &.fa-cubes            { color: #84cc16 !important; } // lime
+
+    // Asset & Site Management
+    &.fa-map-location-dot { color: #ef4444 !important; } // red
+    &.fa-microchip        { color: #14b8a6 !important; } // teal
+    &.fa-calendar-check   { color: #f97316 !important; } // orange
+    &.fa-chart-area       { color: #0ea5e9 !important; } // sky
+
+    // Site Inspections
+    &.fa-clipboard-check  { color: #8b5cf6 !important; } // purple
+    &.fa-users-medical    { color: #10b981 !important; } // emerald
+    &.fa-file-contract    { color: #3b82f6 !important; } // blue
+
+    // Inventory & Procurement
+    &.fa-tag              { color: #f59e0b !important; } // amber
+    &.fa-warehouse        { color: #6366f1 !important; } // indigo
+    &.fa-clipboard-list   { color: #84cc16 !important; } // lime
+    &.fa-truck            { color: #ef4444 !important; } // red
+    &.fa-list-check       { color: #06b6d4 !important; } // cyan
+    &.fa-cube             { color: #ec4899 !important; } // pink
+
+    // Workforce
+    &.fa-user-astronaut   { color: #8b5cf6 !important; } // purple
+    &.fa-checklist        { color: #10b981 !important; } // emerald
+    &.fa-user-check       { color: #3b82f6 !important; } // blue
+    &.fa-calendar-days    { color: #f97316 !important; } // orange
+    &.fa-money-bill-wave  { color: #22c55e !important; } // green
+
+    // Maintenance & Service
+    &.fa-hammer           { color: #ef4444 !important; } // red
+    &.fa-sitemap          { color: #6366f1 !important; } // indigo
+    &.fa-history          { color: #f59e0b !important; } // amber
+    &.fa-receipt          { color: #14b8a6 !important; } // teal
+
+    // Sales
+    &.fa-cash-register    { color: #22c55e !important; } // green
+    &.fa-desktop          { color: #3b82f6 !important; } // blue
+    &.fa-file-invoice-dollar { color: #f97316 !important; } // orange
+    &.fa-undo-alt         { color: #ef4444 !important; } // red
+    &.fa-percentage       { color: #8b5cf6 !important; } // purple
+    &.fa-users            { color: #06b6d4 !important; } // cyan
+    &.fa-layer-group      { color: #ec4899 !important; } // pink
+
+    // E-Commerce
+    &.fa-shopping-bag     { color: #f59e0b !important; } // amber
+
+    // Shipping
+    &.fa-shipping-fast    { color: #3b82f6 !important; } // blue
+
+    // Financials
+    &.fa-coins            { color: #f59e0b !important; } // amber
+    &.fa-file-invoice     { color: #6366f1 !important; } // indigo
+    &.fa-piggy-bank       { color: #ec4899 !important; } // pink
+
+    // Compliance
+    &.fa-magnifying-glass { color: #8b5cf6 !important; } // purple
+    &.fa-file-pdf         { color: #ef4444 !important; } // red
+    &.fa-shield           { color: #10b981 !important; } // emerald
+
+    // Analytics
+    &.fa-gauge            { color: #f97316 !important; } // orange
+    &.fa-scroll           { color: #6366f1 !important; } // indigo
+    &.fa-chart-line       { color: #22c55e !important; } // green
+
+    // Marketing
+    &.fa-bullhorn         { color: #ef4444 !important; } // red
+    &.fa-link             { color: #3b82f6 !important; } // blue
+    &.fa-sms              { color: #10b981 !important; } // emerald
+    &.fa-envelope         { color: #f59e0b !important; } // amber
+  }
+}
+
 // ─── Invoice print — only render the cloned invoice, hide everything else ─────
 @media print {
   // display:none removes elements from layout entirely → no blank second page
