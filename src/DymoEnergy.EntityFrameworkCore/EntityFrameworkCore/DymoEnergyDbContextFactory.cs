@@ -17,7 +17,7 @@ public class DymoEnergyDbContextFactory : IDesignTimeDbContextFactory<DymoEnergy
         DymoEnergyEfCoreEntityExtensionMappings.Configure();
 
         var builder = new DbContextOptionsBuilder<DymoEnergyDbContext>()
-            .UseSqlServer(configuration.GetConnectionString("Default"));
+            .UseNpgsql(configuration.GetConnectionString("Default"));
         
         return new DymoEnergyDbContext(builder.Options);
     }

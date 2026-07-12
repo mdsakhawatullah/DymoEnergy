@@ -16,6 +16,8 @@ using OpenIddict.Server.AspNetCore;
 using DymoEnergy.EntityFrameworkCore;
 using DymoEnergy.MultiTenancy;
 using DymoEnergy.HealthChecks;
+using DymoEnergy.FileUploads;
+using DymoEnergy.Application.FileUploads;
 using Microsoft.OpenApi;
 using Volo.Abp;
 using Volo.Abp.Studio;
@@ -131,6 +133,8 @@ public class DymoEnergyHttpApiHostModule : AbpModule
         context.Services.Configure<DymoEnergy.Chat.OpenAISettings>(
             configuration.GetSection("OpenAI"));
         context.Services.AddHttpClient();
+
+        context.Services.AddScoped<ICloudinaryService, CloudinaryService>();
     }
 
     private void ConfigureStudio(IHostEnvironment hostingEnvironment)

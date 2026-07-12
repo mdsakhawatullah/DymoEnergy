@@ -4,6 +4,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModule } from '../../../shared/shared.module';
 import { CatalogueService } from '../../../proxy/catalogues/catalogue.service';
 import { CatalogueDto, CatalogueLayoutTypeLabels } from '../../../proxy/catalogues/models';
+import { ImageUploadService } from '../../../proxy/image-upload/image-upload.service';
 
 @Component({
   selector:    'catalogue-entry-drawer',
@@ -19,8 +20,10 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
   @Output() handleCatalogueSaved         = new EventEmitter<void>();
 
   form!: FormGroup;
-  saving        = false;
-  publishNow    = false;
+  saving           = false;
+  publishNow       = false;
+  uploadingBg      = false;
+  uploadingThumb   = false;
 
   layoutOptions = Object.entries(CatalogueLayoutTypeLabels).map(([value, label]) => ({
     value: +value,
@@ -28,9 +31,10 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
   }));
 
   constructor(
-    private fb:           FormBuilder,
-    private catalogueSvc: CatalogueService,
-    private message:      NzMessageService,
+    private fb:              FormBuilder,
+    private catalogueSvc:    CatalogueService,
+    private message:         NzMessageService,
+    private imageUploadSvc:  ImageUploadService,
   ) {
     this.buildForm();
   }
@@ -84,6 +88,46 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
   onPublishNowChange(checked: boolean): void {
     this.publishNow = checked;
     this.form.patchValue({ isPublished: checked });
+  }
+
+  triggerFileInput(inputId: string): void {
+    document.getElementById(inputId)?.click();
+  }
+
+  onBgImageSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    this.uploadingBg = true;
+    this.imageUploadSvc.uploadImage(file, 'catalogues/backgrounds').subscribe({
+      next: url => {
+        this.form.patchValue({ primaryBackgroundImageUrl: url });
+        this.uploadingBg = false;
+        this.message.success('Background image uploaded!');
+      },
+      error: () => {
+        this.uploadingBg = false;
+        this.message.error('Failed to upload background image.');
+      },
+    });
+  }
+
+  onThumbImageSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    this.uploadingThumb = true;
+    this.imageUploadSvc.uploadImage(file, 'catalogues/thumbnails').subscribe({
+      next: url => {
+        this.form.patchValue({ thumbnailImageUrl: url });
+        this.uploadingThumb = false;
+        this.message.success('Thumbnail uploaded!');
+      },
+      error: () => {
+        this.uploadingThumb = false;
+        this.message.error('Failed to upload thumbnail.');
+      },
+    });
   }
 
   save(): void {

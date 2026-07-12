@@ -43,8 +43,123 @@
   margin-bottom: 6px;
 }
 
+/* ── Generic upload area (background image) ─────────────────────────────── */
+.upload-area {
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  background: #fafafa;
+  height: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.upload-area:hover {
+  border-color: #0D5C2E;
+  background: #f0faf4;
+}
+
+.upload-area.uploading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.upload-icon {
+  font-size: 24px;
+  color: #0D5C2E;
+}
+
+.upload-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0D5C2E;
+}
+
+.upload-sub {
+  font-size: 10px;
+  color: #aaa;
+}
+
+/* ── Spinning animation ─────────────────────────────────────────────────── */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Background image preview ───────────────────────────────────────────── */
+.bg-preview-wrap {
+  position: relative;
+  width: 100%;
+  height: 90px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0;
+}
+
+.bg-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bg-preview-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.bg-preview-wrap:hover .bg-preview-overlay {
+  opacity: 1;
+}
+
+.btn-reupload {
+  background: rgba(255,255,255,0.9) !important;
+  border: none !important;
+  color: #0D5C2E !important;
+  font-weight: 600;
+  border-radius: 6px !important;
+}
+
+/* ── URL input row (input + upload button) ───────────────────────────────── */
+.url-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.url-input-row input {
+  flex: 1;
+}
+
+.btn-upload-inline {
+  flex-shrink: 0;
+  border-color: #0D5C2E !important;
+  color: #0D5C2E !important;
+  border-radius: 6px !important;
+}
+
+.btn-upload-inline:hover {
+  background: #0D5C2E !important;
+  color: #fff !important;
+}
+
 /* ── Thumbnail upload box ───────────────────────────────────────────────── */
 .thumb-upload-box {
+  position: relative;
   border: 2px dashed #d9d9d9;
   border-radius: 8px;
   background: #fafafa;
@@ -55,11 +170,18 @@
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.2s;
+  overflow: hidden;
 }
 
 .thumb-upload-box:hover {
   border-color: #0D5C2E;
+  background: #f0faf4;
+}
+
+.thumb-upload-box.uploading {
+  pointer-events: none;
+  opacity: 0.7;
 }
 
 .thumb-icon {
@@ -80,11 +202,32 @@
   border-radius: 6px;
 }
 
+/* Change badge shown on hover over thumbnail */
+.thumb-change-badge {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.40);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: 6px;
+}
+
+.thumb-upload-box:hover .thumb-change-badge {
+  opacity: 1;
+}
+
 /* ── Footer — sticky, full drawer width ─────────────────────────────────── */
 .drawer-footer {
   position: sticky;
-  bottom: -24px;           /* cancel out the drawer body's bottom padding */
-  margin: 0 -24px -24px;  /* stretch to cancel the 24px side + bottom padding */
+  bottom: -24px;
+  margin: 0 -24px -24px;
   padding: 14px 24px;
   background: #fff;
   border-top: 1px solid #f0f0f0;

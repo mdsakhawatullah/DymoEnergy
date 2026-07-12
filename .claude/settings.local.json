@@ -37,7 +37,19 @@
       "Bash(Get-Content \"C:\\\\Users\\\\ASUS\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\H--SolarShop-DymoEnergy\\\\9886602a-2b71-4ad5-9d7e-ab07d27cdf99\\\\tasks\\\\bg9gz8spb.output\" -Tail 5)",
       "Bash(xargs grep -l \"AdminSiteSettings\\\\|AdminSiteSetting\")",
       "Bash(Get-ChildItem -Path \"H:\\\\SolarShop\\\\DymoEnergy\\\\src\\\\DymoEnergy.Domain.Shared\" -Recurse -Filter \"*.cs\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://localhost:44371/api/app/order/2/order-items\" --insecure)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://localhost:44371/api/app/order/2/order-items\" --insecure)",
+      "Bash(dotnet add *)",
+      "PowerShell(Resolve-DnsName \"db.lamjszpxvdqqmukhdqfn.supabase.co\" -ErrorAction SilentlyContinue)",
+      "PowerShell(Resolve-DnsName \"db.lamjszpxvdqqmukhdqfn.supabase.co\" -Type A -ErrorAction SilentlyContinue)",
+      "PowerShell(Test-NetConnection -ComputerName \"db.lamjszpxvdqqmukhdqfn.supabase.co\" -Port 5432 -WarningAction SilentlyContinue)",
+      "PowerShell(Test-NetConnection -ComputerName \"aws-1-ap-south-1.pooler.supabase.com\" -Port 5432 -WarningAction SilentlyContinue)",
+      "PowerShell(aws --version 2>&1)",
+      "PowerShell(dotnet --version 2>&1)",
+      "Bash(dotnet publish *)",
+      "PowerShell(aws --version)",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"H:\\\\SolarShop\\\\DymoEnergy\\\\publish\\\\.platform\\\\nginx\\\\conf.d\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"H:\\\\SolarShop\\\\DymoEnergy\\\\publish\\\\.ebextensions\")",
+      "PowerShell(aws s3 mb s3://dymo-energy-deploy --region ap-south-1)"
     ]
   }
 }

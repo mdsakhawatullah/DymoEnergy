@@ -46,30 +46,125 @@
           <div class="field-label">HERO SUBTITLE</div>
           <input nz-input formControlName="heroSubtitle" placeholder="e.g. Explore our solar product range" />
         </div>
+
+        <!-- Background Image Upload -->
         <div class="col-12">
-          <div class="field-label">BACKGROUND IMAGE URL</div>
-          <input nz-input formControlName="primaryBackgroundImageUrl" placeholder="https://..." />
+          <div class="field-label">BACKGROUND IMAGE</div>
+
+          <!-- Preview if URL exists -->
+          @if (form.get('primaryBackgroundImageUrl')?.value) {
+            <div class="bg-preview-wrap">
+              <img [src]="form.get('primaryBackgroundImageUrl')?.value" alt="Background" class="bg-preview" />
+              <div class="bg-preview-overlay">
+                <button
+                  nz-button
+                  nzSize="small"
+                  class="btn-reupload"
+                  type="button"
+                  [nzLoading]="uploadingBg"
+                  (click)="triggerFileInput('bgFileInput')"
+                >
+                  <span nz-icon nzType="upload"></span> Change
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Upload area (shown when no image) -->
+          @if (!form.get('primaryBackgroundImageUrl')?.value) {
+            <div
+              class="upload-area"
+              [class.uploading]="uploadingBg"
+              (click)="triggerFileInput('bgFileInput')"
+            >
+              @if (uploadingBg) {
+                <span nz-icon nzType="loading" nzTheme="outline" class="upload-icon spinning"></span>
+                <span class="upload-hint">Uploading...</span>
+              } @else {
+                <span nz-icon nzType="cloud-upload" nzTheme="outline" class="upload-icon"></span>
+                <span class="upload-hint">Click to upload background image</span>
+                <span class="upload-sub">JPG, PNG, WebP • max 5 MB</span>
+              }
+            </div>
+          }
+
+          <!-- URL input with upload button -->
+          <div class="url-input-row mt-2">
+            <input
+              nz-input
+              formControlName="primaryBackgroundImageUrl"
+              placeholder="https://... or upload above"
+              style="font-size:12px;"
+            />
+            <button
+              nz-button
+              nzSize="small"
+              class="btn-upload-inline"
+              type="button"
+              [nzLoading]="uploadingBg"
+              nz-tooltip
+              nzTooltipTitle="Upload image"
+              (click)="triggerFileInput('bgFileInput')"
+            >
+              <span nz-icon nzType="upload"></span>
+            </button>
+          </div>
+
+          <!-- Hidden file input -->
+          <input
+            id="bgFileInput"
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            style="display:none"
+            (change)="onBgImageSelected($event)"
+          />
         </div>
       </div>
     </div>
 
-    <!-- Thumbnail upload box -->
+    <!-- Thumbnail Upload -->
     <div class="col-md-4">
       <div class="field-label">THUMBNAIL IMAGE</div>
-      <div class="thumb-upload-box">
-        @if (form.get('thumbnailImageUrl')?.value) {
+
+      <!-- Clickable upload box -->
+      <div
+        class="thumb-upload-box"
+        [class.uploading]="uploadingThumb"
+        (click)="triggerFileInput('thumbFileInput')"
+        nz-tooltip
+        nzTooltipTitle="Click to upload thumbnail"
+      >
+        @if (uploadingThumb) {
+          <span nz-icon nzType="loading" nzTheme="outline" class="thumb-icon spinning"></span>
+          <span class="thumb-hint">Uploading...</span>
+        } @else if (form.get('thumbnailImageUrl')?.value) {
           <img [src]="form.get('thumbnailImageUrl')?.value" alt="Thumbnail" class="thumb-preview" />
+          <div class="thumb-change-badge">
+            <span nz-icon nzType="upload"></span> Change
+          </div>
         } @else {
           <span nz-icon nzType="picture" nzTheme="outline" class="thumb-icon"></span>
-          <span class="thumb-hint">Paste URL below</span>
+          <span class="thumb-hint">Click to upload</span>
+          <span class="upload-sub">JPG, PNG, WebP</span>
         }
       </div>
+
+      <!-- URL fallback input -->
       <input
         nz-input
         formControlName="thumbnailImageUrl"
-        placeholder="https://..."
+        placeholder="or paste URL here..."
         class="mt-2"
         style="font-size:12px;"
+      />
+
+      <!-- Hidden file input -->
+      <input
+        id="thumbFileInput"
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        style="display:none"
+        (change)="onThumbImageSelected($event)"
       />
     </div>
   </div>
