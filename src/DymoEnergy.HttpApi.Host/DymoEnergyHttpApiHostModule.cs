@@ -240,18 +240,31 @@ public class DymoEnergyHttpApiHostModule : AbpModule
         {
             options.AddDefaultPolicy(builder =>
             {
-                builder
-                    .WithOrigins(
-                        configuration["App:CorsOrigins"]?
-                            .Split(",", StringSplitOptions.RemoveEmptyEntries)
-                            .Select(o => o.Trim().RemovePostFix("/"))
-                            .ToArray() ?? Array.Empty<string>()
-                    )
-                    .WithAbpExposedHeaders()
-                    .SetIsOriginAllowedToAllowWildcardSubdomains()
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials();
+                var corsOrigins = configuration["App:CorsOrigins"];
+                if (corsOrigins == "*")
+                {
+                    builder
+                        .SetIsOriginAllowed(_ => true)
+                        .WithAbpExposedHeaders()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                }
+                else
+                {
+                    builder
+                        .WithOrigins(
+                            corsOrigins?
+                                .Split(",", StringSplitOptions.RemoveEmptyEntries)
+                                .Select(o => o.Trim().RemovePostFix("/"))
+                                .ToArray() ?? Array.Empty<string>()
+                        )
+                        .WithAbpExposedHeaders()
+                        .SetIsOriginAllowedToAllowWildcardSubdomains()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                }
             });
         });
     }
@@ -269,6 +282,15 @@ public class DymoEnergyHttpApiHostModule : AbpModule
 
         app.UseForwardedHeaders();
 
+        if (!env.IsDevelopment())
+        {
+            app.Use(async (ctx, next) =>
+            {
+                ctx.Request.Scheme = "https";
+                await next();
+            });
+        }
+
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
@@ -282,6 +304,16 @@ public class DymoEnergyHttpApiHostModule : AbpModule
         }
 
         app.UseRouting();
+        var angularUrl = context.ServiceProvider.GetRequiredService<IConfiguration>()["App:AngularUrl"]!;
+        app.Use(async (ctx, next) =>
+        {
+            if (ctx.Request.Path == "/")
+            {
+                ctx.Response.Redirect($"/Account/Login?ReturnUrl={Uri.EscapeDataString(angularUrl)}");
+                return;
+            }
+            await next();
+        });
         app.MapAbpStaticAssets();
         app.UseAbpStudioLink();
         app.UseAbpSecurityHeaders();

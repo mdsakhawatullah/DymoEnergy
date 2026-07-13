@@ -49,7 +49,29 @@
       "PowerShell(aws --version)",
       "PowerShell(New-Item -ItemType Directory -Force -Path \"H:\\\\SolarShop\\\\DymoEnergy\\\\publish\\\\.platform\\\\nginx\\\\conf.d\")",
       "PowerShell(New-Item -ItemType Directory -Force -Path \"H:\\\\SolarShop\\\\DymoEnergy\\\\publish\\\\.ebextensions\")",
-      "PowerShell(aws s3 mb s3://dymo-energy-deploy --region ap-south-1)"
+      "PowerShell(aws s3 mb s3://dymo-energy-deploy --region ap-south-1)",
+      "PowerShell(aws s3 cp H:\\\\SolarShop\\\\DymoEnergy\\\\publish\\\\dymo-api.zip s3://dymo-energy-deploys/dymo-api-v2.zip --region ap-south-1)",
+      "Bash(aws s3 *)",
+      "PowerShell(& \"C:\\\\Program Files\\\\Amazon\\\\AWSCLIV2\\\\aws.exe\" s3 cp H:\\\\SolarShop\\\\DymoEnergy\\\\publish\\\\dymo-api.zip s3://dymo-energy-deploys/dymo-api-v2.zip --region ap-south-1)",
+      "PowerShell(& \"C:\\\\Program Files\\\\Amazon\\\\AWSCLIV2\\\\aws.exe\" s3 ls --region ap-south-1)",
+      "PowerShell(& \"C:\\\\Program Files\\\\Amazon\\\\AWSCLIV2\\\\aws.exe\" s3 cp H:\\\\SolarShop\\\\DymoEnergy\\\\publish\\\\dymo-api.zip s3://dymo-energy-deploy/dymo-api-v2.zip --region ap-south-1)",
+      "PowerShell(dotnet publish H:\\\\SolarShop\\\\DymoEnergy\\\\src\\\\DymoEnergy.HttpApi.Host -c Release -o H:\\\\SolarShop\\\\DymoEnergy\\\\publish)",
+      "Bash(aws --version)",
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "mcp__claude-in-chrome__navigate",
+      "mcp__claude-in-chrome__computer",
+      "mcp__claude-in-chrome__javascript_tool",
+      "Bash(where aws *)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"https://www.dymoenergy.com\" -UseBasicParsing -TimeoutSec 15; \"Status: $\\($r.StatusCode\\)\"; $r.Content.Substring\\(0, [Math]::Min\\(300,$r.Content.Length\\)\\) } catch { \"Error: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://dymoenergy.com\" -UseBasicParsing -TimeoutSec 15 -MaximumRedirection 5; \"HTTP apex Status: $\\($r.StatusCode\\), Final URL: $\\($r.BaseResponse.ResponseUri\\)\" } catch { \"HTTP apex Error: $\\($_.Exception.Message\\)\" })",
+      "Bash(pandoc --version)",
+      "PowerShell($p = Get-Command pandoc -ErrorAction SilentlyContinue; if \\($p\\) { \"pandoc: $\\($p.Source\\)\" } else { \"no pandoc\" }; $s = Get-Command soffice -ErrorAction SilentlyContinue; if \\($s\\) { \"soffice: $\\($s.Source\\)\" } else { \"no soffice\" }; if \\(Test-Path \"C:\\\\Program Files\\\\LibreOffice\\\\program\\\\soffice.exe\"\\) { \"soffice found at Program Files\" })",
+      "Read(//c/Users/ASUS/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/6307216c-1e41-4571-9ba9-7e558670dd57/0fe080e9-7bf8-4f13-9a69-aaf99fe2f4e3/skills/docx/**)",
+      "Bash(node -e \"require\\('docx'\\); console.log\\('docx OK', require\\('docx'\\).Packer ? 'has Packer' : ''\\)\")",
+      "Bash(node C:/Users/ASUS/AppData/Local/Temp/claude/H--SolarShop-DymoEnergy/30028290-b779-4b15-8522-e48a74291958/scratchpad/gen-doc.js H:/SolarShop/DymoEnergy/DymoEnergy-AWS-Deployment-Guide.docx)",
+      "Bash(export NODE_PATH=\"$SKILL_DIR/node_modules\")",
+      "Bash(unzip -l \"DymoEnergy-AWS-Deployment-Guide.docx\")",
+      "Bash(unzip -p \"DymoEnergy-AWS-Deployment-Guide.docx\" word/document.xml)"
     ]
   }
 }
