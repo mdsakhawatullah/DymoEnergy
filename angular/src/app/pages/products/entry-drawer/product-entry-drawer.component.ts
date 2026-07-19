@@ -6,6 +6,7 @@ import { ProductService } from '../../../proxy/products/product.service';
 import { ProductDto, ProductStatusLabels } from '../../../proxy/products/models';
 import { CatalogueService } from '../../../proxy/catalogues/catalogue.service';
 import { SelectListDto } from '../../../proxy/catalogues/models';
+import { ImageUploadService } from '../../../proxy/image-upload/image-upload.service';
 
 @Component({
   selector:    'product-entry-drawer',
@@ -22,6 +23,7 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
 
   form!: FormGroup;
   saving = false;
+  uploadingPrimaryImage = false;
   catalogueOptions: SelectListDto[] = [];
 
   statusOptions = Object.entries(ProductStatusLabels).map(([value, label]) => ({
@@ -34,6 +36,7 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
     private productSvc:   ProductService,
     private catalogueSvc: CatalogueService,
     private message:      NzMessageService,
+    private imageUploadSvc: ImageUploadService,
   ) {
     this.buildForm();
   }
@@ -94,6 +97,28 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
       metaTitle:       [null],
       metaDescription: [null],
       metaKeywords:    [null],
+    });
+  }
+
+  triggerFileInput(inputId: string): void {
+    document.getElementById(inputId)?.click();
+  }
+
+  onPrimaryImageSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    this.uploadingPrimaryImage = true;
+    this.imageUploadSvc.uploadImage(file, 'products').subscribe({
+      next: url => {
+        this.form.patchValue({ primaryImage: url });
+        this.uploadingPrimaryImage = false;
+        this.message.success('Image uploaded!');
+      },
+      error: () => {
+        this.uploadingPrimaryImage = false;
+        this.message.error('Failed to upload image.');
+      },
     });
   }
 

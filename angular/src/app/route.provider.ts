@@ -11,13 +11,14 @@ function configureRoutes() {
   const routes = inject(RoutesService);
   routes.add([
 
-    // ── Home ─────────────────────────────────────────────────────────────────
+    // ── Dashboard ─────────────────────────────────────────────────────────────
     {
       path: '/',
-      name: '::Menu:Home',
-      iconClass: 'fas fa-home',
+      name: '::Menu:Dashboard',
+      iconClass: 'fas fa-gauge',
       order: 1,
       layout: eLayoutType.application,
+      breadcrumbText: '::Menu:Dashboard',
     },
 
     // ── Companies ────────────────────────────────────────────────────────────
@@ -552,12 +553,12 @@ function configureRoutes() {
     },
     {
       path: '/dashboard',
-      name: '::Menu:Dashboard',
+      name: '::Menu:AnalyticsDashboard',
       parentName: '::Menu:AnalyticsReporting',
       iconClass: 'fas fa-gauge',
       order: 1,
       layout: eLayoutType.application,
-      breadcrumbText: '::Menu:Dashboard',
+      breadcrumbText: '::Menu:AnalyticsDashboard',
     },
     {
       path: '/reports',
@@ -582,7 +583,7 @@ function configureRoutes() {
     {
       path: '',
       name: '::Menu:Marketing',
-      iconClass: 'fas fa-megaphone',
+      iconClass: 'fas fa-bullhorn',
       order: 16,
       layout: eLayoutType.application,
     },

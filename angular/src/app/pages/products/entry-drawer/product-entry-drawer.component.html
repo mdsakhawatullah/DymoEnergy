@@ -87,20 +87,40 @@
   <div class="row g-3">
     <div class="col-md-4">
       <div class="field-label">PRIMARY IMAGE</div>
-      <div class="thumb-upload-box">
-        @if (form.get('primaryImage')?.value) {
+      <div
+        class="thumb-upload-box"
+        [class.uploading]="uploadingPrimaryImage"
+        (click)="triggerFileInput('primaryImageFileInput')"
+        nz-tooltip
+        nzTooltipTitle="Click to upload image"
+      >
+        @if (uploadingPrimaryImage) {
+          <span nz-icon nzType="loading" nzTheme="outline" class="thumb-icon spinning"></span>
+          <span class="thumb-hint">Uploading...</span>
+        } @else if (form.get('primaryImage')?.value) {
           <img [src]="form.get('primaryImage')?.value" alt="Primary" class="thumb-preview" />
+          <div class="thumb-change-badge">
+            <span nz-icon nzType="upload"></span> Change
+          </div>
         } @else {
           <span nz-icon nzType="picture" nzTheme="outline" class="thumb-icon"></span>
-          <span class="thumb-hint">Paste URL below</span>
+          <span class="thumb-hint">Click to upload</span>
+          <span class="upload-sub">JPG, PNG, WebP</span>
         }
       </div>
       <input
         nz-input
         formControlName="primaryImage"
-        placeholder="https://..."
+        placeholder="or paste URL here..."
         class="mt-2"
         style="font-size:12px;"
+      />
+      <input
+        id="primaryImageFileInput"
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        style="display:none"
+        (change)="onPrimaryImageSelected($event)"
       />
     </div>
     <div class="col-md-8">

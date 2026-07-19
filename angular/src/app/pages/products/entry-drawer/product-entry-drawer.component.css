@@ -41,6 +41,7 @@
 }
 
 .thumb-upload-box {
+  position: relative;
   border: 2px dashed #d9d9d9;
   border-radius: 8px;
   background: #fafafa;
@@ -51,14 +52,42 @@
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.2s;
+  overflow: hidden;
 }
 
-.thumb-upload-box:hover { border-color: #0D5C2E; }
+.thumb-upload-box:hover { border-color: #0D5C2E; background: #f0faf4; }
+.thumb-upload-box.uploading { pointer-events: none; opacity: 0.7; }
 
 .thumb-icon  { font-size: 28px; color: #ccc; }
 .thumb-hint  { font-size: 12px; color: #0D5C2E; font-weight: 500; }
+.upload-sub  { font-size: 10px; color: #aaa; }
 .thumb-preview { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+
+.thumb-change-badge {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.40);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: 6px;
+}
+
+.thumb-upload-box:hover .thumb-change-badge { opacity: 1; }
+
+.spinning { animation: spin 1s linear infinite; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 
 .drawer-footer {
   position: sticky;

@@ -71,7 +71,9 @@
       "Bash(node C:/Users/ASUS/AppData/Local/Temp/claude/H--SolarShop-DymoEnergy/30028290-b779-4b15-8522-e48a74291958/scratchpad/gen-doc.js H:/SolarShop/DymoEnergy/DymoEnergy-AWS-Deployment-Guide.docx)",
       "Bash(export NODE_PATH=\"$SKILL_DIR/node_modules\")",
       "Bash(unzip -l \"DymoEnergy-AWS-Deployment-Guide.docx\")",
-      "Bash(unzip -p \"DymoEnergy-AWS-Deployment-Guide.docx\" word/document.xml)"
+      "Bash(unzip -p \"DymoEnergy-AWS-Deployment-Guide.docx\" word/document.xml)",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 4200 -ErrorAction SilentlyContinue\")",
+      "Bash(npx tsc *)"
     ]
   }
 }
