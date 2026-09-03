@@ -8,100 +8,100 @@ public class CreateUpdateAdminSiteSettingDto
     public string SiteName { get; set; }
 
     [MaxLength(32)]
-    public string ButtonColor { get; set; }
+    public string? ButtonColor { get; set; }
 
     [MaxLength(256)]
-    public string Tagline { get; set; }
+    public string? Tagline { get; set; }
 
     [MaxLength(512)]
-    public string LogoUrl { get; set; }
+    public string? LogoUrl { get; set; }
 
     // ── Brand colours ────────────────────────────────────────
     [MaxLength(32)]
-    public string PrimaryColor { get; set; }
+    public string? PrimaryColor { get; set; }
 
     [MaxLength(32)]
-    public string SecondaryColor { get; set; }
+    public string? SecondaryColor { get; set; }
 
     [MaxLength(32)]
-    public string AccentColor { get; set; }
+    public string? AccentColor { get; set; }
 
     // ── Text colours ─────────────────────────────────────────
     [MaxLength(32)]
-    public string TextColor { get; set; }
+    public string? TextColor { get; set; }
 
     [MaxLength(32)]
-    public string TextMutedColor { get; set; }
+    public string? TextMutedColor { get; set; }
 
     [MaxLength(32)]
-    public string LinkColor { get; set; }
+    public string? LinkColor { get; set; }
 
     // ── Background colours ───────────────────────────────────
     [MaxLength(32)]
-    public string BackgroundColor { get; set; }
+    public string? BackgroundColor { get; set; }
 
     [MaxLength(32)]
-    public string CardBgColor { get; set; }
+    public string? CardBgColor { get; set; }
 
     // ── Navbar ───────────────────────────────────────────────
     [MaxLength(32)]
-    public string NavbarBgColor { get; set; }
+    public string? NavbarBgColor { get; set; }
 
     [MaxLength(32)]
-    public string NavbarTextColor { get; set; }
+    public string? NavbarTextColor { get; set; }
 
     // ── Sidebar ──────────────────────────────────────────────
     [MaxLength(32)]
-    public string SidebarBgColor { get; set; }
+    public string? SidebarBgColor { get; set; }
 
     [MaxLength(32)]
-    public string SidebarTextColor { get; set; }
+    public string? SidebarTextColor { get; set; }
 
     [MaxLength(32)]
-    public string SidebarActiveBgColor { get; set; }
+    public string? SidebarActiveBgColor { get; set; }
 
     // ── Buttons ──────────────────────────────────────────────
     [MaxLength(32)]
-    public string ButtonPrimaryBgColor { get; set; }
+    public string? ButtonPrimaryBgColor { get; set; }
 
     [MaxLength(32)]
-    public string ButtonPrimaryTextColor { get; set; }
+    public string? ButtonPrimaryTextColor { get; set; }
 
     // ── Typography ───────────────────────────────────────────
     [MaxLength(128)]
-    public string FontFamily { get; set; }
+    public string? FontFamily { get; set; }
 
     [MaxLength(16)]
-    public string FontSizeBase { get; set; }
+    public string? FontSizeBase { get; set; }
 
     public bool IsActive { get; set; }
 
     // ── Location ──────────────────────────────────────────────────────────
     [MaxLength(256)]
-    public string Address { get; set; }
+    public string? Address { get; set; }
 
     [MaxLength(100)]
-    public string City { get; set; }
+    public string? City { get; set; }
 
     [MaxLength(100)]
-    public string State { get; set; }
+    public string? State { get; set; }
 
     [MaxLength(20)]
-    public string ZipCode { get; set; }
+    public string? ZipCode { get; set; }
 
     [MaxLength(100)]
-    public string Country { get; set; }
+    public string? Country { get; set; }
 
     // ── Contact ───────────────────────────────────────────────────────────
     [MaxLength(32)]
-    public string Phone { get; set; }
+    public string? Phone { get; set; }
 
     [MaxLength(256)]
-    public string Email { get; set; }
+    public string? Email { get; set; }
 
     [MaxLength(256)]
-    public string SupportEmail { get; set; }
+    public string? SupportEmail { get; set; }
 
     [MaxLength(32)]
-    public string WhatsApp { get; set; }
+    public string? WhatsApp { get; set; }
 }

@@ -10,10 +10,11 @@ type TabKey   = 'all' | 'active' | 'parent' | 'child';
 type StatsKey = 'total' | 'active' | 'parent' | 'child';
 
 interface CompanyStats {
-  total:  number;
-  active: number;
-  parent: number;
-  child:  number;
+  total:    number;
+  active:   number;
+  inactive: number;
+  parent:   number;
+  child:    number;
 }
 
 @Component({
@@ -33,7 +34,7 @@ export class CompaniesComponent implements OnInit {
   loading     = false;
   activeTab: TabKey = 'all';
 
-  stats: CompanyStats = { total: 0, active: 0, parent: 0, child: 0 };
+  stats: CompanyStats = { total: 0, active: 0, inactive: 0, parent: 0, child: 0 };
 
   tabs: { key: TabKey; label: string; countKey: StatsKey }[] = [
     { key: 'all',    label: 'All',              countKey: 'total'  },
@@ -83,15 +84,17 @@ export class CompaniesComponent implements OnInit {
   // ── List ──────────────────────────────────────────────────────────────────
   loadStats(): void {
     forkJoin({
-      all:    this.companyService.getListData({ maxResultCount: 1, skipCount: 0 }),
-      active: this.companyService.getListData({ status: 1, maxResultCount: 1, skipCount: 0 }),
-      parent: this.companyService.getListData({ isParentCompany: true, maxResultCount: 1, skipCount: 0 }),
-      child:  this.companyService.getListData({ isParentCompany: false, maxResultCount: 1, skipCount: 0 }),
+      all:      this.companyService.getListData({ maxResultCount: 1, skipCount: 0 }),
+      active:   this.companyService.getListData({ status: 1, maxResultCount: 1, skipCount: 0 }),
+      inactive: this.companyService.getListData({ status: 2, maxResultCount: 1, skipCount: 0 }),
+      parent:   this.companyService.getListData({ isParentCompany: true, maxResultCount: 1, skipCount: 0 }),
+      child:    this.companyService.getListData({ isParentCompany: false, maxResultCount: 1, skipCount: 0 }),
     }).subscribe(r => {
-      this.stats.total  = r.all.totalCount;
-      this.stats.active = r.active.totalCount;
-      this.stats.parent = r.parent.totalCount;
-      this.stats.child  = r.child.totalCount;
+      this.stats.total    = r.all.totalCount;
+      this.stats.active   = r.active.totalCount;
+      this.stats.inactive = r.inactive.totalCount;
+      this.stats.parent   = r.parent.totalCount;
+      this.stats.child    = r.child.totalCount;
     });
   }
 

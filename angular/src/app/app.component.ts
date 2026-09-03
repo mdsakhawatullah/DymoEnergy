@@ -1,5 +1,5 @@
-import { Component, AfterViewInit, OnDestroy } from '@angular/core';
-import { DynamicLayoutComponent } from '@abp/ng.core';
+import { Component, AfterViewInit, OnDestroy, inject } from '@angular/core';
+import { DynamicLayoutComponent, RoutesService, eLayoutType } from '@abp/ng.core';
 import { LoaderBarComponent } from '@abp/ng.theme.shared';
 
 @Component({
@@ -12,11 +12,41 @@ import { LoaderBarComponent } from '@abp/ng.theme.shared';
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
   private observer: MutationObserver | null = null;
+  private routes = inject(RoutesService);
 
   ngAfterViewInit() {
+    this.fixAdministrationMenu();
     this.observer = new MutationObserver(() => this.wireHamburger());
     this.observer.observe(document.body, { childList: true, subtree: true });
     setTimeout(() => this.wireHamburger(), 500);
+  }
+
+  // ABP's default Administration/Identity/Settings menu entries ship with
+  // Font Awesome 4/5 icon classes (fa-id-card-o, fa-cog) that don't exist in
+  // the bundled FA6 free package, and no `layout` set (so navigating into
+  // them loses the sidebar). Patch them in place after all modules have
+  // registered their routes.
+  private fixAdministrationMenu() {
+    this.routes.patch('AbpUiNavigation::Menu:Administration', {
+      iconClass: 'fas fa-users-gear',
+      layout: eLayoutType.application,
+    });
+    this.routes.patch('AbpIdentity::Menu:IdentityManagement', {
+      iconClass: 'fas fa-user-tag',
+      layout: eLayoutType.application,
+    });
+    this.routes.patch('AbpIdentity::Roles', {
+      iconClass: 'fas fa-user-tag',
+      layout: eLayoutType.application,
+    });
+    this.routes.patch('AbpIdentity::Users', {
+      iconClass: 'fas fa-user',
+      layout: eLayoutType.application,
+    });
+    this.routes.patch('AbpSettingManagement::Settings', {
+      iconClass: 'fas fa-gear',
+      layout: eLayoutType.application,
+    });
   }
 
   ngOnDestroy() {

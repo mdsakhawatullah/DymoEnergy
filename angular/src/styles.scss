@@ -101,7 +101,7 @@ body {
   cursor: pointer !important;
   color: #0B1020 !important;
   font-size: 12.5px !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
   padding: 10px 16px !important;
@@ -253,7 +253,7 @@ body {
   &.selected,
   &.expanded {
     color: $clr-green !important;
-    font-weight: 600 !important;
+    font-weight: 500 !important;
     background-color: rgba(26, 138, 64, 0.09) !important;
     border-left-color: $clr-green !important;
 
@@ -457,6 +457,55 @@ body {
 .card {
   background-color: #ffffff !important;
   border-color: #e8edf2 !important;
+}
+
+// ─── Form inputs: comfortable padding + brand-colored focus (replace AntD blue) ─
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-picker,
+.ant-input-number,
+textarea.ant-input {
+  padding: 5px 10px !important;
+  border-radius: 6px !important;
+  border-color: #d9d9d9 !important;
+}
+
+.ant-input-affix-wrapper .ant-input,
+.ant-input-number-input {
+  padding: 0 !important;
+}
+
+.ant-input:hover,
+.ant-input-affix-wrapper:hover,
+.ant-picker:hover,
+.ant-input-number:hover,
+.ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+  border-color: $clr-green !important;
+}
+
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused,
+.ant-picker-focused,
+.ant-input-number-focused,
+.ant-select-focused:not(.ant-select-disabled) .ant-select-selector {
+  border-color: $clr-green !important;
+  box-shadow: 0 0 0 2px rgba(26, 138, 64, 0.15) !important;
+}
+
+// ─── Tabs: brand-colored ink bar + active label (replace AntD blue) ────────────
+.ant-tabs-ink-bar {
+  background-color: $clr-green !important;
+}
+
+.ant-tabs-tab:hover {
+  color: $clr-green !important;
+}
+
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: $clr-green !important;
 }
 
 // ─── Primary buttons ──────────────────────────────────────────────────────────

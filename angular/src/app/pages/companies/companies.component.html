@@ -2,11 +2,7 @@
 <div class="d-flex align-items-start justify-content-between mb-3">
   <div>
     <h4 class="mb-1 fw-bold">Companies</h4>
-    <span class="text-muted small">
-      {{ stats.total }} total &nbsp;·&nbsp;
-      {{ stats.active }} active &nbsp;·&nbsp;
-      {{ stats.parent }} parent
-    </span>
+    <span class="text-muted small">Manage partner and client company accounts</span>
   </div>
   <div class="d-flex gap-2">
     <button nz-button nzType="primary" class="btn-new-company" (click)="openDrawerForCreate()">
@@ -15,36 +11,39 @@
   </div>
 </div>
 
-<!-- ── Stat cards ──────────────────────────────────────────────────────── -->
-<div class="row g-3 mb-4">
-  <div class="col-md-3">
-    <div class="stat-card stat-card--green">
-      <div class="stat-card__label">TOTAL COMPANIES</div>
-      <div class="stat-card__value">{{ stats.total }}</div>
-      <div class="stat-card__sub">All records</div>
+<!-- ── Stats row ───────────────────────────────────────────────────────── -->
+<div class="stats-row mb-4">
+  <div class="stats-row__item">
+    <div class="stats-row__icon stats-row__icon--green">
+      <span nz-icon nzType="unordered-list" nzTheme="outline"></span>
+    </div>
+    <div>
+      <div class="stats-row__value">{{ stats.total }}</div>
+      <div class="stats-row__label">Total Companies</div>
     </div>
   </div>
-  <div class="col-md-3">
-    <div class="stat-card stat-card--dark">
-      <div class="stat-card__label">ACTIVE</div>
-      <div class="stat-card__value">{{ stats.active }}</div>
-      <div class="stat-card__sub text-success">
-        <span nz-icon nzType="check-circle" nzTheme="outline"></span> Live
-      </div>
+
+  <div class="stats-row__divider"></div>
+
+  <div class="stats-row__item">
+    <div class="stats-row__icon stats-row__icon--mint">
+      <span nz-icon nzType="check" nzTheme="outline"></span>
+    </div>
+    <div>
+      <div class="stats-row__value">{{ stats.active }}</div>
+      <div class="stats-row__label">Active</div>
     </div>
   </div>
-  <div class="col-md-3">
-    <div class="stat-card stat-card--orange">
-      <div class="stat-card__label">PARENT COMPANIES</div>
-      <div class="stat-card__value">{{ stats.parent }}</div>
-      <div class="stat-card__sub">Have child accounts</div>
+
+  <div class="stats-row__divider"></div>
+
+  <div class="stats-row__item">
+    <div class="stats-row__icon stats-row__icon--rose">
+      <span nz-icon nzType="stop" nzTheme="outline"></span>
     </div>
-  </div>
-  <div class="col-md-3">
-    <div class="stat-card stat-card--purple">
-      <div class="stat-card__label">CHILD COMPANIES</div>
-      <div class="stat-card__value">{{ stats.child }}</div>
-      <div class="stat-card__sub">Linked to a parent</div>
+    <div>
+      <div class="stats-row__value">{{ stats.inactive }}</div>
+      <div class="stats-row__label">Inactive</div>
     </div>
   </div>
 </div>
