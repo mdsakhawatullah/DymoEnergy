@@ -98,6 +98,11 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
       metaDescription: [null],
       metaKeywords:    [null],
     });
+
+    // STATUS mirrors the ACTIVE switch: Active when on, Draft when off.
+    this.form.get('isActive')!.valueChanges.subscribe((isActive: boolean) => {
+      this.form.get('status')!.setValue(isActive ? 2 : 1); // 2 = Active, 1 = Draft
+    });
   }
 
   triggerFileInput(inputId: string): void {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DymoEnergy.Permissions;
+using DymoEnergy.Products;
 using DymoEnergy.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
@@ -15,15 +16,20 @@ namespace DymoEnergy.Catalogues;
 [Authorize(DymoEnergyPermissions.Catalogues.Default)]
 public class CatalogueAppService : ApplicationService, ICatalogueAppService
 {
+    private const int ShowcaseProductLimit = 8;
+
     private readonly IRepository<Catalogue, int>      _catalogueRepository;
     private readonly IRepository<CatalogueImage, int> _imageRepository;
+    private readonly IRepository<Product, int>        _productRepository;
 
     public CatalogueAppService(
         IRepository<Catalogue, int>      catalogueRepository,
-        IRepository<CatalogueImage, int> imageRepository)
+        IRepository<CatalogueImage, int> imageRepository,
+        IRepository<Product, int>        productRepository)
     {
         _catalogueRepository = catalogueRepository;
         _imageRepository     = imageRepository;
+        _productRepository   = productRepository;
     }
 
     // ── READ ─────────────────────────────────────────────────────────────
@@ -104,6 +110,47 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
             {
                 Value       = c.Id,
                 DisplayText = c.Name ?? string.Empty,
+            });
+
+        return await AsyncExecuter.ToListAsync(query);
+    }
+
+    /// <summary>
+    /// Home-page showcase: every published catalogue that has active products, each with
+    /// its thumbnail and first <see cref="ShowcaseProductLimit"/> products. Single SQL query.
+    /// </summary>
+    [AllowAnonymous]
+    public async Task<List<HomeCatalogueShowcaseDto>> GetHomeShowcaseAsync()
+    {
+        var products = (await _productRepository.GetQueryableAsync())
+            .Where(p => p.IsActive);
+
+        var query = (await _catalogueRepository.GetQueryableAsync())
+            .Where(c => c.IsPublished && products.Any(p => p.CatalogueId == c.Id))
+            .OrderBy(c => c.DisplayOrder)
+            .ThenBy(c => c.Name)
+            .Select(c => new HomeCatalogueShowcaseDto
+            {
+                Id                = c.Id,
+                Name              = c.Name,
+                Slug              = c.Slug,
+                ThumbnailImageUrl = c.ThumbnailImageUrl ?? c.PrimaryBackgroundImageUrl,
+                AccentColor       = c.AccentColor,
+                TotalProductCount = products.Count(p => p.CatalogueId == c.Id),
+                Products = products
+                    .Where(p => p.CatalogueId == c.Id)
+                    .OrderBy(p => p.DisplayOrder)
+                    .ThenBy(p => p.Name)
+                    .Take(ShowcaseProductLimit)
+                    .Select(p => new HomeShowcaseProductDto
+                    {
+                        Id            = p.Id,
+                        Name          = p.Name,
+                        Price         = p.Price,
+                        DiscountPrice = p.DiscountPrice,
+                        PrimaryImage  = p.PrimaryImage,
+                    })
+                    .ToList(),
             });
 
         return await AsyncExecuter.ToListAsync(query);

@@ -65,6 +65,9 @@ public class ProductAppService : ApplicationService, IProductAppService
         if (input.Status.HasValue)
             query = query.Where(p => p.Status == input.Status);
 
+        if (input.CatalogueId.HasValue)
+            query = query.Where(p => p.CatalogueId == input.CatalogueId);
+
         var totalCount = await AsyncExecuter.CountAsync(query);
 
         query = query
