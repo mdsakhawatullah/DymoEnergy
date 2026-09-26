@@ -251,6 +251,11 @@ export const APP_ROUTES: Routes = [
     loadComponent: () => import('./pages/orders/orders.component').then(c => c.OrdersComponent),
     canActivate: [authGuard],
   },
+  {
+    path: 'quote-requests',
+    loadComponent: () => import('./pages/quote-requests/quote-requests.component').then(c => c.QuoteRequestsComponent),
+    canActivate: [authGuard],
+  },
 
   // ── Shipping & Courier Setup ───────────────────────────────────────────────
   {

@@ -7,6 +7,7 @@ using DymoEnergy.Products;
 using DymoEnergy.SalesInvoices;
 using DymoEnergy.Orders;
 using DymoEnergy.Companies;
+using DymoEnergy.QuoteRequests;
 using DymoEnergy.UserSiteSettings;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
@@ -43,6 +44,7 @@ public class DymoEnergyDbContext :
     public DbSet<Order>     Orders     { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Company>   Companies  { get; set; }
+    public DbSet<QuoteRequest> QuoteRequests { get; set; }
     public DbSet<UserSiteSetting>      UserSiteSettings      { get; set; }
     public DbSet<UserSiteSettingImage> UserSiteSettingImages { get; set; }
 
@@ -188,6 +190,20 @@ public class DymoEnergyDbContext :
             b.Property(x => x.Id).ValueGeneratedOnAdd();
             b.HasIndex(x => x.CompanyName);
             b.HasIndex(x => x.ParentCompanyId);
+        });
+
+        /* ── Quote Requests ─────────────────────────────────────────────── */
+        builder.Entity<QuoteRequest>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "QuoteRequests", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(QuoteRequestConsts.MaxNameLength);
+            b.Property(x => x.Phone).HasMaxLength(QuoteRequestConsts.MaxPhoneLength);
+            b.Property(x => x.Email).HasMaxLength(QuoteRequestConsts.MaxEmailLength);
+            b.Property(x => x.Interest).HasMaxLength(QuoteRequestConsts.MaxInterestLength);
+            b.Property(x => x.Message).HasMaxLength(QuoteRequestConsts.MaxMessageLength);
+            b.HasIndex(x => x.Status);
         });
 
         /* ── User Site Settings ──────────────────────────────────────────── */

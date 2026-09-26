@@ -10,6 +10,7 @@ public class OrderFilterDto : PagedAndSortedResultRequestDto
     public OrderStage?       Stage        { get; set; }
     public OrderPriority?    Priority     { get; set; }
     public OrderPaymentType? PaymentType  { get; set; }
+    public OrderPaidState?   PaidState    { get; set; }
     public int?              CustomerId   { get; set; }
     public int?              PortalId     { get; set; }
     public DateTime?         DateFrom     { get; set; }

@@ -68,4 +68,11 @@ public static class DymoEnergyPermissions
         public const string Edit    = Default + ".Edit";
         public const string Delete  = Default + ".Delete";
     }
+
+    public static class QuoteRequests
+    {
+        public const string Default = GroupName + ".QuoteRequests";
+        public const string Edit    = Default + ".Edit";
+        public const string Delete  = Default + ".Delete";
+    }
 }

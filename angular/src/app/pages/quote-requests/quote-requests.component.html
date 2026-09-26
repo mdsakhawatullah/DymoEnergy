@@ -1,0 +1,128 @@
+<!-- ── Page header ─────────────────────────────────────────────────────── -->
+<div class="mb-3">
+  <h4 class="mb-1 fw-bold">Quote Requests</h4>
+  <span class="text-muted small">Enquiries submitted from the storefront Get a Quote page</span>
+</div>
+
+<!-- ── Main card ───────────────────────────────────────────────────────── -->
+<div class="card">
+
+  <!-- Tab strip -->
+  <div class="tab-strip">
+    @for (tab of tabs; track tab.key) {
+      <button
+        class="tab-strip__item"
+        [class.tab-strip__item--active]="activeTab === tab.key"
+        (click)="selectTab(tab.key)"
+      >
+        {{ tab.label }}
+        <span class="tab-strip__badge" [class.tab-strip__badge--active]="activeTab === tab.key">
+          {{ counts[tab.key] }}
+        </span>
+      </button>
+    }
+  </div>
+
+  <!-- Filter row -->
+  <div class="px-3 py-2 d-flex gap-2 align-items-center border-bottom">
+    <nz-input-group [nzPrefix]="searchPfx" style="max-width: 260px;">
+      <input
+        nz-input
+        placeholder="Search name, phone, email..."
+        [(ngModel)]="filter"
+        (keyup.enter)="onSearch()"
+      />
+    </nz-input-group>
+    <ng-template #searchPfx>
+      <span nz-icon nzType="search" style="color:#bbb;"></span>
+    </ng-template>
+    <button nz-button (click)="resetFilters()" [disabled]="!filter && activeTab === 'all'">
+      Reset Filters
+    </button>
+  </div>
+
+  <!-- Table -->
+  <nz-table
+    [nzData]="quoteRequests"
+    [nzTotal]="totalCount"
+    [nzPageIndex]="pageIndex"
+    [nzPageSize]="pageSize"
+    [nzLoading]="loading"
+    [nzFrontPagination]="false"
+    [nzShowSizeChanger]="true"
+    [nzPageSizeOptions]="[10, 20, 50]"
+    (nzPageIndexChange)="onPageIndexChange($event)"
+    (nzPageSizeChange)="onPageSizeChange($event)"
+    nzShowPaginationBottom
+    nzSize="small"
+  >
+    <thead>
+      <tr>
+        <th nzWidth="60px" nzAlign="center">ID</th>
+        <th nzWidth="180px">NAME</th>
+        <th nzWidth="200px">CONTACT</th>
+        <th nzWidth="180px">INTERESTED IN</th>
+        <th>MESSAGE</th>
+        <th nzWidth="150px">RECEIVED</th>
+        <th nzWidth="140px" nzAlign="center">STATUS</th>
+        <th nzWidth="80px" nzAlign="center">ACTION</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of quoteRequests; track item.id) {
+        <tr>
+          <td nzAlign="center" class="text-muted" style="font-size:12px;">{{ item.id }}</td>
+
+          <td><span class="fw-semibold" style="font-size:13px;">{{ item.name }}</span></td>
+
+          <td>
+            @if (item.phone) { <div style="font-size:12px;">{{ item.phone }}</div> }
+            @if (item.email) { <div style="font-size:11px; color:#888;">{{ item.email }}</div> }
+            @if (!item.phone && !item.email) { <span class="text-muted">—</span> }
+          </td>
+
+          <td style="font-size:12px;">{{ item.interest || '—' }}</td>
+
+          <td><div class="message-cell">{{ item.message || '—' }}</div></td>
+
+          <td style="font-size:12px; color:#555;">{{ item.creationTime | date: 'MMM d, y, h:mm a' }}</td>
+
+          <td nzAlign="center">
+            <nz-select
+              nzSize="small"
+              style="width:126px;"
+              [ngModel]="item.status"
+              (ngModelChange)="changeStatus(item, $event)"
+            >
+              @for (s of statusOptions; track s) {
+                <nz-option [nzValue]="s" [nzLabel]="statusLabels[s]" nzCustomContent>
+                  <span class="status-option">
+                    <i class="ds-dot" [class]="'ds-dot ds-dot--' + statusDot(s)"></i>
+                    {{ statusLabels[s] }}
+                  </span>
+                </nz-option>
+              }
+            </nz-select>
+          </td>
+
+          <td nzAlign="center">
+            <button
+              nz-button nzType="text" nzSize="small"
+              nzDanger
+              nz-tooltip nzTooltipTitle="Delete"
+              nz-popconfirm
+              nzPopconfirmTitle="Delete this quote request?"
+              nzOkText="Yes, delete"
+              nzOkDanger
+              nzCancelText="Cancel"
+              [nzLoading]="deletingIds.has(item.id)"
+              (nzOnConfirm)="deleteQuoteRequest(item.id)"
+            >
+              <span nz-icon nzType="delete" nzTheme="outline"></span>
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>

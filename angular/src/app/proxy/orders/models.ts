@@ -116,6 +116,7 @@ export interface OrderFilterDto {
   stage?: number;
   priority?: number;
   paymentType?: number;
+  paidState?: number;
   customerId?: number;
   portalId?: number;
   dateFrom?: string;
@@ -180,3 +181,12 @@ export interface CreateUpdateOrderDto {
   internalNotes?: string;
   items: CreateUpdateOrderItemDto[];
 }
+
+/** Settlement state derived from BalanceDue — mirrors DymoEnergy.Orders.OrderPaidState. */
+export type OrderPaidStateType = 1 | 2 | 3;
+
+export const OrderPaidStateLabels: Record<number, string> = {
+  1: 'Paid in full',
+  2: 'Partly paid',
+  3: 'Unpaid',
+};

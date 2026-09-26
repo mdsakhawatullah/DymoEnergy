@@ -1,218 +1,260 @@
-<!-- ── Page header ─────────────────────────────────────────────────────── -->
-<div class="d-flex align-items-start justify-content-between mb-3">
+<!-- ── Page header ───────────────────────────────────────────────────────────── -->
+<div class="pg-head">
   <div>
-    <h4 class="mb-1 fw-bold">Orders</h4>
-    <span class="text-muted small">
-      {{ stats.total }} total &nbsp;·&nbsp;
-      {{ stats.pending }} pending &nbsp;·&nbsp;
-      {{ stats.delivered }} delivered
-    </span>
+    <h1 class="pg-title">Orders</h1>
+    <p class="pg-sub">
+      {{ stats.total | number }} orders · {{ stats.pending | number }} awaiting confirmation
+      · {{ stats.delivered | number }} delivered
+    </p>
   </div>
-  <button nz-button nzType="primary" class="btn-new-order" (click)="openDrawerForCreate()">
-    <span nz-icon nzType="plus" nzTheme="outline"></span> New Order
-  </button>
-</div>
-
-<!-- ── Stat cards ──────────────────────────────────────────────────────── -->
-<div class="row g-3 mb-4">
-  <div class="col-md-3">
-    <div class="stat-card stat-card--green">
-      <div class="stat-card__label">TOTAL ORDERS</div>
-      <div class="stat-card__value">{{ stats.total }}</div>
-      <div class="stat-card__sub">All records</div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="stat-card stat-card--orange">
-      <div class="stat-card__label">PENDING</div>
-      <div class="stat-card__value" [class.text-warning]="stats.pending > 0">{{ stats.pending }}</div>
-      <div class="stat-card__sub">
-        @if (stats.pending > 0) {
-          <span class="text-warning">Awaiting confirmation</span>
-        } @else {
-          <span class="text-muted">None</span>
-        }
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="stat-card stat-card--blue">
-      <div class="stat-card__label">PROCESSING</div>
-      <div class="stat-card__value">{{ stats.processing }}</div>
-      <div class="stat-card__sub text-primary">In progress</div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="stat-card stat-card--dark">
-      <div class="stat-card__label">DELIVERED</div>
-      <div class="stat-card__value">{{ stats.delivered }}</div>
-      <div class="stat-card__sub text-success">
-        <span nz-icon nzType="check-circle" nzTheme="outline"></span> Completed
-      </div>
-    </div>
+  <div class="pg-actions">
+    <button type="button" class="btn-ghost">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3v12M7 11l5 5 5-5M4 21h16"/>
+      </svg>
+      Export CSV
+    </button>
+    <button type="button" class="btn-solid" (click)="openDrawerForCreate()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      New order
+    </button>
   </div>
 </div>
 
-<!-- ── Main card ───────────────────────────────────────────────────────── -->
-<div class="card">
+<!-- ── KPI cards ─────────────────────────────────────────────────────────────── -->
+<section class="kpi-grid" aria-label="Order summary">
+  <div class="kpi">
+    <div class="kpi__top">
+      <span class="kpi__chip kpi__chip--green">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/>
+        </svg>
+      </span>
+      <span class="kpi__label">Total orders</span>
+    </div>
+    <div class="kpi__value">{{ stats.total | number }}</div>
+    <div class="kpi__note">{{ monthCount | number }} this month</div>
+  </div>
 
-  <!-- Tab strip -->
-  <div class="tab-strip">
+  <div class="kpi">
+    <div class="kpi__top">
+      <span class="kpi__chip kpi__chip--amber">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 7v5l3 2M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18"/>
+        </svg>
+      </span>
+      <span class="kpi__label">Awaiting confirmation</span>
+    </div>
+    <div class="kpi__value">{{ stats.pending | number }}</div>
+    <div class="kpi__note">
+      @if (stats.pending) { Oldest: {{ daysAgo(oldestPending) }} } @else { Nothing waiting }
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi__top">
+      <span class="kpi__chip kpi__chip--blue">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M2 7h11v9H2zM13 10h4l3 3v3h-7"/>
+        </svg>
+      </span>
+      <span class="kpi__label">Processing &amp; shipped</span>
+    </div>
+    <div class="kpi__value">{{ stats.processing + stats.shipped | number }}</div>
+    <div class="kpi__note">{{ stats.shipped | number }} out for delivery</div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi__top">
+      <span class="kpi__chip kpi__chip--danger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 7h18v13H3zM3 7l3-3h12l3 3M16 13.5h2"/>
+        </svg>
+      </span>
+      <span class="kpi__label">Outstanding balance</span>
+    </div>
+    <div class="kpi__value kpi__value--danger">BDT {{ compact(outstanding) }}</div>
+    <div class="kpi__note">Across {{ outstandingOf | number }} {{ outstandingOf === 1 ? 'order' : 'orders' }}</div>
+  </div>
+</section>
+
+<!-- ── Main card ─────────────────────────────────────────────────────────────── -->
+<div class="panel">
+
+  <!-- Tabs -->
+  <div class="tabs" role="tablist">
     @for (tab of tabs; track tab.key) {
-      <button
-        class="tab-strip__item"
-        [class.tab-strip__item--active]="activeTab === tab.key"
-        (click)="selectTab(tab.key)"
-      >
+      <button type="button" role="tab" class="tabs__btn"
+              [class.tabs__btn--on]="activeTab === tab.key"
+              [attr.aria-selected]="activeTab === tab.key"
+              (click)="selectTab(tab.key)">
         {{ tab.label }}
-        <span class="tab-strip__badge" [class.tab-strip__badge--active]="activeTab === tab.key">
-          {{ tabCount(tab.key) }}
+        <span class="tabs__count" [class.tabs__count--on]="activeTab === tab.key">
+          {{ tabCount(tab.key) | number }}
         </span>
       </button>
     }
   </div>
 
-  <!-- Filter row -->
-  <div class="px-3 py-2 d-flex gap-2 align-items-center border-bottom">
-    <nz-input-group [nzPrefix]="searchPfx" style="max-width: 320px;">
-      <input nz-input placeholder="Search order no., customer, ref..."
-        [(ngModel)]="filter" (keyup.enter)="onSearch()" />
-    </nz-input-group>
-    <ng-template #searchPfx>
-      <span nz-icon nzType="search" style="color:#bbb;"></span>
-    </ng-template>
-    <button nz-button (click)="resetFilters()" [disabled]="!filter && activeTab === 'all'">
-      Reset
+  <!-- Filters -->
+  <div class="filters">
+    <label class="fld fld--search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/>
+        <path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+      <input type="search" placeholder="Order no., customer or phone"
+             [(ngModel)]="filter" (keyup.enter)="onSearch()" />
+    </label>
+
+    <select class="fld fld--select" [(ngModel)]="dateRange" (ngModelChange)="onFilterChange()"
+            aria-label="Date range">
+      @for (d of dateOptions; track d.key) { <option [value]="d.key">{{ d.label }}</option> }
+    </select>
+
+    <select class="fld fld--select" [(ngModel)]="paidState" (ngModelChange)="onFilterChange()"
+            aria-label="Payment">
+      <option [ngValue]="null">Any payment</option>
+      @for (p of paidOptions; track p.value) { <option [ngValue]="p.value">{{ p.label }}</option> }
+    </select>
+
+    <select class="fld fld--select" [(ngModel)]="priority" (ngModelChange)="onFilterChange()"
+            aria-label="Priority">
+      <option [ngValue]="null">Any priority</option>
+      @for (p of priorityOptions; track p.value) { <option [ngValue]="p.value">{{ p.label }}</option> }
+    </select>
+
+    <button type="button" class="reset" [disabled]="!hasFilters" (click)="resetFilters()">
+      Reset filters
     </button>
   </div>
 
-  <!-- Table -->
-  <nz-table
-    [nzData]="orders"
-    [nzTotal]="totalCount"
-    [nzPageIndex]="pageIndex"
-    [nzPageSize]="pageSize"
-    [nzLoading]="loading"
-    [nzFrontPagination]="false"
-    [nzShowSizeChanger]="true"
-    [nzPageSizeOptions]="[10, 20, 50]"
-    (nzPageIndexChange)="onPageIndexChange($event)"
-    (nzPageSizeChange)="onPageSizeChange($event)"
-    nzShowPaginationBottom
-    nzSize="small"
-  >
-    <thead>
-      <tr>
-        <th nzWidth="60px"  nzAlign="center">ID</th>
-        <th nzWidth="170px">ORDER NO.</th>
-        <th>CUSTOMER</th>
-        <th nzWidth="110px">DATE</th>
-        <th nzWidth="100px" nzAlign="center">PRIORITY</th>
-        <th nzWidth="120px" nzAlign="center">STATUS</th>
-        <th nzWidth="140px" nzAlign="center">STAGE</th>
-        <th nzWidth="130px" nzAlign="right">GRAND TOTAL</th>
-        <th nzWidth="110px" nzAlign="right">BALANCE</th>
-        <th nzWidth="90px"  nzAlign="center">ACTION</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (order of orders; track order.id) {
-        <tr>
-          <td nzAlign="center" class="text-muted" style="font-size:12px;">{{ order.id }}</td>
+  <!-- Table head -->
+  <div class="thead">
+    <span>Order</span>
+    <span>Customer</span>
+    <span>Date</span>
+    <span>Priority</span>
+    <span>Status</span>
+    <span>Payment</span>
+    <span class="ta-right">Total</span>
+    <span class="ta-right">Action</span>
+  </div>
 
-          <td>
-            <a class="order-no-link"
-               [routerLink]="['/orders', order.id, 'invoice']"
-               target="_blank" rel="noopener"
-               nz-tooltip nzTooltipTitle="Open invoice in new tab">
-              {{ order.orderNumber || '—' }}
-              <span nz-icon nzType="export" style="font-size:10px; opacity:0.45; margin-left:2px;"></span>
-            </a>
-          </td>
+  <!-- Rows -->
+  @if (loading) {
+    @for (i of [1,2,3,4,5]; track i) {
+      <div class="trow trow--skeleton"><span class="sk"></span></div>
+    }
+  } @else if (!orders.length) {
+    <div class="empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A3ACA5"
+           stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/>
+      </svg>
+      <p>No orders match these filters.</p>
+    </div>
+  } @else {
+    @for (o of orders; track o.id) {
+      <div class="trow">
+        <!-- Order -->
+        <span class="cell-stack">
+          <a class="order-no" (click)="openDrawerForEdit(o)">{{ o.orderNumber || '#' + o.id }}</a>
+          <span class="cell-sub-strong">{{ o.customerReference || o.notes || '—' }}</span>
+        </span>
 
-          <td>
-            <div class="fw-semibold" style="font-size:13px;">{{ order.customerName || '—' }}</div>
-            @if (order.customerEmail) {
-              <div style="font-size:11px; color:#888;">{{ order.customerEmail }}</div>
-            }
-            @if (order.customerReference) {
-              <div style="font-size:11px; color:#aaa;">Ref: {{ order.customerReference }}</div>
-            }
-          </td>
+        <!-- Customer -->
+        <span class="cell-stack">
+          <span class="cell-name">{{ o.customerName || 'Walk-in customer' }}</span>
+          <span class="cell-sub">{{ o.customerPhone || '—' }}</span>
+        </span>
 
-          <td style="font-size:12px; color:#555;">
-            {{ order.orderDate | date:'dd MMM yyyy' }}
-          </td>
+        <!-- Date -->
+        <span class="cell-date">{{ o.orderDate | date: 'd MMM' }}</span>
 
-          <td nzAlign="center">
-            <nz-tag [nzColor]="priorityColors[order.priority]">
-              {{ priorityLabels[order.priority] }}
-            </nz-tag>
-          </td>
+        <!-- Priority -->
+        <span class="prio" [class]="'prio prio--' + priorityTone(o.priority)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path [attr.d]="priorityIcon(o.priority)"/>
+          </svg>
+          {{ priorityLabels[o.priority] }}
+        </span>
 
-          <td nzAlign="center">
-            <nz-tag [nzColor]="statusColors[order.status]">
-              {{ statusLabels[order.status] }}
-            </nz-tag>
-          </td>
+        <!-- Status -->
+        <span class="spill" [class]="'spill spill--' + statusPill(o.status)">
+          <span class="spill__dot"></span>{{ statusLabels[o.status] }}
+        </span>
 
-          <td nzAlign="center">
-            <nz-tag [nzColor]="stageColors[order.stage]">
-              {{ stageLabels[order.stage] }}
-            </nz-tag>
-          </td>
+        <!-- Payment -->
+        <span class="pay">
+          <span class="pay__track">
+            <span class="pay__fill" [class]="'pay__fill pay__fill--' + paidTone(o)"
+                  [style.width.%]="paidPercent(o)"></span>
+          </span>
+          <span class="pay__text" [class]="'pay__text pay__text--' + paidTone(o)">{{ paidLabel(o) }}</span>
+        </span>
 
-          <td nzAlign="right">
-            <span class="fw-semibold">{{ order.currencyCode }} {{ order.grandTotal | number:'1.2-2' }}</span>
-          </td>
+        <!-- Total -->
+        <span class="total">BDT {{ money(o.grandTotal) }}</span>
 
-          <td nzAlign="right">
-            @if (order.balanceDue > 0) {
-              <span class="text-danger fw-semibold">{{ order.currencyCode }} {{ order.balanceDue | number:'1.2-2' }}</span>
-            } @else {
-              <span class="text-success fw-semibold">Settled</span>
-            }
-          </td>
+        <!-- Actions -->
+        <span class="acts">
+          <button type="button" class="ib" aria-label="Edit order" (click)="openDrawerForEdit(o)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/>
+            </svg>
+          </button>
+          <button type="button" class="ib" aria-label="More actions"
+                  nz-popconfirm nzPopconfirmTitle="Delete this order?"
+                  nzOkText="Yes, delete" nzOkDanger nzCancelText="Cancel"
+                  (nzOnConfirm)="deleteOrder(o.id)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>
+            </svg>
+          </button>
+        </span>
+      </div>
+    }
+  }
 
-          <td nzAlign="center">
-            <div class="d-flex align-items-center justify-content-center gap-1">
-              <button nz-button nzType="text" nzSize="small" class="btn-edit"
-                nz-tooltip nzTooltipTitle="Edit"
-                (click)="openDrawerForEdit(order)">
-                <span nz-icon nzType="edit" nzTheme="outline"></span>
-              </button>
-              <button nz-button nzType="text" nzSize="small" nzDanger
-                nz-tooltip nzTooltipTitle="Delete"
-                nz-popconfirm
-                nzPopconfirmTitle="Delete this order?"
-                nzOkText="Yes, delete" nzOkDanger nzCancelText="Cancel"
-                [nzLoading]="deletingIds.has(order.id)"
-                (nzOnConfirm)="deleteOrder(order.id)">
-                <span nz-icon nzType="delete" nzTheme="outline"></span>
-              </button>
-            </div>
-          </td>
-        </tr>
-      }
-    </tbody>
-  </nz-table>
+  <!-- Footer -->
+  <div class="tfoot">
+    <span class="ds-page-label">{{ showingLabel }}</span>
+    <div class="tfoot__pager">
+      <nz-pagination
+        [nzPageIndex]="pageIndex"
+        [nzTotal]="totalCount"
+        [nzPageSize]="pageSize"
+        [nzPageSizeOptions]="[10, 20, 50]"
+        nzShowSizeChanger
+        (nzPageIndexChange)="onPageIndexChange($event)"
+        (nzPageSizeChange)="onPageSizeChange($event)"
+      ></nz-pagination>
+    </div>
+  </div>
 </div>
 
-<!-- ── Create / Update Drawer ──────────────────────────────────────────── -->
+<!-- ── Create / Update Drawer ────────────────────────────────────────────────── -->
 <nz-drawer
   *ngIf="isDrawerOpen"
   [nzVisible]="isDrawerOpen"
   [nzBodyStyle]="{ overflow: 'auto' }"
   [nzMaskClosable]="false"
-  [nzWidth]="1100"
-  nzTitle="{{ selectedOrder?.id ? 'Update Order — ' + selectedOrder?.orderNumber : 'Create New Order' }}"
+  [nzWidth]="980"
+  nzTitle="{{ selectedOrder?.id ? 'Update' : 'Create' }} order"
   (nzOnClose)="onDrawerClosed()"
 >
   <div *nzDrawerContent>
     <order-entry-drawer
       [input]="selectedOrder"
-      [existingItems]="selectedItems"
-      (onDrawerClosed)="onDrawerClosed()"
+      [items]="selectedItems"
+      (onOrderEntryDrawerClosed)="onDrawerClosed()"
       (handleOrderSaved)="onOrderSaved()"
     ></order-entry-drawer>
   </div>

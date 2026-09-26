@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { LocalizationPipe } from '@abp/ng.core';
 import { NzTableModule } from 'ng-zorro-antd/table';
+import { NzPaginationModule } from 'ng-zorro-antd/pagination';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -28,6 +29,7 @@ const MODULES = [
   ReactiveFormsModule,
   RouterModule,
   NzTableModule,
+  NzPaginationModule,
   NzTagModule,
   NzInputModule,
   NzButtonModule,

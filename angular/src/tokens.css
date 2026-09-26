@@ -1,0 +1,52 @@
+/* DymoEnergy admin — design tokens. Import once globally (e.g. src/styles/tokens.css). */
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap");
+
+:root {
+  /* Brand */
+  --de-primary: #0E6B3F;        /* Solar Green — buttons, active states, links */
+  --de-primary-hover: #0B5A34;
+  --de-primary-text: #0B5A34;   /* green text on light bg */
+  --de-forest: #0A3D26;         /* avatars, dark surfaces */
+  --de-sun: #F29D12;            /* Sun Amber — decorative only (logo, dots, "new" markers), never body text */
+  --de-leaf: #E6F2EA;           /* active nav bg, success tint */
+  --de-focus-ring: #D3EBDC;
+
+  /* Neutrals */
+  --de-bg: #F5F6F2;             /* page background */
+  --de-sidebar-bg: #FBFCFA;
+  --de-surface: #FFFFFF;        /* cards */
+  --de-surface-muted: #F7F8F5;  /* table header, inset boxes */
+  --de-border: #E3E6E0;         /* card borders */
+  --de-border-soft: #F1F3EE;    /* row dividers */
+  --de-border-input: #D8DDD5;
+  --de-text: #16201A;
+  --de-text-2: #2E3A33;
+  --de-text-muted: #5F6B63;     /* captions — passes 4.5:1 on white */
+  --de-placeholder: #7C877F;
+
+  /* Status pills: background / text */
+  --de-pending-bg: #FDF0D9;    --de-pending-fg: #8A4B00;
+  --de-confirmed-bg: #E8EEFC;  --de-confirmed-fg: #1E40AF;
+  --de-processing-bg: #F0EAFE; --de-processing-fg: #5B21B6;
+  --de-shipped-bg: #E0F2F1;    --de-shipped-fg: #0F5F58;
+  --de-success-bg: #E6F2EA;    --de-success-fg: #0B5A34;   /* Delivered, Active, Quoted */
+  --de-neutral-bg: #F1F3EE;    --de-neutral-fg: #5F6B63;   /* Cancelled, Inactive, Closed */
+  --de-danger-bg: #FDECEA;     --de-danger-fg: #B42318;    /* errors, low stock, balance due */
+
+  /* Type */
+  --de-font: "Instrument Sans", system-ui, sans-serif;
+  --de-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace; /* order numbers */
+  --de-fs-h1: 28px;  --de-fs-h2: 16px;  --de-fs-body: 14px;  --de-fs-small: 13px;  --de-fs-label: 12px;
+  --de-kpi: 28px;
+
+  /* Shape & spacing */
+  --de-radius-card: 12px;
+  --de-radius-control: 8px;
+  --de-radius-pill: 999px;
+  --de-sidebar-w: 280px;
+  --de-topbar-h: 64px;
+  --de-page-pad: 28px 32px;
+  --de-gap: 20px;
+  --de-control-h: 40px;
+  --de-row-h: 60px;
+}

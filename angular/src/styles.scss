@@ -1,12 +1,54 @@
 /* You can add global styles to this file, and also import other style files */
 
-// ─── Brand Palette ───────────────────────────────────────────────────────────
-$clr-green: #1A8A40;
+// Design-handoff tokens (--de-*). Source of truth for colour, type and shape.
+@import './tokens.css';
+
+// ─── Brand Palette (DymoEnergy Admin design spec) ────────────────────────────
+$clr-green: #0E6B3F;   // Solar Green
 $clr-bg:    #ffffff;
 
 :root {
   --clr-green: #{$clr-green};
   --clr-bg:    #{$clr-bg};
+
+  // ── ds-* aliases onto the handoff tokens, so nothing hard-codes hex ──────
+  --ds-solar:   var(--de-primary);
+  --ds-forest:  var(--de-forest);
+  --ds-amber-brand: var(--de-sun);
+  --ds-leaf:    var(--de-leaf);
+  --ds-ink:     var(--de-text);
+  --ds-canvas:  var(--de-bg);
+
+  --ds-bg:            var(--de-surface);
+  --ds-bg-subtle:     var(--de-surface-muted);
+  --ds-sidebar-bg:    var(--de-sidebar-bg);
+  --ds-hover:         #f8faf7;
+  --ds-border:        var(--de-border);
+  --ds-border-soft:   var(--de-border-soft);
+  --ds-text:          var(--de-text);
+  --ds-text-body:     var(--de-text-2);
+  --ds-text-muted:    var(--de-text-muted);
+  --ds-text-subtle:   var(--de-placeholder);
+  --ds-accent:        var(--de-primary);
+  --ds-accent-text:   var(--de-primary-text);
+  --ds-accent-soft:   var(--de-focus-ring);
+
+  --ds-radius:        var(--de-radius-card);
+  --ds-radius-sm:     var(--de-radius-control);
+  --ds-hairline:      1px;
+  --ds-shadow:        none;
+  --ds-shadow-pill:   0 1px 2px rgba(16, 32, 26, 0.06);
+
+  // Status dot palette (pill bg/fg pairs come from --de-*-bg/-fg)
+  --ds-blue:   var(--de-confirmed-fg);
+  --ds-amber:  var(--de-pending-fg);
+  --ds-red:    var(--de-danger-fg);
+  --ds-green:  var(--de-success-fg);
+  --ds-purple: var(--de-processing-fg);
+  --ds-cyan:   var(--de-shipped-fg);
+  --ds-gray:   var(--de-neutral-fg);
+
+  --ds-font: var(--de-font);
 
   // ── LeptonX brand (drives breadcrumb hover, dropdown active, etc.) ───────
   --lpx-brand:   #{$clr-green};
@@ -14,10 +56,10 @@ $clr-bg:    #ffffff;
 
   // ── Bootstrap primary ─────────────────────────────────────────────────────
   --bs-primary:                #{$clr-green};
-  --bs-primary-rgb:            26, 138, 64;
+  --bs-primary-rgb:            14, 107, 63;
   --bs-primary-text-emphasis:  #{$clr-green};
-  --bs-primary-bg-subtle:      #d1f0dc;
-  --bs-primary-border-subtle:  #a3e1b9;
+  --bs-primary-bg-subtle:      #e6f2ea;
+  --bs-primary-border-subtle:  #bfdcc9;
 
   // ── Page & body ───────────────────────────────────────────────────────────
   --bs-body-bg:         #{$clr-bg};
@@ -34,23 +76,23 @@ $clr-bg:    #ffffff;
   --lpx-theme-dark-bg:  url('assets/images/login/login-bg-img-dark.svg');
 
   // ── Logo ──────────────────────────────────────────────────────────────────
-  --lpx-logo-icon: url('assets/images/logo/icon-lite.svg');
+  --lpx-logo-icon: url('assets/images/logo/dymo-mark.svg');
   --lpx-logo-url:  var(--lpx-logo-icon);
   --lpx-logo:      var(--lpx-logo-icon);
 
   // ── Buttons ───────────────────────────────────────────────────────────────
   --bs-btn-bg:                 #{$clr-green};
   --bs-btn-border-color:       #{$clr-green};
-  --bs-btn-hover-bg:           #157035;
-  --bs-btn-hover-border-color: #157035;
-  --bs-btn-active-bg:          #0f5228;
+  --bs-btn-hover-bg:           #0a5230;
+  --bs-btn-hover-border-color: #0a5230;
+  --bs-btn-active-bg:          #083f25;
 
   // ── Dropdowns / pills / pagination ───────────────────────────────────────
   --bs-dropdown-link-active-bg:  #{$clr-green};
-  --bs-nav-pills-link-active-bg: rgba(26, 138, 64, 0.15);
+  --bs-nav-pills-link-active-bg: rgba(14, 107, 63, 0.15);
   --bs-pagination-active-bg:     #{$clr-green};
-  --bs-list-group-active-bg:     rgba(26, 138, 64, 0.15);
-  --bs-accordion-active-bg:      rgba(26, 138, 64, 0.08);
+  --bs-list-group-active-bg:     rgba(14, 107, 63, 0.15);
+  --bs-accordion-active-bg:      rgba(14, 107, 63, 0.08);
 
   .abp-logo    { background-repeat: no-repeat; }
 
@@ -75,92 +117,122 @@ $clr-bg:    #ffffff;
 // ─── Base ─────────────────────────────────────────────────────────────────────
 html,
 body {
-  background-color: $clr-bg !important;
+  background-color: var(--de-bg) !important;
+  font-family: var(--de-font) !important;
+  color: var(--de-text-2);
+}
+
+// Page canvas sits behind the cards (spec: #F5F6F2, padding 28px 32px)
+.lpx-content-container,
+.lpx-content,
+.lpx-content-wrapper {
+  background-color: var(--de-bg) !important;
+  font-family: var(--de-font) !important;
+}
+
+.lpx-content {
+  padding: var(--de-page-pad) !important;
 }
 
 // ─── Sidebar shell ────────────────────────────────────────────────────────────
 .lpx-sidebar {
-  background-color: #ffffff !important;
-  color: #4a5568 !important;
-  border-right: 1px solid #e8edf2 !important;
+  background-color: var(--ds-sidebar-bg) !important;
+  color: var(--ds-text-body) !important;
+  border-right: var(--ds-hairline) solid var(--ds-border) !important;
 
   .lpx-logo-container {
-    background-color: #ffffff !important;
-    border-bottom: 1px solid #e8edf2 !important;
+    background-color: var(--ds-sidebar-bg) !important;
+    border-bottom: var(--ds-hairline) solid var(--ds-border) !important;
+    height: 73px !important;
+    padding: 0 22px !important;
   }
 }
 
 .lpx-sidebar-container .lpx-sidebar .lpx-nav .lpx-nav-menu {
-  background-color: #ffffff !important;
+  background-color: var(--ds-sidebar-bg) !important;
+  padding: 10px 12px !important;
 }
 
-// ─── Collapsible Sidebar: parent items toggle sub-menus with +/− ─────────────
+// ─── Collapsible sidebar: parent rows carry a rotating chevron ───────────────
 
-// Parent group items AND standalone top-level items (e.g. Dashboard): same icon sizing/alignment
+// Parent group items AND standalone top-level items (e.g. Dashboard)
 .lpx-nav-menu .outer-menu-item > lpx-sub-navbar > .lpx-menu-item-link {
   cursor: pointer !important;
-  color: #0B1020 !important;
-  font-size: 12.5px !important;
+  color: var(--ds-text-body) !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
-  padding: 10px 16px !important;
+  padding: 0 10px !important;
   margin-top: 0 !important;
-  height: auto !important;
-  line-height: 1.5 !important;
-  border-left: 3px solid transparent !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  line-height: 36px !important;
+  border-left: none !important;
+  border-radius: var(--ds-radius-sm) !important;
   background-color: transparent !important;
   position: relative !important;
 
   .lpx-menu-item-icon {
     display: inline-flex !important;
-    font-size: 15px !important;
-    width: 22px !important;
-    opacity: 0.8 !important;
-    margin-right: 10px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 17px !important;
+    width: 18px !important;
+    opacity: 1 !important;
+    margin-right: 11px !important;
+    color: var(--ds-text-muted) !important;
+  }
+
+  &:hover {
+    background-color: var(--ds-hover) !important;
+    color: var(--ds-text) !important;
+  }
+
+  // Declared here too: this selector outranks the generic `.selected` rule,
+  // so the Leaf fill has to be restated at this specificity to win.
+  &.selected {
+    background-color: var(--ds-leaf) !important;
+    color: var(--ds-accent-text) !important;
+    font-weight: 600 !important;
+
+    .lpx-menu-item-icon,
+    .dd-icon { color: var(--ds-accent-text) !important; }
   }
 }
 
-// Replace chevron dd-icon with +/− toggle
+// Chevron: keep the real glyph, rotate it open (reference behaviour)
 .lpx-nav-menu .lpx-menu-item-link .dd-icon {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   position: absolute !important;
-  right: 12px !important;
+  right: 8px !important;
   top: 50% !important;
-  transform: translateY(-50%) !important;
-  width: 20px !important;
-  height: 20px !important;
-  font-size: 0 !important;           // hide the original icon glyph
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 11px !important;
   opacity: 1 !important;
-  color: #9aa5b4 !important;
-  border-radius: 3px !important;
-  transition: all 0.15s ease !important;
+  color: #a8a29e !important;
+  transform: translateY(-50%) rotate(-90deg) !important;
+  transition: transform 0.16s ease, color 0.16s ease !important;
 
-  &::before {
-    content: '+' !important;
-    font-family: inherit !important;
-    font-size: 16px !important;
-    font-weight: 400 !important;
-    line-height: 1 !important;
-    color: #9aa5b4 !important;
-  }
+  i { font-size: 11px !important; line-height: 1 !important; }
 }
 
-// When expanded → show −
-.lpx-nav-menu .lpx-menu-item-link.expanded .dd-icon::before {
-  content: '−' !important;
-  color: $clr-green !important;
+.lpx-nav-menu .lpx-menu-item-link.expanded .dd-icon {
+  transform: translateY(-50%) rotate(0deg) !important;
+  color: #78716c !important;
 }
 
-// ─── Sidebar group headings (groupedItems path, kept for completeness) ─────────
+// ─── Sidebar section labels (OVERVIEW / COMMERCE / OPERATIONS …) ─────────────
 .lpx-nav-menu .group-menu-item {
-  color: #9aa5b4 !important;
-  font-size: 0.68rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.09em !important;
+  color: var(--ds-text-muted) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.99px !important;
   text-transform: uppercase !important;
+  padding: 18px 10px 6px !important;
 }
 
 // ─── Sidebar minimized state (JS sets left:-208px on container; CSS styles children)
@@ -222,110 +294,173 @@ body {
 
 // ─── Sidebar font ─────────────────────────────────────────────────────────────
 .lpx-nav-menu {
-  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
-  font-size: 12.5px !important;
+  font-family: var(--de-font) !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
 }
 
 // ─── Sidebar menu items ────────────────────────────────────────────────────────
 .lpx-nav-menu .lpx-menu-item-link {
-  color: #0B1020 !important;
-  border-left: 3px solid transparent !important;
-  padding-left: 15px !important;
-  transition: all 0.2s ease !important;
+  color: var(--ds-text-body) !important;
+  border-left: none !important;
+  border-radius: var(--ds-radius-sm) !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  margin: 1px 0 !important;
+  font-size: 14px !important;
+  transition: background-color 0.12s ease, color 0.12s ease !important;
 
   .lpx-menu-item-icon {
-    opacity: 0.85;
+    opacity: 1;
+    color: var(--ds-text-muted) !important;
+    font-size: 17px !important;
+    width: 18px !important;
   }
 
-  // Hover state
   &:hover {
-    color: $clr-green !important;
-    background-color: rgba(26, 138, 64, 0.06) !important;
-    border-left-color: rgba(26, 138, 64, 0.4) !important;
+    color: var(--ds-text) !important;
+    background-color: var(--ds-hover) !important;
 
-    .lpx-menu-item-icon {
+    .lpx-menu-item-icon { color: var(--ds-text-body) !important; }
+  }
+
+  // Active — Leaf fill with Solar Green label and icon
+  &.selected {
+    color: var(--ds-accent-text) !important;
+    font-weight: 600 !important;
+    background-color: var(--ds-leaf) !important;
+    box-shadow: none !important;
+
+    .lpx-menu-item-icon,
+    .dd-icon {
+      color: var(--ds-accent-text) !important;
       opacity: 1 !important;
     }
   }
 
-  // Active / selected state
-  &.selected,
+  // Expanded parent — stays flat, just darker text
   &.expanded {
-    color: $clr-green !important;
-    font-weight: 500 !important;
-    background-color: rgba(26, 138, 64, 0.09) !important;
-    border-left-color: $clr-green !important;
+    color: var(--ds-text) !important;
+    font-weight: 600 !important;
+    background-color: transparent !important;
 
     .lpx-menu-item-icon,
-    .dd-icon {
-      color: $clr-green !important;
-      opacity: 1 !important;
+    .dd-icon { color: var(--ds-text-body) !important; opacity: 1 !important; }
+
+    &:hover { background-color: var(--ds-hover) !important; }
+  }
+}
+
+// Child group: a hairline rail runs down the left of the nested items
+.lpx-nav-menu .lpx-inner-menu {
+  position: relative !important;
+  padding-left: 0 !important;
+
+  &::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 19px !important;
+    top: 2px !important;
+    bottom: 2px !important;
+    width: 1px !important;
+    background: var(--ds-border) !important;
+  }
+
+  &.collapsed::before { display: none !important; }
+}
+
+// Inner (child) menu items — the pill starts clear of the rail so the rail
+// stays visible behind every row, including the selected one.
+.lpx-nav-menu .lpx-inner-menu-item {
+  // Indent the row itself so the pill shrinks with it instead of overflowing
+  padding-left: 22px !important;
+
+  .lpx-menu-item-link {
+    margin-left: 0 !important;
+    padding: 0 10px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    line-height: 34px !important;
+    font-size: 13.5px !important;
+    border-left: none !important;
+    border-radius: var(--ds-radius-sm) !important;
+    color: var(--ds-text-body) !important;
+
+    .lpx-menu-item-icon {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 15px !important;
+      width: 18px !important;
+      margin-right: 10px !important;
+      color: var(--ds-text-subtle) !important;
+    }
+
+    &:hover {
+      color: var(--ds-text) !important;
+      background-color: var(--ds-hover) !important;
+
+      .lpx-menu-item-icon { color: var(--ds-text-muted) !important; }
+    }
+
+    // Active row reads through the white pill + weight, not a coloured icon
+    // Spec §63: active child is white with a 1px green ring, not a Leaf fill
+    &.selected {
+      color: var(--de-primary-text) !important;
+      font-weight: 600 !important;
+      background-color: var(--de-surface) !important;
+      box-shadow: 0 0 0 1px #d3e6da !important;
+
+      .lpx-menu-item-icon { color: var(--de-primary) !important; }
     }
   }
 }
 
-// Inner (child) menu items — no icons, L-shaped tree connector
-.lpx-nav-menu .lpx-inner-menu-item {
-  position: relative !important;
+// ─── Sidebar scrollbar: thin and quiet, only visible on hover ────────────────
+.lpx-sidebar-container,
+.lpx-sidebar,
+.lpx-nav,
+.lpx-nav-menu {
+  scrollbar-width: thin !important;
+  scrollbar-color: #d6d1ca transparent !important;
 
-  // Vertical line running through the item
-  &::before {
-    content: '' !important;
-    position: absolute !important;
-    left: 24px !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    width: 1px !important;
-    background-color: #d1d5db !important;
+  &::-webkit-scrollbar {
+    width: 5px !important;
+    height: 5px !important;
   }
 
-  // Horizontal branch from vertical line to text
-  &::after {
-    content: '' !important;
-    position: absolute !important;
-    left: 24px !important;
-    top: 50% !important;
-    width: 12px !important;
-    height: 1px !important;
-    background-color: #d1d5db !important;
+  &::-webkit-scrollbar-track {
+    background: transparent !important;
   }
 
-  // Last child: vertical line stops at the branch
-  &:last-child::before {
-    bottom: 50% !important;
+  &::-webkit-scrollbar-thumb {
+    background-color: #dbd6cf !important;
+    border-radius: 999px !important;
+    border: none !important;
   }
 
-  .lpx-menu-item-link {
-    padding-left: 44px !important;
-    border-left: none !important;
-
-    .lpx-menu-item-icon {
-      display: none !important;
-    }
-
-    &.selected,
-    &:hover {
-      color: $clr-green !important;
-      background-color: rgba(26, 138, 64, 0.07) !important;
-    }
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: #c7c0b7 !important;
   }
+
+  &::-webkit-scrollbar-button { display: none !important; }
 }
 
 // ─── Topbar ────────────────────────────────────────────────────────────────────
 .lpx-topbar-container {
   background-color: #ffffff !important;
-  border-bottom: 1px solid #e8edf2 !important;
+  border-bottom: var(--ds-hairline) solid var(--ds-border) !important;
 }
 
 .lpx-topbar-container .lpx-topbar {
   background-color: #ffffff !important;
-  border-color: #e8edf2 !important;
+  border-color: var(--ds-border) !important;
 }
 
-// ─── Topbar height ────────────────────────────────────────────────────────────
+// ─── Topbar height (spec: 64px) ───────────────────────────────────────────────
 .lpx-topbar-container .lpx-topbar {
-  min-height: 52px !important;
+  min-height: 64px !important;
+  padding-right: 24px !important;
   align-items: center !important;
 }
 
@@ -449,14 +584,16 @@ body {
 
 // ─── Content wrapper ───────────────────────────────────────────────────────────
 .lpx-content-wrapper {
-  border-color: #e8edf2 !important;
+  border-color: var(--ds-border) !important;
   background-color: $clr-bg !important;
 }
 
 // ─── Cards ────────────────────────────────────────────────────────────────────
 .card {
   background-color: #ffffff !important;
-  border-color: #e8edf2 !important;
+  border: var(--ds-hairline) solid var(--ds-border) !important;
+  border-radius: var(--ds-radius) !important;
+  box-shadow: none !important;
 }
 
 // ─── Form inputs: comfortable padding + brand-colored focus (replace AntD blue) ─
@@ -466,9 +603,23 @@ body {
 .ant-picker,
 .ant-input-number,
 textarea.ant-input {
-  padding: 5px 10px !important;
-  border-radius: 6px !important;
-  border-color: #d9d9d9 !important;
+  padding: 7px 11px !important;
+  border-radius: var(--ds-radius-sm) !important;
+  border-color: #dcd9d4 !important;
+}
+
+.ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+  height: 36px !important;
+  padding: 0 11px !important;
+
+  .ant-select-selection-item,
+  .ant-select-selection-placeholder { line-height: 34px !important; }
+}
+
+.ant-form-item-label > label {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #44403c !important;
 }
 
 .ant-input-affix-wrapper .ant-input,
@@ -492,7 +643,7 @@ textarea.ant-input {
 .ant-input-number-focused,
 .ant-select-focused:not(.ant-select-disabled) .ant-select-selector {
   border-color: $clr-green !important;
-  box-shadow: 0 0 0 2px rgba(26, 138, 64, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(14, 107, 63, 0.15) !important;
 }
 
 // ─── Tabs: brand-colored ink bar + active label (replace AntD blue) ────────────
@@ -517,15 +668,15 @@ textarea.ant-input {
   &:hover,
   &:focus,
   &:active {
-    background-color: #157035 !important;
-    border-color:     #157035 !important;
+    background-color: #0a5230 !important;
+    border-color:     #0a5230 !important;
   }
 }
 
 // ─── Links ────────────────────────────────────────────────────────────────────
 a {
   color: $clr-green;
-  &:hover { color: #157035; }
+  &:hover { color: #0a5230; }
 }
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
@@ -536,42 +687,46 @@ a {
 
 .page-link {
   color: $clr-green !important;
-  &:hover { color: #157035 !important; }
+  &:hover { color: #0a5230 !important; }
 }
 
 // ─── Brand logo: make the badge fill cleanly ──────────────────────────────────
+// ─── Brand mark: 34px per spec, sitting 11px from the wordmark ───────────────
 .lpx-brand-logo {
-  background-size: 32px 32px !important;
+  background-size: 34px 34px !important;
   background-position: center left !important;
-  width: 32px !important;
+  background-repeat: no-repeat !important;
+  width: 34px !important;
+  height: 34px !important;
+  margin-right: 11px !important;
 }
 
-// ─── Brand name: "Dymo" dark-bold + "Energy" green ────────────────────────────
+// ─── Wordmark: "Dymo" 700 Ink + "Energy" 500 Solar Green, 20px, -0.01em ──────
 .lpx-brand-name {
   background: transparent !important;
   color: transparent !important;        // hide the raw text node
   font-size: 0 !important;             // collapse original glyph space
-  line-height: 32px !important;
+  line-height: 1 !important;
   display: flex !important;
   align-items: center !important;
   gap: 0 !important;
+  font-family: var(--de-font) !important;
+  letter-spacing: -0.01em !important;
 
-  // "Dymo"
   &::before {
     content: 'Dymo';
-    font-size: 17px !important;
+    font-size: 20px !important;
     font-weight: 700 !important;
-    color: #1a202c !important;
-    line-height: 32px;
+    color: var(--de-text) !important;
+    line-height: 1;
   }
 
-  // "Energy"
   &::after {
     content: 'Energy';
-    font-size: 17px !important;
-    font-weight: 400 !important;
-    color: $clr-green !important;
-    line-height: 32px;
+    font-size: 20px !important;
+    font-weight: 500 !important;
+    color: var(--de-primary) !important;
+    line-height: 1;
   }
 }
 
@@ -596,99 +751,10 @@ a {
 
 // ─── Login brand strip ────────────────────────────────────────────────────────
 .lpx-layout-login {
-  background-color: rgba(26, 138, 64, 0.7) !important;
+  background-color: rgba(14, 107, 63, 0.7) !important;
 }
 
 
-// ─── Sidebar: colourful icons per menu item ───────────────────────────────────
-.lpx-nav-menu .lpx-inner-menu-item .lpx-menu-item-link {
-  .lpx-menu-item-icon {
-    // Home
-    &.fa-home           { color: #f59e0b !important; }  // amber
-
-    // Companies
-    &.fa-building       { color: #3b82f6 !important; }  // blue
-
-    // Site Settings
-    &.fa-sliders-h      { color: #8b5cf6 !important; }  // purple
-    &.fa-paint-brush    { color: #ec4899 !important; }  // pink
-
-    // Project Planning
-    &.fa-project-diagram  { color: #10b981 !important; } // emerald
-    &.fa-timeline         { color: #06b6d4 !important; } // cyan
-    &.fa-flag-checkered   { color: #f59e0b !important; } // amber
-    &.fa-user-tie         { color: #6366f1 !important; } // indigo
-    &.fa-cubes            { color: #84cc16 !important; } // lime
-
-    // Asset & Site Management
-    &.fa-map-location-dot { color: #ef4444 !important; } // red
-    &.fa-microchip        { color: #14b8a6 !important; } // teal
-    &.fa-calendar-check   { color: #f97316 !important; } // orange
-    &.fa-chart-area       { color: #0ea5e9 !important; } // sky
-
-    // Site Inspections
-    &.fa-clipboard-check  { color: #8b5cf6 !important; } // purple
-    &.fa-users-medical    { color: #10b981 !important; } // emerald
-    &.fa-file-contract    { color: #3b82f6 !important; } // blue
-
-    // Inventory & Procurement
-    &.fa-tag              { color: #f59e0b !important; } // amber
-    &.fa-warehouse        { color: #6366f1 !important; } // indigo
-    &.fa-clipboard-list   { color: #84cc16 !important; } // lime
-    &.fa-truck            { color: #ef4444 !important; } // red
-    &.fa-list-check       { color: #06b6d4 !important; } // cyan
-    &.fa-cube             { color: #ec4899 !important; } // pink
-
-    // Workforce
-    &.fa-user-astronaut   { color: #8b5cf6 !important; } // purple
-    &.fa-checklist        { color: #10b981 !important; } // emerald
-    &.fa-user-check       { color: #3b82f6 !important; } // blue
-    &.fa-calendar-days    { color: #f97316 !important; } // orange
-    &.fa-money-bill-wave  { color: #22c55e !important; } // green
-
-    // Maintenance & Service
-    &.fa-hammer           { color: #ef4444 !important; } // red
-    &.fa-sitemap          { color: #6366f1 !important; } // indigo
-    &.fa-history          { color: #f59e0b !important; } // amber
-    &.fa-receipt          { color: #14b8a6 !important; } // teal
-
-    // Sales
-    &.fa-cash-register    { color: #22c55e !important; } // green
-    &.fa-desktop          { color: #3b82f6 !important; } // blue
-    &.fa-file-invoice-dollar { color: #f97316 !important; } // orange
-    &.fa-undo-alt         { color: #ef4444 !important; } // red
-    &.fa-percentage       { color: #8b5cf6 !important; } // purple
-    &.fa-users            { color: #06b6d4 !important; } // cyan
-    &.fa-layer-group      { color: #ec4899 !important; } // pink
-
-    // E-Commerce
-    &.fa-shopping-bag     { color: #f59e0b !important; } // amber
-
-    // Shipping
-    &.fa-shipping-fast    { color: #3b82f6 !important; } // blue
-
-    // Financials
-    &.fa-coins            { color: #f59e0b !important; } // amber
-    &.fa-file-invoice     { color: #6366f1 !important; } // indigo
-    &.fa-piggy-bank       { color: #ec4899 !important; } // pink
-
-    // Compliance
-    &.fa-magnifying-glass { color: #8b5cf6 !important; } // purple
-    &.fa-file-pdf         { color: #ef4444 !important; } // red
-    &.fa-shield           { color: #10b981 !important; } // emerald
-
-    // Analytics
-    &.fa-gauge            { color: #f97316 !important; } // orange
-    &.fa-scroll           { color: #6366f1 !important; } // indigo
-    &.fa-chart-line       { color: #22c55e !important; } // green
-
-    // Marketing
-    &.fa-bullhorn         { color: #ef4444 !important; } // red
-    &.fa-link             { color: #3b82f6 !important; } // blue
-    &.fa-sms              { color: #10b981 !important; } // emerald
-    &.fa-envelope         { color: #f59e0b !important; } // amber
-  }
-}
 
 // ─── Invoice print — only render the cloned invoice, hide everything else ─────
 @media print {
@@ -710,4 +776,1358 @@ a {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+}
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  DESIGN SYSTEM — shared surfaces used across every admin page
+//  Warm neutral canvas, bordered cards, quiet pills. No heavy shadows.
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ─── Typography baseline ──────────────────────────────────────────────────────
+.lpx-content-container,
+.lpx-content {
+  font-family: var(--ds-font);
+  color: var(--ds-text);
+}
+
+// ─── Page header: big title + muted subtitle + right-side actions ─────────────
+.ds-page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.ds-page-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ds-text);
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+
+.ds-page-sub {
+  font-size: 14px;
+  color: var(--ds-text-muted);
+  margin: 0;
+}
+
+.ds-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// ─── Stat strip: one bordered box, cells split by hairlines ───────────────────
+.ds-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #fff;
+  border: var(--ds-hairline) solid var(--ds-border);
+  border-radius: var(--ds-radius);
+  box-shadow: none;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.ds-stat {
+  padding: 18px 22px;
+  border-right: 1px solid var(--ds-border);
+
+  &:last-child { border-right: none; }
+}
+
+.ds-stat__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #57534e;
+  margin-bottom: 10px;
+
+  i { font-size: 15px; color: var(--ds-text-subtle); }
+}
+
+.ds-stat__value {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ds-text);
+  margin-bottom: 8px;
+}
+
+.ds-stat__foot {
+  font-size: 12.5px;
+  color: var(--ds-text-muted);
+
+  &--amber { color: var(--ds-amber); }
+  &--red   { color: var(--ds-red); }
+  &--green { color: var(--ds-green); }
+}
+
+// ─── Panel: the standard white card with a header row ─────────────────────────
+.ds-panel {
+  background: #fff;
+  border: var(--ds-hairline) solid var(--ds-border);
+  border-radius: var(--ds-radius);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.ds-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.ds-panel__title {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--ds-text);
+  margin: 0;
+}
+
+.ds-panel__link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ds-text-muted) !important;
+  text-decoration: none;
+
+  &:hover { color: var(--ds-text) !important; }
+}
+
+.ds-panel__body  { padding: 0 20px 16px; }
+
+.ds-panel__empty {
+  padding: 28px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ds-text-subtle);
+}
+
+// ─── Segmented control (All / Pending / Delivered) ────────────────────────────
+.ds-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: #f3f1ee;
+  border-radius: 9px;
+  padding: 3px;
+}
+
+.ds-segment__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  padding: 5px 11px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #57534e;
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover { color: var(--ds-text); }
+
+  &--active {
+    background: #fff;
+    color: var(--ds-text);
+    font-weight: 600;
+    box-shadow: var(--ds-shadow-pill);
+  }
+
+  span { color: var(--ds-text-subtle); font-weight: 500; }
+}
+
+// ─── Status pill with leading dot ─────────────────────────────────────────────
+.ds-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #44403c;
+  white-space: nowrap;
+}
+
+.ds-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--ds-gray);
+
+  &--blue   { background: var(--ds-blue); }
+  &--amber  { background: var(--ds-amber); }
+  &--red    { background: var(--ds-red); }
+  &--green  { background: var(--ds-green); }
+  &--purple { background: var(--ds-purple); }
+}
+
+// ─── Avatar chip with initials ────────────────────────────────────────────────
+.ds-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #44403c;
+  background: #ece9e4;
+  flex-shrink: 0;
+}
+
+// ─── Progress bar ─────────────────────────────────────────────────────────────
+.ds-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: #ece9e4;
+  overflow: hidden;
+  min-width: 90px;
+}
+
+.ds-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ds-accent);
+}
+
+// ─── ng-zorro tables: quiet header, hairline rows, roomy cells ────────────────
+.ant-table {
+  font-family: var(--ds-font);
+  color: var(--ds-text);
+}
+
+.ant-table-thead > tr > th {
+  background: var(--ds-bg-subtle) !important;
+  border-bottom: 1px solid var(--ds-border) !important;
+  color: #57534e !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase;
+  padding: 10px 14px !important;
+
+  &::before { display: none !important; }
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--ds-border-soft) !important;
+  font-size: 13px !important;
+  padding: 11px 14px !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--ds-bg-subtle) !important;
+}
+
+// ─── ng-zorro tags: neutral pill, status carried by a leading colour dot ──────
+// (Matches the reference status menu: the dot conveys state, not a block fill.)
+.ant-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--ds-border) !important;
+  background: var(--ds-bg-subtle) !important;
+  color: #44403c !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  padding: 2px 10px !important;
+  margin-inline-end: 4px !important;
+  line-height: 18px !important;
+
+  &::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ds-gray);
+    flex-shrink: 0;
+  }
+}
+
+// Dot colour per ng-zorro nzColor keyword
+.ant-tag-blue::before,
+.ant-tag-processing::before        { background: var(--ds-blue) !important; }
+.ant-tag-gold::before,
+.ant-tag-orange::before,
+.ant-tag-warning::before           { background: var(--ds-amber) !important; }
+.ant-tag-success::before,
+.ant-tag-green::before,
+.ant-tag-lime::before              { background: var(--ds-green) !important; }
+.ant-tag-error::before,
+.ant-tag-red::before               { background: var(--ds-red) !important; }
+.ant-tag-purple::before,
+.ant-tag-magenta::before           { background: var(--ds-purple) !important; }
+.ant-tag-cyan::before              { background: var(--ds-cyan) !important; }
+
+// Tags that are labels rather than statuses opt out of the dot
+.ant-tag-has-color::before,
+.ant-tag--plain::before            { display: none !important; }
+
+// ─── ng-zorro buttons ─────────────────────────────────────────────────────────
+.ant-btn {
+  border-radius: var(--ds-radius-sm) !important;
+  font-family: var(--ds-font);
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  border-color: #dcd9d4 !important;
+
+  &:not(.ant-btn-primary):not(.ant-btn-dangerous):hover {
+    border-color: #c7c2bb !important;
+    color: var(--ds-text) !important;
+  }
+}
+
+.ant-btn-primary {
+  background: var(--ds-accent) !important;
+  border-color: var(--ds-accent) !important;
+
+  &:hover,
+  &:focus {
+    background: #0a5230 !important;
+    border-color: #0a5230 !important;
+  }
+}
+
+// ─── ng-zorro modals & drawers ────────────────────────────────────────────────
+.ant-modal-content {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+.ant-modal-header {
+  border-bottom: 1px solid var(--ds-border) !important;
+  padding: 16px 22px !important;
+}
+
+.ant-modal-title {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--ds-text) !important;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid var(--ds-border) !important;
+  padding: 12px 22px !important;
+}
+
+.ant-drawer-header {
+  border-bottom: 1px solid var(--ds-border) !important;
+  padding: 16px 22px !important;
+}
+
+.ant-drawer-title {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--ds-text) !important;
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 1100px) {
+  .ds-stat-strip { grid-template-columns: repeat(2, 1fr); }
+  .ds-stat:nth-child(2)    { border-right: none; }
+  .ds-stat:nth-child(-n+2) { border-bottom: 1px solid var(--ds-border); }
+}
+
+@media (max-width: 640px) {
+  .ds-stat-strip { grid-template-columns: 1fr; }
+  .ds-stat       { border-right: none !important; border-bottom: 1px solid var(--ds-border); }
+  .ds-stat:last-child { border-bottom: none; }
+  .ds-page-title { font-size: 23px; }
+}
+
+
+// ─── Dropdowns & select menus (reference status picker) ───────────────────────
+.ant-select-dropdown,
+.ant-dropdown-menu {
+  border-radius: 10px !important;
+  padding: 5px !important;
+  border: 1px solid var(--ds-border) !important;
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.10) !important;
+}
+
+.ant-select-item,
+.ant-dropdown-menu-item {
+  border-radius: 7px !important;
+  min-height: 34px !important;
+  padding: 6px 11px !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  color: #3f3b37 !important;
+}
+
+.ant-select-item-option-active:not(.ant-select-item-option-disabled),
+.ant-dropdown-menu-item:hover {
+  background: var(--ds-hover) !important;
+}
+
+// Selected row: no blue block — the tick on the right carries the state
+.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: transparent !important;
+  font-weight: 600 !important;
+  color: var(--ds-text) !important;
+}
+
+.ant-select-item-option-state {
+  color: var(--ds-accent) !important;
+}
+
+// ─── Status option: coloured dot + label, used inside selects and tables ──────
+.status-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// ─── Focus ring ───────────────────────────────────────────────────────────────
+.ant-select-focused:not(.ant-select-disabled) .ant-select-selector,
+.ant-input:focus,
+.ant-input-focused {
+  box-shadow: 0 0 0 3px var(--ds-accent-soft) !important;
+}
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  HANDOFF SPEC OVERRIDES — tokens.css is the source of truth
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ─── Status pills: tinted background + matching text + currentColor dot ───────
+// Spec §4: 12.5px/600, padding 3px 9px, radius 999, 6px dot before the text.
+.ant-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  border: none !important;
+  border-radius: var(--de-radius-pill) !important;
+  padding: 3px 9px !important;
+  font-family: var(--de-font) !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  line-height: 18px !important;
+  margin-inline-end: 4px !important;
+  background: var(--de-neutral-bg) !important;
+  color: var(--de-neutral-fg) !important;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+}
+
+// Pending / New
+.ant-tag-gold,
+.ant-tag-orange,
+.ant-tag-warning {
+  background: var(--de-pending-bg) !important;
+  color: var(--de-pending-fg) !important;
+}
+
+// Confirmed / Contacted
+.ant-tag-processing,
+.ant-tag-blue {
+  background: var(--de-confirmed-bg) !important;
+  color: var(--de-confirmed-fg) !important;
+}
+
+// Processing
+.ant-tag-purple,
+.ant-tag-magenta {
+  background: var(--de-processing-bg) !important;
+  color: var(--de-processing-fg) !important;
+}
+
+// Shipped
+.ant-tag-cyan {
+  background: var(--de-shipped-bg) !important;
+  color: var(--de-shipped-fg) !important;
+}
+
+// Delivered / Active / Quoted / Paid
+.ant-tag-success,
+.ant-tag-green,
+.ant-tag-lime {
+  background: var(--de-success-bg) !important;
+  color: var(--de-success-fg) !important;
+}
+
+// Errors / low stock / due
+.ant-tag-error,
+.ant-tag-red {
+  background: var(--de-danger-bg) !important;
+  color: var(--de-danger-fg) !important;
+}
+
+// Cancelled / Inactive / Closed keep the neutral default
+.ant-tag-default { background: var(--de-neutral-bg) !important; color: var(--de-neutral-fg) !important; }
+
+// Tags carrying an explicit colour opt out of the dot
+.ant-tag-has-color::before { display: none !important; }
+
+// ─── Controls: 40px tall per spec §4 ─────────────────────────────────────────
+.ant-btn {
+  height: var(--de-control-h) !important;
+  border-radius: var(--de-radius-control) !important;
+  font-family: var(--de-font) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-color: var(--de-border-input) !important;
+  box-shadow: none !important;
+}
+
+.ant-btn-sm { height: 32px !important; font-size: 13px !important; }
+
+.ant-btn-primary {
+  background: var(--de-primary) !important;
+  border-color: var(--de-primary) !important;
+  color: #fff !important;
+
+  &:hover,
+  &:focus {
+    background: var(--de-primary-hover) !important;
+    border-color: var(--de-primary-hover) !important;
+  }
+}
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-picker,
+.ant-input-number,
+.ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+  min-height: var(--de-control-h) !important;
+  border-radius: var(--de-radius-control) !important;
+  border-color: var(--de-border-input) !important;
+  font-family: var(--de-font) !important;
+  font-size: 14px !important;
+}
+
+.ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+  height: var(--de-control-h) !important;
+
+  .ant-select-selection-item,
+  .ant-select-selection-placeholder { line-height: 38px !important; }
+}
+
+// Focus: primary border + 3px focus ring
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused,
+.ant-picker-focused,
+.ant-input-number-focused,
+.ant-select-focused:not(.ant-select-disabled) .ant-select-selector {
+  border-color: var(--de-primary) !important;
+  box-shadow: 0 0 0 3px var(--de-focus-ring) !important;
+}
+
+// Field labels: sentence case, 13px/600 (replaces the ALL-CAPS grey labels)
+.ant-form-item-label > label {
+  font-family: var(--de-font) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  color: var(--de-text) !important;
+}
+
+// ─── Tables: header h40 muted, rows h60, soft dividers ───────────────────────
+.ant-table {
+  font-family: var(--de-font) !important;
+  color: var(--de-text-2) !important;
+}
+
+.ant-table-thead > tr > th {
+  height: 40px !important;
+  padding: 0 16px !important;
+  background: var(--de-surface-muted) !important;
+  border-bottom: 1px solid var(--de-border) !important;
+  color: var(--de-text-muted) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+
+  &::before { display: none !important; }
+}
+
+.ant-table-tbody > tr > td {
+  height: var(--de-row-h) !important;
+  padding: 10px 16px !important;
+  border-bottom: 1px solid var(--de-border-soft) !important;
+  font-size: 14px !important;
+}
+
+.ant-table-tbody > tr:hover > td { background: #f8faf7 !important; }
+
+// Numbers line up in tables and KPIs
+.ant-table td,
+.ant-table th { font-variant-numeric: tabular-nums; }
+
+// ─── Cards / drawers / modals ────────────────────────────────────────────────
+.card,
+.ds-panel,
+.ant-modal-content {
+  border-radius: var(--de-radius-card) !important;
+  box-shadow: none !important;
+}
+
+.card,
+.ds-panel {
+  border: 1px solid var(--de-border) !important;
+  background: var(--de-surface) !important;
+}
+
+.ant-modal-header,
+.ant-drawer-header {
+  border-bottom: 1px solid var(--de-border) !important;
+}
+
+.ant-modal-title,
+.ant-drawer-title {
+  font-family: var(--de-font) !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--de-text) !important;
+}
+
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  SIDEBAR — reference/Sidebar.dc.html, exact values
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ─── Section labels (OVERVIEW / COMMERCE / …) ────────────────────────────────
+// Entries carry iconClass "de-section-label"; :has() lets us restyle the row.
+.lpx-nav-menu .outer-menu-item > lpx-sub-navbar > .lpx-menu-item-link:has(.de-section-label) {
+  height: auto !important;
+  min-height: 0 !important;
+  line-height: 1.2 !important;
+  padding: 16px 10px 6px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  pointer-events: none !important;
+  cursor: default !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.09em !important;
+  text-transform: uppercase !important;
+  color: var(--de-text-muted) !important;
+
+  .lpx-menu-item-icon,
+  .dd-icon { display: none !important; }
+}
+
+// The very first section label sits flush with the top of the nav
+.lpx-nav-menu > .outer-menu-item:first-child > lpx-sub-navbar > .lpx-menu-item-link:has(.de-section-label) {
+  padding-top: 6px !important;
+}
+
+// ─── Brand header: 72px, 11px gap, soft bottom border ────────────────────────
+.lpx-sidebar .lpx-logo-container {
+  height: 72px !important;
+  gap: 11px !important;
+  padding: 0 22px !important;
+  border-bottom: 1px solid #eef0eb !important;
+}
+
+// ─── Nav padding ─────────────────────────────────────────────────────────────
+.lpx-sidebar-container .lpx-sidebar .lpx-nav .lpx-nav-menu {
+  padding: 6px 12px 12px !important;
+}
+
+// ─── Child group: 19px indent, 10px inner pad, hairline rail ─────────────────
+.lpx-nav-menu .lpx-inner-menu {
+  position: relative !important;
+  margin: 2px 0 6px 19px !important;
+  padding-left: 10px !important;
+  border-left: 1px solid var(--de-border) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+
+  // The rail is a real border now, so drop the pseudo-element version
+  &::before { display: none !important; }
+  &.collapsed { border-left-color: transparent !important; }
+}
+
+// ─── Child items: 32px, no icon, 13.5px ──────────────────────────────────────
+.lpx-nav-menu .lpx-inner-menu-item {
+  padding-left: 0 !important;
+
+  .lpx-menu-item-link {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    line-height: 32px !important;
+    margin: 0 !important;
+    padding: 0 10px !important;
+    border-radius: 7px !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    color: #4a564f !important;
+    background: transparent !important;
+    box-shadow: none !important;
+
+    // Mock children carry no icons — the rail supplies the hierarchy
+    .lpx-menu-item-icon { display: none !important; }
+
+    &:hover {
+      background: var(--ds-hover) !important;
+      color: var(--de-text) !important;
+    }
+
+    &.selected {
+      background: var(--de-surface) !important;
+      color: var(--de-primary-text) !important;
+      font-weight: 600 !important;
+      box-shadow: 0 0 0 1px #d3e6da, 0 1px 2px rgba(10, 61, 38, 0.06) !important;
+    }
+  }
+}
+
+// ─── Parent of an open group: green label, no fill ───────────────────────────
+.lpx-nav-menu .outer-menu-item > lpx-sub-navbar > .lpx-menu-item-link.expanded {
+  background: transparent !important;
+  color: var(--de-primary-text) !important;
+  font-weight: 600 !important;
+
+  .lpx-menu-item-icon { color: var(--de-primary) !important; }
+}
+
+// ─── Chevron: 14px, points right, rotates 90° open ───────────────────────────
+.lpx-nav-menu .lpx-menu-item-link .dd-icon {
+  right: 10px !important;
+  width: 14px !important;
+  height: 14px !important;
+  color: #8a958e !important;
+  transform: translateY(-50%) rotate(0deg) !important;
+
+  i { font-size: 12px !important; }
+}
+
+.lpx-nav-menu .lpx-menu-item-link.expanded .dd-icon {
+  transform: translateY(-50%) rotate(90deg) !important;
+  color: #8a958e !important;
+}
+
+// Leaf rows have no chevron at all
+.lpx-nav-menu .outer-menu-item:not(:has(.lpx-inner-menu)) .dd-icon {
+  display: none !important;
+}
+
+// ─── Sidebar footer: storefront pill + user row ──────────────────────────────
+.de-sidebar-foot {
+  flex-shrink: 0;
+  padding: 12px;
+  border-top: 1px solid #eef0eb;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--de-sidebar-bg);
+  font-family: var(--de-font);
+}
+
+.de-storefront {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eef6f0;
+  text-decoration: none;
+  color: var(--de-primary-text) !important;
+  font-size: 13px;
+  font-weight: 600;
+
+  &:hover { background: #e4efe8; }
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #16a34a;
+    box-shadow: 0 0 0 3px #cfe9d8;
+    flex-shrink: 0;
+  }
+
+  &__label { flex-grow: 1; }
+
+  &__visit {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+  }
+}
+
+.de-userrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 48px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover { background: var(--ds-hover); }
+
+  &__avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--de-forest);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__text {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+    min-width: 0;
+  }
+
+  &__name { font-size: 14px; font-weight: 600; color: var(--de-text); }
+  &__role { font-size: 12px; color: var(--de-text-muted); }
+}
+
+// Keep the nav scrolling above the pinned footer
+.lpx-sidebar .lpx-nav {
+  display: flex !important;
+  flex-direction: column !important;
+  flex-grow: 1 !important;
+  min-height: 0 !important;
+}
+
+.lpx-sidebar-container .lpx-sidebar .lpx-nav .lpx-nav-menu {
+  flex-grow: 1 !important;
+  overflow-y: auto !important;
+}
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  TOP BAR — reference/Topbar.dc.html
+//  64px white bar: collapse button · divider · breadcrumb — search · bell · EN · avatar
+// ═════════════════════════════════════════════════════════════════════════════
+
+.lpx-topbar-container .lpx-topbar {
+  height: var(--de-topbar-h) !important;
+  min-height: var(--de-topbar-h) !important;
+  padding: 0 24px 0 16px !important;
+  background: var(--de-surface) !important;
+  border-bottom: 1px solid var(--de-border) !important;
+  font-family: var(--de-font) !important;
+  color: var(--de-text) !important;
+}
+
+// ─── Left: collapse button + hairline divider ────────────────────────────────
+.lpx-topbar-container .lpx-topbar .lpx-breadcrumb-container {
+  gap: 14px !important;
+  padding: 0 !important;
+}
+
+.topbar-hamburger {
+  position: relative !important;
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  margin: 0 22px 0 0 !important;
+  border: 0 !important;
+  border-radius: var(--de-radius-control) !important;
+  background: transparent !important;
+  color: #4a564f !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+
+  &:hover { background: var(--de-surface-muted) !important; color: var(--de-text) !important; }
+
+  svg { display: block; }
+}
+
+.topbar-divider {
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 22px;
+  background: var(--de-border);
+}
+
+// ─── Breadcrumb: section muted, page 600 ─────────────────────────────────────
+.lpx-breadcrumb-item {
+  font-family: var(--de-font) !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: var(--de-text-muted) !important;
+
+  a { color: var(--de-text-muted) !important; font-weight: 400 !important; }
+
+  &:last-child,
+  &:last-child a {
+    color: var(--de-text) !important;
+    font-weight: 600 !important;
+  }
+}
+
+.lpx-breadcrumb-separator::before {
+  content: '' !important;
+  width: 14px;
+  height: 14px;
+  background: no-repeat center / 14px 14px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A3ACA5' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E");
+}
+
+// ─── Right cluster ───────────────────────────────────────────────────────────
+.lpx-topbar .lpx-topbar-content {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+// Search field
+.topbar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 280px;
+  height: 38px;
+  box-sizing: border-box;
+  padding: 0 8px 0 12px;
+  border: 1px solid var(--de-border);
+  border-radius: var(--de-radius-control);
+  background: var(--de-surface-muted);
+  color: var(--de-text-muted);
+  flex-shrink: 0;
+
+  &:focus-within {
+    border-color: var(--de-primary);
+    box-shadow: 0 0 0 3px var(--de-focus-ring);
+  }
+
+  svg { flex-shrink: 0; }
+
+  input {
+    flex-grow: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--de-text);
+
+    &::placeholder { color: var(--de-placeholder); }
+    &::-webkit-search-cancel-button { display: none; }
+  }
+
+  &__kbd {
+    flex-shrink: 0;
+    padding: 2px 6px;
+    border: 1px solid #dadfd7;
+    border-radius: 4px;
+    background: var(--de-surface);
+    font-family: var(--de-font-mono);
+    font-size: 11px;
+    color: #4a564f;
+    white-space: nowrap;
+  }
+}
+
+// Notification bell with amber dot
+.topbar-bell {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: var(--de-radius-control);
+  background: transparent;
+  color: var(--de-text-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &:hover { background: var(--de-surface-muted); }
+
+  &__dot {
+    position: absolute;
+    top: 7px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--de-sun);
+    border: 2px solid var(--de-surface);
+  }
+}
+
+// ─── ABP toolbar items: language pill + user row ─────────────────────────────
+.lpx-topbar lpx-toolbar-items {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.lpx-topbar lpx-toolbar-item {
+  display: flex !important;
+  align-items: center !important;
+}
+
+// Language selector → outlined "EN" button
+.lpx-topbar lpx-toolbar-item:has(abp-language-selection) > .lpx-menu-item-link {
+  height: 34px !important;
+  padding: 0 10px !important;
+  border: 1px solid var(--de-border) !important;
+  border-radius: var(--de-radius-control) !important;
+  background: var(--de-surface) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--de-text-2) !important;
+
+  &:hover { background: var(--de-surface-muted) !important; }
+}
+
+// User profile → avatar + name
+.lpx-topbar lpx-toolbar-item:has(abp-user-profile) > .lpx-menu-item-link {
+  height: 38px !important;
+  padding: 0 6px !important;
+  border-radius: var(--de-radius-control) !important;
+  background: transparent !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--de-text) !important;
+
+  &:hover { background: var(--de-surface-muted) !important; }
+}
+
+.lpx-topbar .lpx-topbar-content .lpx-menu-item-link {
+  font-family: var(--de-font) !important;
+}
+
+@media (max-width: 1100px) {
+  .topbar-search { display: none; }
+}
+
+// Injected top-bar action cluster: pushes itself to the right of the breadcrumb
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  BRAND HEADER + TOP BAR FIXES
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ─── Sidebar brand row: the anchor is inline by default, which pins the 34px
+//     mark to the top of the 72px header and visually clips it. Make it a
+//     centred flex row (spec: height 72, gap 11, padding 0 22).
+.lpx-sidebar .lpx-logo-container {
+  display: flex !important;
+  align-items: center !important;
+  height: 72px !important;
+  min-height: 72px !important;
+  padding: 0 22px !important;
+  overflow: hidden !important;
+
+  > a,
+  a.text-decoration-none {
+    display: flex !important;
+    align-items: center !important;
+    gap: 11px !important;
+    height: 100% !important;
+    text-decoration: none !important;
+  }
+}
+
+.lpx-brand-logo {
+  flex-shrink: 0 !important;
+  margin-right: 0 !important;   // the flex gap supplies the 11px
+  align-self: center !important;
+}
+
+.lpx-brand-name {
+  align-self: center !important;
+  white-space: nowrap !important;
+}
+
+// ─── Breadcrumb separator: render a real chevron, not the icon-font glyph ────
+.lpx-breadcrumb-separator {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin: 0 8px !important;
+
+  lpx-icon,
+  i,
+  [class*='bi-'] { display: none !important; }
+
+  &::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 14px !important;
+    height: 14px !important;
+    background: no-repeat center / 14px 14px
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A3ACA5' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E");
+  }
+}
+
+// Breadcrumb leading icon is not in the design
+.lpx-breadcrumb-item .lpx-breadcrumb-item-icon { display: none !important; }
+
+// ─── Top bar avatar: forest circle with initials ─────────────────────────────
+.topbar-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--de-forest);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+// Hide ABP's stock person glyph once our initials badge is in place
+.lpx-topbar .lpx-menu-item-link.has-topbar-avatar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+
+  .lpx-menu-item-icon,
+  abp-user-profile > i,
+  abp-user-profile .bi { display: none !important; }
+
+  .lpx-menu-item-text,
+  abp-user-profile { font-size: 14px !important; font-weight: 600 !important; color: var(--de-text) !important; }
+}
+
+// ─── Language selector → outlined EN pill ────────────────────────────────────
+.lpx-topbar lpx-toolbar-item:has(abp-language-selection) > .lpx-menu-item-link,
+.lpx-topbar abp-language-selection > .lpx-menu-item-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 34px !important;
+  padding: 0 10px !important;
+  border: 1px solid var(--de-border) !important;
+  border-radius: var(--de-radius-control) !important;
+  background: var(--de-surface) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--de-text-2) !important;
+
+  &:hover { background: var(--de-surface-muted) !important; }
+}
+
+// Long locale names ("Chinese (Traditional)") collapse to the short code
+.lpx-topbar abp-language-selection .lpx-menu-item-text {
+  max-width: 34px !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-transform: uppercase !important;
+}
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  PAGINATION — reference/Companies.dc.html + Orders.dc.html footers
+//  32px squares at radius 7; prev/next outlined; current page solid green.
+//  Global so every list page (Orders, Companies, Quote requests, …) matches.
+// ═════════════════════════════════════════════════════════════════════════════
+
+.ant-pagination {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-family: var(--de-font) !important;
+}
+
+// Every cell is a 32px square; ng-zorro's default margins would break the 6px gap
+.ant-pagination .ant-pagination-item,
+.ant-pagination .ant-pagination-prev,
+.ant-pagination .ant-pagination-next,
+.ant-pagination .ant-pagination-jump-prev,
+.ant-pagination .ant-pagination-jump-next {
+  min-width: 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 30px !important;
+  margin: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 7px !important;
+  background: transparent !important;
+  transition: background 0.12s ease, border-color 0.12s ease !important;
+}
+
+// Page numbers: plain until hovered
+.ant-pagination .ant-pagination-item a {
+  padding: 0 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #4a564f !important;
+}
+
+.ant-pagination .ant-pagination-item:hover,
+.ant-pagination .ant-pagination-jump-prev:hover,
+.ant-pagination .ant-pagination-jump-next:hover {
+  background: var(--de-neutral-bg) !important;
+  border-color: var(--de-border) !important;
+}
+
+.ant-pagination .ant-pagination-item:hover a { color: var(--de-text) !important; }
+
+// Current page: solid Solar Green
+.ant-pagination .ant-pagination-item-active,
+.ant-pagination .ant-pagination-item-active:hover {
+  background: var(--de-primary) !important;
+  border-color: var(--de-primary) !important;
+}
+
+.ant-pagination .ant-pagination-item-active a,
+.ant-pagination .ant-pagination-item-active:hover a {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+// Prev / next: outlined squares
+.ant-pagination .ant-pagination-prev .ant-pagination-item-link,
+.ant-pagination .ant-pagination-next .ant-pagination-item-link {
+  width: 100% !important;
+  height: 100% !important;
+  border: 1px solid var(--de-border) !important;
+  border-radius: 7px !important;
+  background: var(--de-surface) !important;
+  color: #4a564f !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.ant-pagination .ant-pagination-prev:hover .ant-pagination-item-link,
+.ant-pagination .ant-pagination-next:hover .ant-pagination-item-link {
+  background: var(--de-neutral-bg) !important;
+  color: var(--de-text) !important;
+}
+
+.ant-pagination .ant-pagination-disabled .ant-pagination-item-link,
+.ant-pagination .ant-pagination-disabled:hover .ant-pagination-item-link {
+  background: var(--de-surface) !important;
+  color: var(--de-placeholder) !important;
+  border-color: var(--de-border-soft) !important;
+}
+
+// "10 / page" select
+.ant-pagination .ant-pagination-options {
+  margin-left: 8px !important;
+}
+
+.ant-pagination .ant-pagination-options .ant-select-selector {
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 12px !important;
+  border: 1px solid var(--de-border-input) !important;
+  border-radius: var(--de-radius-control) !important;
+  background: var(--de-surface) !important;
+  font-size: 13px !important;
+}
+
+.ant-pagination .ant-pagination-options .ant-select-selection-item {
+  line-height: 30px !important;
+  font-size: 13px !important;
+  color: var(--de-text) !important;
+}
+
+.ant-pagination .ant-pagination-options .ant-select-focused .ant-select-selector {
+  border-color: var(--de-primary) !important;
+  box-shadow: 0 0 0 3px var(--de-focus-ring) !important;
+}
+
+// Quick-jump input, when a page enables it
+.ant-pagination .ant-pagination-options-quick-jumper input {
+  height: 32px !important;
+  border-radius: var(--de-radius-control) !important;
+  border-color: var(--de-border-input) !important;
+}
+
+// ─── Bootstrap pagination (ABP identity / settings pages) ────────────────────
+.page-item .page-link {
+  min-width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 3px;
+  border: 1px solid transparent !important;
+  border-radius: 7px !important;
+  background: transparent !important;
+  color: #4a564f !important;
+  font-size: 13px;
+  font-weight: 500;
+
+  &:hover {
+    background: var(--de-neutral-bg) !important;
+    border-color: var(--de-border) !important;
+    color: var(--de-text) !important;
+  }
+}
+
+.page-item.active .page-link {
+  background: var(--de-primary) !important;
+  border-color: var(--de-primary) !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.page-item.disabled .page-link {
+  color: var(--de-placeholder) !important;
+  background: transparent !important;
+}
+
+// ─── Shared footer label ("Page 1 of 3" / "Showing 7 of 142 orders") ─────────
+.ds-page-label {
+  font-size: 13px;
+  color: var(--de-text-muted);
+  font-family: var(--de-font);
 }

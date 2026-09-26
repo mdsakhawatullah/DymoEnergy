@@ -1,328 +1,265 @@
-<div class="getting-started-page">
-  <div class="row mb-3">
-    <div class="col-xl-6 col-12 d-flex">
-      <div class="card h-lg-100 w-100 overflow-hidden getting-started-hero-card">
-        <div class="card-body">
-          <div class="starting-content pe-5">
-            @if(!hasLoggedIn){
-              <h3>Welcome</h3>
-              <p class="lead text-muted mb-2">
-              {{ '::LongWelcomeMessage' | abpLocalization }}
-              </p>
-              <a (click)="login()" class="btn btn-primary mb-4"><i class="fa-solid fa-right-to-bracket me-1"></i><span>{{ 'AbpAccount::Login' | abpLocalization }}</span></a>
-            }
+<div class="dash">
 
-            <h4>Getting Started</h4>
-            <p class="text-muted mb-2">
-              Learn how to create and run a new web application using the application startup
-              template.
-            </p>
-            <a
-              href="https://abp.io/docs/latest/get-started"
-              class="btn  btn-brand mb-4"
-              target="_blank"
-            >
-              Getting Started
-            </a>
+  <!-- ── Page header ──────────────────────────────────────────────────────── -->
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-title">{{ greeting() }}, {{ userName() }}</h1>
+      <p class="dash-sub">
+        {{ today | date: 'EEEE, d MMMM' }} · Here's how your solar store is doing today.
+      </p>
+    </div>
+    <div class="dash-actions">
+      <a routerLink="/orders" class="btn-ghost">
+        <i class="bi bi-box-arrow-up"></i> Export
+      </a>
+      <a routerLink="/quote-requests" class="btn-ghost">
+        <i class="bi bi-file-earmark-text"></i> New quotation
+      </a>
+      <a routerLink="/orders" class="btn-solid">
+        <i class="bi bi-plus-lg"></i> New order
+      </a>
+    </div>
+  </div>
 
-            <h4>Web Application Development Tutorial</h4>
-            <p class="text-muted mb-2">
-              Learn how to build an ABP based web application named Acme.BookStore.
-            </p>
-            <a href="https://abp.io/docs/latest/tutorials/book-store" class="btn btn-primary soft mb-4" target="_blank">Explore Tutorial</a>
-          </div>
-          <img class="card-bg-image" src="assets/images/getting-started/bg-01.png" />
-        </div>
+  <!-- ── KPI cards ────────────────────────────────────────────────────────── -->
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat__top">
+        <span class="stat__label">Revenue this month</span>
+        <span class="stat__chip stat__chip--green">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>
+          </svg>
+        </span>
+      </div>
+      <div class="stat__value">BDT {{ compact(monthRevenue()) }}</div>
+      <div class="stat__foot">
+        {{ monthOrders() | number }} {{ monthOrders() === 1 ? 'order' : 'orders' }} since the 1st
       </div>
     </div>
-    <div class="col-xl-3 col-md-6 d-flex pe-0">
-      <div class="row w-100">
-        <div class="col-12 d-flex pe-0">
-          <div class="card w-100 overflow-hidden">
-            <div class="card-body pb-0">
-              <div class="abp-support abp-logo mb-2"></div>
-              <p class="text-muted mb-2">
-                You can check for similar problems and solutions, or open a new topic to discuss your
-                specific issue.
-              </p>
-              <a
-                class="btn btn-brand soft"
-                href="https://abp.io/support/questions"
-                target="_blank"
-              >
-                Visit Support
-              </a>
-              <img src="assets/images/getting-started/img-support.png" />
-            </div>
-          </div>
-        </div>
-        <div class="col-12 d-flex pe-0">
-          <div class="card h-md-100 w-100 overflow-hidden">
-            <div class="card-body pb-0">
-              <div class="abp-blog abp-logo mb-2"></div>
-              <p class="text-muted mb-2">
-                You can find content on .NET development, cross-platform, ASP.NET application
-                templates, ABP-related news, and more.
-              </p>
-              <a
-                class="btn btn-brand soft"
-                href="https://abp.io/blog"
-                target="_blank"
-              >
-                Visit Blog
-              </a>
-              <img style="margin-bottom: -24px"
-                src="assets/images/getting-started/img-blog.png"
-              />
-            </div>
-          </div>
-        </div>
+
+    <div class="stat">
+      <div class="stat__top">
+        <span class="stat__label">Orders</span>
+        <span class="stat__chip stat__chip--blue">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/>
+          </svg>
+        </span>
       </div>
+      <div class="stat__value">{{ ordersTotal() | number }}</div>
+      <div class="stat__foot">{{ ordersPending() | number }} awaiting confirmation</div>
     </div>
-    <div class="col-xl-3 col-md-6 d-flex">
-      <div class="card h-100 w-100 overflow-hidden">
-        <div class="card-body">
-          <div class="abp-community abp-logo mb-2"></div>
-          <p class="lead text-muted">
-            A unique community platform for <span class="fw-bold">ABP Lovers!</span>
-          </p>
-          <p class="text-muted mb-2">
-            Explore all ABP users' experiences with the ABP Framework, discover articles and videos on
-            how to use ABP, and join raffles for a chance to win surprise gifts!
-          </p>
-          <a
-            class="btn btn-brand soft mb-3"
-            href="https://abp.io/community/"
-            target="_blank"
-          >
-            Join ABP Community
-          </a>
+
+    <div class="stat">
+      <div class="stat__top">
+        <span class="stat__label">Quote requests</span>
+        <span class="stat__chip stat__chip--amber">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </span>
+      </div>
+      @if (quotesDenied()) {
+        <div class="stat__value stat__value--muted">—</div>
+        <div class="stat__foot">no access</div>
+      } @else {
+        <div class="stat__value">{{ quotesTotal() | number }}</div>
+        <div class="stat__foot" [class.stat__foot--pending]="quotesNew() > 0">
+          @if (quotesNew() > 0) { {{ quotesNew() | number }} new to review }
+          @else { all handled }
         </div>
-        <img class="mt-3 img-fluid" src="assets/images/getting-started/img-community.png" />
+      }
+    </div>
+
+    <div class="stat">
+      <div class="stat__top">
+        <span class="stat__label">Products</span>
+        <span class="stat__chip stat__chip--sun">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 5h16l-2 10H6zM4.8 10h14.4M12 5v10M8 15l-1 4M16 15l1 4"/>
+          </svg>
+        </span>
+      </div>
+      <div class="stat__value">{{ productsTotal() | number }}</div>
+      <div class="stat__foot" [class.stat__foot--danger]="lowStock().length > 0">
+        @if (lowStock().length) { {{ lowStock().length }} running low }
+        @else { stock levels healthy }
       </div>
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-xl-3 col-lg-4 col-md-6">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title text-body">More from ABP.IO</div>
-        </div>
-        <div class="card-body pt-0">
-          <div class="table-responsive">
-            <table class="table mb-0">
-              <tbody>
-                <tr>
-                  <td class="ps-0">
-                    <div class="d-flex align-items-center">
-                      <div
-                        class="rounded-circle me-2 flex-center bg-brand soft"
-                        style="width: 20px; height: 20px"
-                      >
-                        <i class="bi bi-check fs-4"></i>
-                      </div>
-                      <div>Latest Release Logs</div>
-                    </div>
-                  </td>
-                  <td class="text-end pe-0 opacity-50 align-middle">
-                    <a href="https://github.com/abpframework/abp/releases" target="_blank">
-                      <i class="bi bi-box-arrow-up-right text-dark fs-6"></i>
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-0">
-                    <div class="d-flex align-items-center">
-                      <div
-                        class="rounded-circle me-2 flex-center bg-brand soft"
-                        style="width: 20px; height: 20px"
-                      >
-                        <i class="bi bi-check fs-4"></i>
-                      </div>
-                      <div>Video Courses</div>
-                    </div>
-                  </td>
-                  <td class="text-end pe-0 opacity-50 align-middle">
-                    <a href="https://abp.io/video-courses/essentials" target="_blank">
-                      <i class="bi bi-box-arrow-up-right text-dark fs-6"></i>
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-0">
-                    <div class="d-flex align-items-center">
-                      <div
-                        class="rounded-circle me-2 flex-center bg-brand soft"
-                        style="width: 20px; height: 20px"
-                      >
-                        <i class="bi bi-check fs-4"></i>
-                      </div>
-                      <div>Samples</div>
-                    </div>
-                  </td>
-                  <td class="text-end pe-0 opacity-50 align-middle">
-                    <a href="https://abp.io/docs/latest/samples" target="_blank">
-                      <i class="bi bi-box-arrow-up-right text-dark fs-6"></i>
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-0">
-                    <div class="d-flex align-items-center">
-                      <div
-                        class="rounded-circle me-2 flex-center bg-brand soft"
-                        style="width: 20px; height: 20px"
-                      >
-                        <i class="bi bi-check fs-4"></i>
-                      </div>
-                      <div>Books</div>
-                    </div>
-                  </td>
-                  <td class="text-end pe-0 opacity-50 align-middle">
-                    <a href="https://abp.io/books" target="_blank">
-                      <i class="bi bi-box-arrow-up-right text-dark fs-6"></i>
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-0 border-bottom-0">
-                    <div class="d-flex align-items-center">
-                      <div
-                        class="rounded-circle me-2 flex-center bg-brand soft"
-                        style="width: 20px; height: 20px"
-                      >
-                        <i class="bi bi-check fs-4"></i>
-                      </div>
-                      <div>FAQ</div>
-                    </div>
-                  </td>
-                  <td class="text-end pe-0 opacity-50 border-bottom-0 align-middle">
-                    <a href="https://abp.io/faq" target="_blank">
-                      <i class="bi bi-box-arrow-up-right text-dark fs-6"></i>
-                    </a>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+  <!-- ── Main grid ────────────────────────────────────────────────────────── -->
+  <div class="dash-grid">
+
+    <!-- LEFT ─ Recent orders -->
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">Recent orders</h2>
+        <div class="seg">
+          <button class="seg__btn" [class.seg__btn--on]="activeTab() === 'pending'"
+                  (click)="selectTab('pending')">Pending <span>{{ pendingOrders().length }}</span></button>
+          <button class="seg__btn" [class.seg__btn--on]="activeTab() === 'progress'"
+                  (click)="selectTab('progress')">In progress <span>{{ progressOrders().length }}</span></button>
+          <button class="seg__btn" [class.seg__btn--on]="activeTab() === 'delivered'"
+                  (click)="selectTab('delivered')">Delivered <span>{{ deliveredOrders().length }}</span></button>
         </div>
       </div>
-    </div>
-    <div class="col-xl-6 col-lg-8 col-md-6 d-flex">
-      <div class="card">
-        <div class="card-body d-flex">
-          <div class="row align-items-center">
-            <div class="col-md-8">
-              <p class="text-muted mb-0">THE OFFICIAL GUIDE</p>
-              <h3>Mastering ABP Framework</h3>
-              <p class="text-muted">
-                Written by the creator of the ABP Framework, this book will help you gain a complete
-                understanding of the framework and modern web application development techniques.
-              </p>
-              <div class="d-md-flex mb-2 mb-md-0">
-                <a
-                  href="https://www.amazon.com/gp/product/B097Z2DM8Q"
-                  target="_blank"
-                  class="btn btn-primary soft me-md-2 mb-2 mb-md-0"
-                >
-                  Buy on Amazon US
-                </a>
-                <a
-                  href="https://www.packtpub.com/product/mastering-abp-framework/9781801079242"
-                  target="_blank"
-                  class="btn btn-primary soft mb-2 mb-md-0"
-                >
-                  Buy on PACKT
-                </a>
-              </div>
+
+      @if (loading()) {
+        <div class="prows">
+          @for (i of [1,2,3,4]; track i) {
+            <div class="prow"><span class="sk sk--lg"></span><span class="sk sk--sm"></span></div>
+          }
+        </div>
+      } @else if (!visibleOrders().length) {
+        <div class="panel__empty">No orders in this view.</div>
+      } @else {
+        <div class="prows">
+          @for (order of visibleOrders(); track order.id) {
+            <a class="prow order-row" routerLink="/orders">
+              <span class="order-row__main">
+                <span class="order-row__no">{{ order.orderNumber || '#' + order.id }}</span>
+                <span class="order-row__cust">{{ order.customerName || 'Walk-in customer' }}</span>
+              </span>
+              <span class="pill">
+                <i class="ds-dot" [class]="'ds-dot ds-dot--' + orderDot(order.status)"></i>
+                {{ orderLabel(order.status) }}
+              </span>
+              <span class="order-row__amt">
+                {{ order.currencyCode || 'BDT' }} {{ order.grandTotal | number: '1.0-0' }}
+              </span>
+              <span class="order-row__date">{{ order.orderDate | date: 'd MMM' }}</span>
+            </a>
+          }
+        </div>
+      }
+
+      <a routerLink="/orders" class="panel__foot-link">View all orders →</a>
+    </section>
+
+    <!-- RIGHT ─ New quote requests -->
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">
+          New quote requests
+          @if (!quotesDenied() && quotesNew() > 0) {
+            <span class="badge-amber">{{ quotesNew() }} new</span>
+          }
+        </h2>
+        <a routerLink="/quote-requests" class="panel__link">Open inbox</a>
+      </div>
+
+      @if (quotesLoading()) {
+        <div class="prows">
+          @for (i of [1,2,3]; track i) {
+            <div class="prow"><span class="sk sk--lg"></span></div>
+          }
+        </div>
+      } @else if (quotesDenied()) {
+        <div class="panel__empty">You don't have permission to view quote requests.</div>
+      } @else if (!quoteGroups().length) {
+        <div class="panel__empty">Nothing waiting on you.</div>
+      } @else {
+        <div class="prows">
+          @for (group of quoteGroups(); track group.status) {
+            @for (quote of group.items; track quote.id) {
+              <a class="prow quote-row" routerLink="/quote-requests">
+                <span class="avatar">{{ initials(quote.name) }}</span>
+                <span class="quote-row__main">
+                  <span class="quote-row__name">{{ quote.name }}</span>
+                  @if (quote.interest) {
+                    <span class="quote-row__meta">{{ quote.interest }}</span>
+                  }
+                </span>
+                <span class="pill">
+                  <i class="ds-dot" [class]="'ds-dot ds-dot--' + quoteDot(quote.status)"></i>
+                  {{ group.label }}
+                </span>
+              </a>
+            }
+          }
+        </div>
+      }
+    </section>
+
+    <!-- LEFT ─ Products -->
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">Products</h2>
+        <a routerLink="/products" class="panel__link">All products</a>
+      </div>
+
+      @if (productsLoading()) {
+        <div class="prows">
+          @for (i of [1,2,3]; track i) {
+            <div class="prow"><span class="sk sk--lg"></span></div>
+          }
+        </div>
+      } @else if (!topProducts().length) {
+        <div class="panel__empty">No products yet.</div>
+      } @else {
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Catalogue</th>
+              <th class="tbl__num">Stock</th>
+              <th class="tbl__num">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of topProducts(); track row.product.id) {
+              <tr>
+                <td class="tbl__strong">{{ row.product.name || 'Untitled' }}</td>
+                <td class="tbl__muted">{{ row.catalogue }}</td>
+                <td class="tbl__num" [class.tbl__low]="row.product.stockQuantity <= 10">
+                  {{ row.product.stockQuantity | number }} left
+                </td>
+                <td class="tbl__num tbl__strong">
+                  BDT {{ (row.product.discountPrice ?? row.product.price) | number: '1.0-0' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <!-- RIGHT ─ Low stock -->
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">Low stock</h2>
+        <span class="panel__link">Inventory</span>
+      </div>
+
+      @if (productsLoading()) {
+        <div class="prows">
+          @for (i of [1,2,3]; track i) {
+            <div class="prow"><span class="sk sk--lg"></span></div>
+          }
+        </div>
+      } @else if (!lowStock().length) {
+        <div class="panel__empty">Every product is above {{ 10 }} units.</div>
+      } @else {
+        <div class="prows">
+          @for (p of lowStock(); track p.id) {
+            <div class="prow stock-row">
+              <span class="stock-row__main">
+                <span class="stock-row__name">{{ p.name || 'Untitled' }}</span>
+                <span class="stock-row__meta">{{ p.sku || 'No SKU' }}</span>
+              </span>
+              <span class="stock-row__count">{{ p.stockQuantity | number }} left</span>
+              <a routerLink="/stock-entries" class="btn-mini">Reorder</a>
             </div>
-            <div class="col">
-              <img src="assets/images/getting-started/book.png" />
-            </div>
-          </div>
+          }
         </div>
-      </div>
-    </div>
-    <div class="col-xl-3 col-lg-4 col-md-6">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title text-body">Follow us on Social Media</div>
-        </div>
-        <div class="card-body pt-0">
-          <div class="table-responsive">
-            <table class="table mb-0">
-              <tbody>
-                <tr>
-                  <td class="ps-0">
-                    <div class="d-flex align-items-center">
-                      <div class="logo-x me-2"></div>
-                      <div>X.com</div>
-                    </div>
-                  </td>
-                  <td class="text-end pe-0 opacity-50 align-middle">
-                    <a href="https://twitter.com/abpframework" target="_blank">
-                      <i class="bi bi-box-arrow-up-right text-dark fs-6"></i>
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-0">
-                    <div class="d-flex align-items-center">
-                      <img src="assets/images/getting-started/discord.svg" class="me-2" />
-                      <div>Discord</div>
-                    </div>
-                  </td>
-                  <td class="text-end pe-0 opacity-50 align-middle">
-                    <a href="https://abp.io/community/discord" target="_blank">
-                      <i class="bi bi-box-arrow-up-right text-dark fs-6"></i>
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-0">
-                    <div class="d-flex align-items-center">
-                      <img src="assets/images/getting-started/stack-overflow.svg" class="me-2" />
-                      <div>Stack Overflow</div>
-                    </div>
-                  </td>
-                  <td class="text-end pe-0 opacity-50 align-middle">
-                    <a href="https://stackoverflow.com/questions/tagged/abp" target="_blank">
-                      <i class="bi bi-box-arrow-up-right text-dark fs-6"></i>
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-0">
-                    <div class="d-flex align-items-center">
-                      <img src="assets/images/getting-started/youtube.svg" class="me-2" />
-                      <div>YouTube</div>
-                    </div>
-                  </td>
-                  <td class="text-end pe-0 opacity-50 align-middle">
-                    <a href="https://www.youtube.com/@Volosoft" target="_blank">
-                      <i class="bi bi-box-arrow-up-right text-dark fs-6"></i>
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-0 border-bottom-0">
-                    <div class="d-flex align-items-center">
-                      <img src="assets/images/getting-started/instagram.svg" class="me-2" />
-                      <div>Instagram</div>
-                    </div>
-                  </td>
-                  <td class="text-end pe-0 opacity-50 border-bottom-0 align-middle">
-                    <a href="https://www.instagram.com/abpframework/" target="_blank">
-                      <i class="bi bi-box-arrow-up-right text-dark fs-6"></i>
-                    </a>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
+      }
+    </section>
+
   </div>
 </div>

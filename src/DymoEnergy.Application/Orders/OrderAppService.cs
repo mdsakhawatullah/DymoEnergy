@@ -50,6 +50,16 @@ public class OrderAppService : ApplicationService, IOrderAppService
         if (input.Stage.HasValue)       query = query.Where(o => o.Stage       == input.Stage);
         if (input.Priority.HasValue)    query = query.Where(o => o.Priority    == input.Priority);
         if (input.PaymentType.HasValue) query = query.Where(o => o.PaymentType == input.PaymentType);
+
+        // Settlement state is derived from the outstanding balance, so the list
+        // can be filtered the same way the Payment column reads.
+        query = input.PaidState switch
+        {
+            OrderPaidState.PaidInFull => query.Where(o => o.BalanceDue <= 0),
+            OrderPaidState.PartlyPaid => query.Where(o => o.BalanceDue > 0 && o.BalanceDue < o.GrandTotal),
+            OrderPaidState.Unpaid     => query.Where(o => o.BalanceDue >= o.GrandTotal && o.GrandTotal > 0),
+            _                         => query,
+        };
         if (input.CustomerId.HasValue)  query = query.Where(o => o.CustomerId  == input.CustomerId);
         if (input.PortalId.HasValue)    query = query.Where(o => o.PortalId    == input.PortalId);
         if (input.DateFrom.HasValue)    query = query.Where(o => o.OrderDate   >= input.DateFrom.Value);
