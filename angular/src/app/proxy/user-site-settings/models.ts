@@ -39,9 +39,9 @@ export interface UserSiteSettingDto {
   // ── About Section ─────────────────────────────────────────────────────
   aboutTitle?: string;
   aboutDescription?: string;
-  // ── Catalogues Section ────────────────────────────────────────────────
-  cataloguesTitle?: string;
-  cataloguesDescription?: string;
+  // ── Categories Section ────────────────────────────────────────────────
+  categoriesTitle?: string;
+  categoriesDescription?: string;
   socialLinkedinUrl?: string;
   socialInstagramUrl?: string;
   socialFacebookUrl?: string;
@@ -80,8 +80,8 @@ export interface CreateUpdateUserSiteSettingDto {
   fontSizeBase?: string;
   aboutTitle?: string;
   aboutDescription?: string;
-  cataloguesTitle?: string;
-  cataloguesDescription?: string;
+  categoriesTitle?: string;
+  categoriesDescription?: string;
   socialLinkedinUrl?: string;
   socialInstagramUrl?: string;
   socialFacebookUrl?: string;

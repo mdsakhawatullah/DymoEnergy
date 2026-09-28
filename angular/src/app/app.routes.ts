@@ -227,8 +227,8 @@ export const APP_ROUTES: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'catalogues',
-    loadComponent: () => import('./pages/catalogues/catalogues.component').then(c => c.CataloguesComponent),
+    path: 'categories',
+    loadComponent: () => import('./pages/categories/categories.component').then(c => c.CategoriesComponent),
     canActivate: [authGuard],
   },
 

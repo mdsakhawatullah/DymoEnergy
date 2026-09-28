@@ -1,14 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace DymoEnergy.Catalogues;
+namespace DymoEnergy.Categories;
 
-public class CreateUpdateCatalogueImageDto
+public class CreateUpdateCategoryImageDto
 {
     public int? Id { get; set; }
 
     public string? ImageUrl { get; set; }
 
-    public CatalogueImageType ImageType    { get; set; }
+    public CategoryImageType ImageType    { get; set; }
 
     public string? Title { get; set; }
 

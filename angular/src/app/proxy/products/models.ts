@@ -1,11 +1,11 @@
-import { DymoPagedResultDto } from '../catalogues/models';
+import { DymoPagedResultDto } from '../categories/models';
 
 export { DymoPagedResultDto };
 
 export interface ProductDto {
   id: number;
   portalId?: number;
-  catalogueId: number;
+  categoryId: number;
   ribbonText?: string;
   name?: string;
   slug?: string;
@@ -52,7 +52,7 @@ export interface ProductFilterDto {
   status?: ProductStatusType;
   isActive?: boolean;
   isFeatured?: boolean;
-  catalogueId?: number;
+  categoryId?: number;
   portalId?: number;
   sorting?: string;
   skipCount?: number;
@@ -61,7 +61,7 @@ export interface ProductFilterDto {
 
 export interface CreateUpdateProductDto {
   portalId?: number;
-  catalogueId: number;
+  categoryId: number;
   ribbonText?: string;
   name?: string;
   slug?: string;

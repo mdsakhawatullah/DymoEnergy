@@ -4,9 +4,9 @@ using System.Linq;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
 
-namespace DymoEnergy.Catalogues;
+namespace DymoEnergy.Categories;
 
-public class Catalogue : FullAuditedAggregateRoot<int>
+public class Category : FullAuditedAggregateRoot<int>
 {
     public string?  Name { get; set; }
     public int? PortalId { get; set; }
@@ -24,7 +24,7 @@ public class Catalogue : FullAuditedAggregateRoot<int>
     public string? PrimaryTextColor     { get; set; }
     public string? AccentColor          { get; set; }
     public string? SectionBackgroundColor { get; set; }
-    public CatalogueLayoutType LayoutType { get; set; }
+    public CategoryLayoutType LayoutType { get; set; }
     public bool IsPublished  { get; set; }
     public bool IsFeatured   { get; set; }
     public int  DisplayOrder { get; set; }
@@ -33,5 +33,5 @@ public class Catalogue : FullAuditedAggregateRoot<int>
     public string? MetaTitle       { get; set; }
     public string? MetaDescription { get; set; }
     public string? MetaKeywords    { get; set; }
-    public ICollection<CatalogueImage> Images { get; set; } = new List<CatalogueImage>();
+    public ICollection<CategoryImage> Images { get; set; } = new List<CategoryImage>();
 }

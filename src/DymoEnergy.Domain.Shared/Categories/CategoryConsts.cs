@@ -1,6 +1,6 @@
-namespace DymoEnergy.Catalogues;
+namespace DymoEnergy.Categories;
 
-public static class CatalogueConsts
+public static class CategoryConsts
 {
     public const int MaxNameLength             = 128;
     public const int MaxSlugLength             = 128;

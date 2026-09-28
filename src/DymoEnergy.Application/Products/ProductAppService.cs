@@ -65,8 +65,8 @@ public class ProductAppService : ApplicationService, IProductAppService
         if (input.Status.HasValue)
             query = query.Where(p => p.Status == input.Status);
 
-        if (input.CatalogueId.HasValue)
-            query = query.Where(p => p.CatalogueId == input.CatalogueId);
+        if (input.CategoryId.HasValue)
+            query = query.Where(p => p.CategoryId == input.CategoryId);
 
         var totalCount = await AsyncExecuter.CountAsync(query);
 
@@ -164,7 +164,7 @@ public class ProductAppService : ApplicationService, IProductAppService
     private static void ApplyInput(Product p, CreateUpdateProductDto input)
     {
         p.PortalId      = input.PortalId;
-        p.CatalogueId   = input.CatalogueId;
+        p.CategoryId   = input.CategoryId;
         p.RibbonText    = input.RibbonText;
         p.Name          = input.Name;
         p.Slug          = input.Slug?.ToLowerInvariant().Trim();
@@ -223,7 +223,7 @@ public class ProductAppService : ApplicationService, IProductAppService
         DeletionTime        = p.DeletionTime,
         DeleterId           = p.DeleterId,
         PortalId            = p.PortalId,
-        CatalogueId         = p.CatalogueId,
+        CategoryId         = p.CategoryId,
         RibbonText          = p.RibbonText,
         Name                = p.Name,
         Slug                = p.Slug,

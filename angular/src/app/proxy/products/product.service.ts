@@ -1,5 +1,5 @@
 import type { CreateUpdateProductDto, ProductDto, ProductFilterDto } from './models';
-import { DymoPagedResultDto } from '../catalogues/models';
+import { DymoPagedResultDto } from '../categories/models';
 import { RestService } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
 
@@ -19,7 +19,7 @@ export class ProductService {
           status:         input.status,
           isActive:       input.isActive,
           isFeatured:     input.isFeatured,
-          catalogueId:    input.catalogueId,
+          categoryId:    input.categoryId,
           portalId:       input.portalId,
           sorting:        input.sorting,
           skipCount:      input.skipCount,

@@ -69,12 +69,12 @@ public class CreateUpdateUserSiteSettingDto
     [MaxLength(4000)]
     public string? AboutDescription { get; set; }
 
-    // ── Catalogues Section ────────────────────────────────────────────────
+    // ── Categories Section ────────────────────────────────────────────────
     [MaxLength(256)]
-    public string? CataloguesTitle { get; set; }
+    public string? CategoriesTitle { get; set; }
 
     [MaxLength(1000)]
-    public string? CataloguesDescription { get; set; }
+    public string? CategoriesDescription { get; set; }
 
     // ── Social Media ──────────────────────────────────────────────────────
     [MaxLength(512)] public string? SocialLinkedinUrl  { get; set; }

@@ -71,8 +71,8 @@
   color: #0D5C2E;
 }
 
-/* ── New Catalogue button ───────────────────────────────────────────────── */
-.btn-new-catalogue {
+/* ── New Category button ───────────────────────────────────────────────── */
+.btn-new-category {
   background-color: #0D5C2E !important;
   border-color: #0D5C2E !important;
   color: #ffffff !important;
@@ -86,13 +86,13 @@
   gap: 6px;
   box-shadow: none !important;
 }
-.btn-new-catalogue:hover,
-.btn-new-catalogue:focus {
+.btn-new-category:hover,
+.btn-new-category:focus {
   background-color: #0a4a25 !important;
   border-color: #0a4a25 !important;
   color: #ffffff !important;
 }
-.btn-new-catalogue .anticon {
+.btn-new-category .anticon {
   color: #ffffff !important;
   font-size: 14px;
 }

@@ -1,4 +1,4 @@
-import { DymoPagedResultDto } from '../catalogues/models';
+import { DymoPagedResultDto } from '../categories/models';
 export { DymoPagedResultDto };
 
 // ── Enum label / colour maps ──────────────────────────────────────────────────

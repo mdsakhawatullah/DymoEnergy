@@ -1,5 +1,5 @@
 import type { QuoteRequestDto, QuoteRequestFilterDto, UpdateQuoteRequestStatusDto } from './models';
-import { DymoPagedResultDto } from '../catalogues/models';
+import { DymoPagedResultDto } from '../categories/models';
 import { RestService } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
 

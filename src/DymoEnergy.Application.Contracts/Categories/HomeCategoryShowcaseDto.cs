@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 
-namespace DymoEnergy.Catalogues;
+namespace DymoEnergy.Categories;
 
-/// <summary>One catalogue block on the storefront home page: thumbnail + its first products.</summary>
-public class HomeCatalogueShowcaseDto
+/// <summary>One category block on the storefront home page: thumbnail + its first products.</summary>
+public class HomeCategoryShowcaseDto
 {
     public int     Id                { get; set; }
     public string? Name              { get; set; }

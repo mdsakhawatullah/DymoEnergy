@@ -1,4 +1,4 @@
-export interface CatalogueDto {
+export interface CategoryDto {
   id: number;
   name?: string;
   slug?: string;
@@ -15,7 +15,7 @@ export interface CatalogueDto {
   primaryTextColor?: string;
   accentColor?: string;
   sectionBackgroundColor?: string;
-  layoutType: CatalogueLayoutType;
+  layoutType: CategoryLayoutType;
   isPublished: boolean;
   isFeatured: boolean;
   displayOrder: number;
@@ -24,12 +24,12 @@ export interface CatalogueDto {
   metaKeywords?: string;
   creationTime?: string;
   lastModificationTime?: string;
-  images: CatalogueImageDto[];
+  images: CategoryImageDto[];
 }
 
-export interface CatalogueImageDto {
+export interface CategoryImageDto {
   id: number;
-  catalogueId: number;
+  categoryId: number;
   imageUrl?: string;
   imageType: number;
   title?: string;
@@ -38,7 +38,7 @@ export interface CatalogueImageDto {
   isActive: boolean;
 }
 
-export interface CatalogueFilterDto {
+export interface CategoryFilterDto {
   filter?: string;
   isPublished?: boolean;
   isFeatured?: boolean;
@@ -48,9 +48,9 @@ export interface CatalogueFilterDto {
   maxResultCount?: number;
 }
 
-export type CatalogueLayoutType = 1 | 2 | 3 | 4 | 5;
+export type CategoryLayoutType = 1 | 2 | 3 | 4 | 5;
 
-export const CatalogueLayoutTypeLabels: Record<number, string> = {
+export const CategoryLayoutTypeLabels: Record<number, string> = {
   1: 'Full Width Hero',
   2: 'Split Hero',
   3: 'Minimalist Hero',
@@ -58,7 +58,7 @@ export const CatalogueLayoutTypeLabels: Record<number, string> = {
   5: 'Slider Hero',
 };
 
-export interface CreateUpdateCatalogueDto {
+export interface CreateUpdateCategoryDto {
   portalId?: number;
   name?: string;
   slug?: string;
@@ -75,7 +75,7 @@ export interface CreateUpdateCatalogueDto {
   primaryTextColor?: string;
   accentColor?: string;
   sectionBackgroundColor?: string;
-  layoutType: CatalogueLayoutType;
+  layoutType: CategoryLayoutType;
   isPublished: boolean;
   isFeatured: boolean;
   displayOrder: number;

@@ -2,14 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { forkJoin } from 'rxjs';
 import { SharedModule } from '../../shared/shared.module';
-import { CatalogueService } from '../../proxy/catalogues/catalogue.service';
-import { CatalogueDto } from '../../proxy/catalogues/models';
-import { CatalogueEntryDrawerComponent } from './entry-drawer/catalogue-entry-drawer.component';
+import { CategoryService } from '../../proxy/categories/category.service';
+import { CategoryDto } from '../../proxy/categories/models';
+import { CategoryEntryDrawerComponent } from './entry-drawer/category-entry-drawer.component';
 
 type TabKey   = 'all' | 'published' | 'unpublished' | 'featured';
 type StatsKey = 'total' | 'published' | 'unpublished' | 'featured';
 
-interface CatalogueStats {
+interface CategoryStats {
   total:       number;
   published:   number;
   unpublished: number;
@@ -17,15 +17,15 @@ interface CatalogueStats {
 }
 
 @Component({
-  selector:    'app-catalogues',
-  templateUrl: './catalogues.component.html',
-  styleUrl:    './catalogues.component.css',
-  imports:     [SharedModule, CatalogueEntryDrawerComponent],
+  selector:    'app-categories',
+  templateUrl: './categories.component.html',
+  styleUrl:    './categories.component.css',
+  imports:     [SharedModule, CategoryEntryDrawerComponent],
 })
-export class CataloguesComponent implements OnInit {
+export class CategoriesComponent implements OnInit {
 
   // ── List state ────────────────────────────────────────────────────────────
-  catalogues: CatalogueDto[] = [];
+  categories: CategoryDto[] = [];
   totalCount = 0;
   pageIndex  = 1;
   pageSize   = 10;
@@ -33,7 +33,7 @@ export class CataloguesComponent implements OnInit {
   loading    = false;
   activeTab: TabKey = 'all';
 
-  stats: CatalogueStats = { total: 0, published: 0, unpublished: 0, featured: 0 };
+  stats: CategoryStats = { total: 0, published: 0, unpublished: 0, featured: 0 };
 
   tabs: { key: TabKey; label: string; countKey: StatsKey }[] = [
     { key: 'all',         label: 'All',         countKey: 'total'       },
@@ -44,12 +44,12 @@ export class CataloguesComponent implements OnInit {
 
   // ── Drawer state ──────────────────────────────────────────────────────────
   isDrawerOpen                 = false;
-  selectedCatalogue: CatalogueDto | null = null;
+  selectedCategory: CategoryDto | null = null;
 
   deletingIds = new Set<number>();
 
   constructor(
-    private catalogueService: CatalogueService,
+    private categoryService: CategoryService,
     private message: NzMessageService,
   ) {}
 
@@ -60,12 +60,12 @@ export class CataloguesComponent implements OnInit {
 
   // ── Drawer open / close ───────────────────────────────────────────────────
   openDrawerForCreate(): void {
-    this.selectedCatalogue = null;
+    this.selectedCategory = null;
     this.isDrawerOpen      = true;
   }
 
-  openDrawerForEdit(item: CatalogueDto): void {
-    this.selectedCatalogue = item;
+  openDrawerForEdit(item: CategoryDto): void {
+    this.selectedCategory = item;
     this.isDrawerOpen      = true;
   }
 
@@ -73,7 +73,7 @@ export class CataloguesComponent implements OnInit {
     this.isDrawerOpen = false;
   }
 
-  onCatalogueSaved(): void {
+  onCategorySaved(): void {
     this.isDrawerOpen = false;
     this.loadStats();
     this.loadData();
@@ -82,9 +82,9 @@ export class CataloguesComponent implements OnInit {
   // ── List ──────────────────────────────────────────────────────────────────
   loadStats(): void {
     forkJoin({
-      all:       this.catalogueService.getListData({ maxResultCount: 1, skipCount: 0 }),
-      published: this.catalogueService.getListData({ isPublished: true, maxResultCount: 1, skipCount: 0 }),
-      featured:  this.catalogueService.getListData({ isFeatured:  true, maxResultCount: 1, skipCount: 0 }),
+      all:       this.categoryService.getListData({ maxResultCount: 1, skipCount: 0 }),
+      published: this.categoryService.getListData({ isPublished: true, maxResultCount: 1, skipCount: 0 }),
+      featured:  this.categoryService.getListData({ isFeatured:  true, maxResultCount: 1, skipCount: 0 }),
     }).subscribe(results => {
       this.stats.total       = results.all.totalCount;
       this.stats.published   = results.published.totalCount;
@@ -104,9 +104,9 @@ export class CataloguesComponent implements OnInit {
     if (this.activeTab === 'unpublished') params.isPublished = false;
     if (this.activeTab === 'featured')    params.isFeatured  = true;
 
-    this.catalogueService.getListData(params).subscribe({
+    this.categoryService.getListData(params).subscribe({
       next: result => {
-        this.catalogues = result.items;
+        this.categories = result.items;
         this.totalCount = result.totalCount;
         this.loading    = false;
       },
@@ -115,17 +115,17 @@ export class CataloguesComponent implements OnInit {
   }
 
   // ── Delete ────────────────────────────────────────────────────────────────
-  deleteCatalogue(id: number): void {
+  deleteCategory(id: number): void {
     this.deletingIds.add(id);
-    this.catalogueService.delete(id).subscribe({
+    this.categoryService.delete(id).subscribe({
       next: () => {
-        this.message.success('Catalogue deleted.');
+        this.message.success('Category deleted.');
         this.deletingIds.delete(id);
         this.loadStats();
         this.loadData();
       },
       error: () => {
-        this.message.error('Failed to delete catalogue.');
+        this.message.error('Failed to delete category.');
         this.deletingIds.delete(id);
       },
     });

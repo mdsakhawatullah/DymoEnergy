@@ -1,11 +1,11 @@
-namespace DymoEnergy.Catalogues;
+namespace DymoEnergy.Categories;
 
-public class CatalogueImageDto
+public class CategoryImageDto
 {
     public int Id { get; set; }
-    public int CatalogueId  { get; set; }
+    public int CategoryId  { get; set; }
     public string? ImageUrl { get; set; }
-    public CatalogueImageType ImageType { get; set; }
+    public CategoryImageType ImageType { get; set; }
     public string? Title { get; set; }
     public string? AltText { get; set; }
     public int DisplayOrder { get; set; }

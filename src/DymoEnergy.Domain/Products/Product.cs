@@ -6,7 +6,7 @@ namespace DymoEnergy.Products;
 public class Product : FullAuditedAggregateRoot<int>
 {
     public int? PortalId { get; set; }
-    public int CatalogueId { get; set; }
+    public int CategoryId { get; set; }
     public string? RibbonText { get; set; }
     public string? Name { get; set; }
     public string? Slug { get; set; }

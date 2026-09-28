@@ -20,10 +20,10 @@ public class DymoEnergyPermissionDefinitionProvider : PermissionDefinitionProvid
         adminSiteSettingsPermission.AddChild(DymoEnergyPermissions.AdminSiteSettings.Edit,   L("Permission:AdminSiteSettings.Edit"));
         adminSiteSettingsPermission.AddChild(DymoEnergyPermissions.AdminSiteSettings.Delete, L("Permission:AdminSiteSettings.Delete"));
 
-        var cataloguesPermission = myGroup.AddPermission(DymoEnergyPermissions.Catalogues.Default, L("Permission:Catalogues"));
-        cataloguesPermission.AddChild(DymoEnergyPermissions.Catalogues.Create, L("Permission:Catalogues.Create"));
-        cataloguesPermission.AddChild(DymoEnergyPermissions.Catalogues.Edit,   L("Permission:Catalogues.Edit"));
-        cataloguesPermission.AddChild(DymoEnergyPermissions.Catalogues.Delete, L("Permission:Catalogues.Delete"));
+        var categoriesPermission = myGroup.AddPermission(DymoEnergyPermissions.Categories.Default, L("Permission:Categories"));
+        categoriesPermission.AddChild(DymoEnergyPermissions.Categories.Create, L("Permission:Categories.Create"));
+        categoriesPermission.AddChild(DymoEnergyPermissions.Categories.Edit,   L("Permission:Categories.Edit"));
+        categoriesPermission.AddChild(DymoEnergyPermissions.Categories.Delete, L("Permission:Categories.Delete"));
 
         var productsPermission = myGroup.AddPermission(DymoEnergyPermissions.Products.Default, L("Permission:Products"));
         productsPermission.AddChild(DymoEnergyPermissions.Products.Create, L("Permission:Products.Create"));

@@ -1,7 +1,7 @@
 <!-- ── Page header ─────────────────────────────────────────────────────── -->
 <div class="d-flex align-items-start justify-content-between mb-3">
   <div>
-    <h4 class="mb-1 fw-bold">Catalogues</h4>
+    <h4 class="mb-1 fw-bold">Categories</h4>
     <span class="text-muted small">
       {{ stats.total }} total &nbsp;·&nbsp;
       {{ stats.published }} published &nbsp;·&nbsp;
@@ -9,8 +9,8 @@
     </span>
   </div>
   <div class="d-flex gap-2">
-    <button nz-button nzType="primary" class="btn-new-catalogue" (click)="openDrawerForCreate()">
-      <span nz-icon nzType="plus" nzTheme="outline"></span> New Catalogue
+    <button nz-button nzType="primary" class="btn-new-category" (click)="openDrawerForCreate()">
+      <span nz-icon nzType="plus" nzTheme="outline"></span> New Category
     </button>
   </div>
 </div>
@@ -19,7 +19,7 @@
 <div class="row g-3 mb-4">
   <div class="col-md-3">
     <div class="stat-card stat-card--green">
-      <div class="stat-card__label">TOTAL CATALOGUES</div>
+      <div class="stat-card__label">TOTAL CATEGORIES</div>
       <div class="stat-card__value">{{ stats.total }}</div>
       <div class="stat-card__sub">All records</div>
     </div>
@@ -96,7 +96,7 @@
 
   <!-- Table -->
   <nz-table
-    [nzData]="catalogues"
+    [nzData]="categories"
     [nzTotal]="totalCount"
     [nzPageIndex]="pageIndex"
     [nzPageSize]="pageSize"
@@ -120,7 +120,7 @@
       </tr>
     </thead>
     <tbody>
-      @for (item of catalogues; track item.id) {
+      @for (item of categories; track item.id) {
         <tr>
           <td nzAlign="center" class="text-muted" style="font-size:12px;">{{ item.id }}</td>
 
@@ -190,12 +190,12 @@
                 nzDanger
                 nz-tooltip nzTooltipTitle="Delete"
                 nz-popconfirm
-                nzPopconfirmTitle="Delete this catalogue?"
+                nzPopconfirmTitle="Delete this category?"
                 nzOkText="Yes, delete"
                 nzOkDanger
                 nzCancelText="Cancel"
                 [nzLoading]="deletingIds.has(item.id)"
-                (nzOnConfirm)="deleteCatalogue(item.id)"
+                (nzOnConfirm)="deleteCategory(item.id)"
               >
                 <span nz-icon nzType="delete" nzTheme="outline"></span>
               </button>
@@ -214,14 +214,14 @@
   [nzBodyStyle]="{ overflow: 'auto' }"
   [nzMaskClosable]="false"
   [nzWidth]="880"
-  nzTitle="{{ selectedCatalogue?.id ? 'Update' : 'Create' }} Catalogue"
+  nzTitle="{{ selectedCategory?.id ? 'Update' : 'Create' }} Category"
   (nzOnClose)="onDrawerClosed()"
 >
   <div *nzDrawerContent>
-    <catalogue-entry-drawer
-      [input]="selectedCatalogue"
-      (onCatalogueEntryDrawerClosed)="onDrawerClosed()"
-      (handleCatalogueSaved)="onCatalogueSaved()"
-    ></catalogue-entry-drawer>
+    <category-entry-drawer
+      [input]="selectedCategory"
+      (onCategoryEntryDrawerClosed)="onDrawerClosed()"
+      (handleCategorySaved)="onCategorySaved()"
+    ></category-entry-drawer>
   </div>
 </nz-drawer>

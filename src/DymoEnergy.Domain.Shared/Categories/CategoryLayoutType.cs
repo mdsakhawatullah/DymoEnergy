@@ -1,9 +1,9 @@
-namespace DymoEnergy.Catalogues;
+namespace DymoEnergy.Categories;
 
 /// <summary>
-/// Controls which hero / page layout the front-end renders for this catalogue.
+/// Controls which hero / page layout the front-end renders for this category.
 /// </summary>
-public enum CatalogueLayoutType
+public enum CategoryLayoutType
 {
     /// <summary>Classic 100 % viewport-height background image with centred text.</summary>
     FullWidthHero  = 1,

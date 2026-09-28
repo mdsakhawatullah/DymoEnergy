@@ -168,8 +168,8 @@ public class UserSiteSettingAppService : ApplicationService, IUserSiteSettingApp
         entity.FontSizeBase           = input.FontSizeBase;
         entity.AboutTitle             = input.AboutTitle;
         entity.AboutDescription       = input.AboutDescription;
-        entity.CataloguesTitle        = input.CataloguesTitle;
-        entity.CataloguesDescription  = input.CataloguesDescription;
+        entity.CategoriesTitle        = input.CategoriesTitle;
+        entity.CategoriesDescription  = input.CategoriesDescription;
         entity.SocialLinkedinUrl      = input.SocialLinkedinUrl;
         entity.SocialInstagramUrl     = input.SocialInstagramUrl;
         entity.SocialFacebookUrl      = input.SocialFacebookUrl;
@@ -226,8 +226,8 @@ public class UserSiteSettingAppService : ApplicationService, IUserSiteSettingApp
         FontSizeBase          = s.FontSizeBase,
         AboutTitle            = s.AboutTitle,
         AboutDescription      = s.AboutDescription,
-        CataloguesTitle       = s.CataloguesTitle,
-        CataloguesDescription = s.CataloguesDescription,
+        CategoriesTitle       = s.CategoriesTitle,
+        CategoriesDescription = s.CategoriesDescription,
         SocialLinkedinUrl     = s.SocialLinkedinUrl,
         SocialInstagramUrl    = s.SocialInstagramUrl,
         SocialFacebookUrl     = s.SocialFacebookUrl,

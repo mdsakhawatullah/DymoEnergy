@@ -1,6 +1,6 @@
 import type { CompanyDto, CompanyFilterDto, CreateUpdateCompanyDto } from './models';
-import { DymoPagedResultDto } from '../catalogues/models';
-import { SelectListDto } from '../catalogues/models';
+import { DymoPagedResultDto } from '../categories/models';
+import { SelectListDto } from '../categories/models';
 import { RestService } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
 

@@ -1,18 +1,18 @@
-import type { CatalogueDto, CatalogueFilterDto, CreateUpdateCatalogueDto, DymoPagedResultDto, SelectListDto } from './models';
+import type { CategoryDto, CategoryFilterDto, CreateUpdateCategoryDto, DymoPagedResultDto, SelectListDto } from './models';
 import { RestService } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
 
 @Injectable({
   providedIn: 'root',
 })
-export class CatalogueService {
+export class CategoryService {
   apiName = 'Default';
 
-  getListData = (input: CatalogueFilterDto) =>
-    this.restService.request<any, DymoPagedResultDto<CatalogueDto>>(
+  getListData = (input: CategoryFilterDto) =>
+    this.restService.request<any, DymoPagedResultDto<CategoryDto>>(
       {
         method: 'GET',
-        url: '/api/app/catalogue/data',
+        url: '/api/app/category/data',
         params: {
           filter: input.filter,
           isPublished: input.isPublished,
@@ -28,31 +28,31 @@ export class CatalogueService {
 
   getSelectList = () =>
     this.restService.request<any, SelectListDto[]>(
-      { method: 'GET', url: '/api/app/catalogue/select-list' },
+      { method: 'GET', url: '/api/app/category/select-list' },
       { apiName: this.apiName }
     );
 
   get = (id: number) =>
-    this.restService.request<any, CatalogueDto>(
-      { method: 'GET', url: `/api/app/catalogue/${id}` },
+    this.restService.request<any, CategoryDto>(
+      { method: 'GET', url: `/api/app/category/${id}` },
       { apiName: this.apiName }
     );
 
-  create = (input: CreateUpdateCatalogueDto) =>
-    this.restService.request<any, CatalogueDto>(
-      { method: 'POST', url: '/api/app/catalogue/catalogue-data', body: input },
+  create = (input: CreateUpdateCategoryDto) =>
+    this.restService.request<any, CategoryDto>(
+      { method: 'POST', url: '/api/app/category/category-data', body: input },
       { apiName: this.apiName }
     );
 
-  update = (id: number, input: CreateUpdateCatalogueDto) =>
-    this.restService.request<any, CatalogueDto>(
-      { method: 'PUT', url: `/api/app/catalogue/${id}`, body: input },
+  update = (id: number, input: CreateUpdateCategoryDto) =>
+    this.restService.request<any, CategoryDto>(
+      { method: 'PUT', url: `/api/app/category/${id}`, body: input },
       { apiName: this.apiName }
     );
 
   delete = (id: number) =>
     this.restService.request<any, void>(
-      { method: 'DELETE', url: `/api/app/catalogue/${id}` },
+      { method: 'DELETE', url: `/api/app/category/${id}` },
       { apiName: this.apiName }
     );
 

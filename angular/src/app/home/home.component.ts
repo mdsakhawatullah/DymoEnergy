@@ -7,10 +7,10 @@ import { Observable, catchError, forkJoin, map, of } from 'rxjs';
 import { OrderService } from '../proxy/orders/order.service';
 import { QuoteRequestService } from '../proxy/quote-requests/quote-request.service';
 import { ProductService } from '../proxy/products/product.service';
-import { CatalogueService } from '../proxy/catalogues/catalogue.service';
+import { CategoryService } from '../proxy/categories/category.service';
 import { OrderDto, OrderStatusLabels } from '../proxy/orders/models';
 import { QuoteRequestDto, QuoteRequestStatusLabels } from '../proxy/quote-requests/models';
-import { CatalogueDto } from '../proxy/catalogues/models';
+import { CategoryDto } from '../proxy/categories/models';
 import { ProductDto } from '../proxy/products/models';
 
 type OrderTab = 'pending' | 'progress' | 'delivered';
@@ -36,7 +36,7 @@ export class HomeComponent implements OnInit {
   private orderService     = inject(OrderService);
   private quoteService     = inject(QuoteRequestService);
   private productService   = inject(ProductService);
-  private catalogueService = inject(CatalogueService);
+  private categoryService = inject(CategoryService);
   private config           = inject(ConfigStateService);
 
   today = new Date();
@@ -53,7 +53,7 @@ export class HomeComponent implements OnInit {
   // ── Lists ───────────────────────────────────────────────────────────────────
   orders     = signal<OrderDto[]>([]);
   quotes     = signal<QuoteRequestDto[]>([]);
-  catalogues = signal<CatalogueDto[]>([]);
+  categories = signal<CategoryDto[]>([]);
   products   = signal<ProductDto[]>([]);
 
   loading        = signal(true);
@@ -104,10 +104,10 @@ export class HomeComponent implements OnInit {
       .slice(0, 5)
   );
 
-  /** Catalogue names by id, for the product table's category column. */
-  private catalogueName = computed(() => {
+  /** Category names by id, for the product table's category column. */
+  private categoryName = computed(() => {
     const map = new Map<number, string>();
-    this.catalogues().forEach(c => map.set(c.id, c.name || 'Uncategorised'));
+    this.categories().forEach(c => map.set(c.id, c.name || 'Uncategorised'));
     return map;
   });
 
@@ -116,7 +116,7 @@ export class HomeComponent implements OnInit {
     [...this.products()]
       .sort((a, b) => (b.discountPrice ?? b.price) - (a.discountPrice ?? a.price))
       .slice(0, 5)
-      .map(p => ({ product: p, catalogue: this.catalogueName().get(p.catalogueId) || '—' }))
+      .map(p => ({ product: p, category: this.categoryName().get(p.categoryId) || '—' }))
   );
 
   ngOnInit(): void {
@@ -159,10 +159,10 @@ export class HomeComponent implements OnInit {
     });
 
     forkJoin({
-      catalogues: this.safe(this.catalogueService.getListData({ maxResultCount: 50, skipCount: 0 })),
+      categories: this.safe(this.categoryService.getListData({ maxResultCount: 50, skipCount: 0 })),
       products:   this.safe(this.productService.getListData({ maxResultCount: 500, skipCount: 0 })),
     }).subscribe(r => {
-      this.catalogues.set(r.catalogues.items);
+      this.categories.set(r.categories.items);
       this.products.set(r.products.items);
       this.productsLoading.set(false);
     });

@@ -1,8 +1,8 @@
 using Volo.Abp.Application.Dtos;
 
-namespace DymoEnergy.Catalogues;
+namespace DymoEnergy.Categories;
 
-public class CatalogueFilterDto : PagedAndSortedResultRequestDto
+public class CategoryFilterDto : PagedAndSortedResultRequestDto
 {
     public string? Filter { get; set; }
     public bool? IsPublished { get; set; }

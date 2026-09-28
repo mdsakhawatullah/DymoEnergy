@@ -11,52 +11,52 @@ using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
 
-namespace DymoEnergy.Catalogues;
+namespace DymoEnergy.Categories;
 
-[Authorize(DymoEnergyPermissions.Catalogues.Default)]
-public class CatalogueAppService : ApplicationService, ICatalogueAppService
+[Authorize(DymoEnergyPermissions.Categories.Default)]
+public class CategoryAppService : ApplicationService, ICategoryAppService
 {
     private const int ShowcaseProductLimit = 8;
 
-    private readonly IRepository<Catalogue, int>      _catalogueRepository;
-    private readonly IRepository<CatalogueImage, int> _imageRepository;
+    private readonly IRepository<Category, int>      _categoryRepository;
+    private readonly IRepository<CategoryImage, int> _imageRepository;
     private readonly IRepository<Product, int>        _productRepository;
 
-    public CatalogueAppService(
-        IRepository<Catalogue, int>      catalogueRepository,
-        IRepository<CatalogueImage, int> imageRepository,
+    public CategoryAppService(
+        IRepository<Category, int>      categoryRepository,
+        IRepository<CategoryImage, int> imageRepository,
         IRepository<Product, int>        productRepository)
     {
-        _catalogueRepository = catalogueRepository;
+        _categoryRepository = categoryRepository;
         _imageRepository     = imageRepository;
         _productRepository   = productRepository;
     }
 
     // ── READ ─────────────────────────────────────────────────────────────
 
-    /// <summary>Returns a single catalogue with all its images.</summary>
+    /// <summary>Returns a single category with all its images.</summary>
     [AllowAnonymous]
-    public async Task<CatalogueDto> GetAsync(int id)
+    public async Task<CategoryDto> GetAsync(int id)
     {
-        var query = await _catalogueRepository.WithDetailsAsync(c => c.Images);
+        var query = await _categoryRepository.WithDetailsAsync(c => c.Images);
 
-        var catalogue = await AsyncExecuter.FirstOrDefaultAsync(query.Where(c => c.Id == id))
-            ?? throw new EntityNotFoundException(typeof(Catalogue), id);
+        var category = await AsyncExecuter.FirstOrDefaultAsync(query.Where(c => c.Id == id))
+            ?? throw new EntityNotFoundException(typeof(Category), id);
 
-        return MapToDto(catalogue);
+        return MapToDto(category);
     }
 
-    /// <summary>Returns a single catalogue by its URL slug with all its images.</summary>
+    /// <summary>Returns a single category by its URL slug with all its images.</summary>
     [AllowAnonymous]
-    public async Task<CatalogueDto> GetBySlugAsync(string slug)
+    public async Task<CategoryDto> GetBySlugAsync(string slug)
     {
         var normalised = slug.ToLowerInvariant().Trim();
-        var query      = await _catalogueRepository.WithDetailsAsync(c => c.Images);
+        var query      = await _categoryRepository.WithDetailsAsync(c => c.Images);
 
-        var catalogue = await AsyncExecuter.FirstOrDefaultAsync(query.Where(c => c.Slug == normalised))
-            ?? throw new UserFriendlyException($"Catalogue with slug '{slug}' not found.");
+        var category = await AsyncExecuter.FirstOrDefaultAsync(query.Where(c => c.Slug == normalised))
+            ?? throw new UserFriendlyException($"Category with slug '{slug}' not found.");
 
-        return MapToDto(catalogue);
+        return MapToDto(category);
     }
 
     /// <summary>
@@ -64,10 +64,10 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
     /// All filtering is translated to SQL; no in-memory evaluation.
     /// </summary>
     [AllowAnonymous]
-    public async Task<DymoPagedResultDto<CatalogueDto>> GetListDataAsync(CatalogueFilterDto input)
+    public async Task<DymoPagedResultDto<CategoryDto>> GetListDataAsync(CategoryFilterDto input)
     {
         // Plain IQueryable — no Include → single-table SQL query
-        var query = await _catalogueRepository.GetQueryableAsync();
+        var query = await _categoryRepository.GetQueryableAsync();
 
         // ── SQL-level filters ─────────────────────────────────────────────
         if (!string.IsNullOrWhiteSpace(input.Filter))
@@ -94,16 +94,16 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
             .Skip(input.SkipCount)
             .Take(input.MaxResultCount);
 
-        var catalogues = await AsyncExecuter.ToListAsync(query);
+        var categories = await AsyncExecuter.ToListAsync(query);
 
         // Images are not loaded for the list — MapToDto returns empty Images list
-        return new DymoPagedResultDto<CatalogueDto>(totalCount, catalogues.Select(MapToDto).ToList());
+        return new DymoPagedResultDto<CategoryDto>(totalCount, categories.Select(MapToDto).ToList());
     }
 
     [AllowAnonymous]
     public async Task<IEnumerable<SelectListDto>> GetSelectListAsync()
     {
-        var query = (await _catalogueRepository.GetQueryableAsync())
+        var query = (await _categoryRepository.GetQueryableAsync())
             .OrderBy(c => c.DisplayOrder)
             .ThenBy(c => c.Name)
             .Select(c => new SelectListDto
@@ -116,29 +116,29 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
     }
 
     /// <summary>
-    /// Home-page showcase: every published catalogue that has active products, each with
+    /// Home-page showcase: every published category that has active products, each with
     /// its thumbnail and first <see cref="ShowcaseProductLimit"/> products. Single SQL query.
     /// </summary>
     [AllowAnonymous]
-    public async Task<List<HomeCatalogueShowcaseDto>> GetHomeShowcaseAsync()
+    public async Task<List<HomeCategoryShowcaseDto>> GetHomeShowcaseAsync()
     {
         var products = (await _productRepository.GetQueryableAsync())
             .Where(p => p.IsActive);
 
-        var query = (await _catalogueRepository.GetQueryableAsync())
-            .Where(c => c.IsPublished && products.Any(p => p.CatalogueId == c.Id))
+        var query = (await _categoryRepository.GetQueryableAsync())
+            .Where(c => c.IsPublished && products.Any(p => p.CategoryId == c.Id))
             .OrderBy(c => c.DisplayOrder)
             .ThenBy(c => c.Name)
-            .Select(c => new HomeCatalogueShowcaseDto
+            .Select(c => new HomeCategoryShowcaseDto
             {
                 Id                = c.Id,
                 Name              = c.Name,
                 Slug              = c.Slug,
                 ThumbnailImageUrl = c.ThumbnailImageUrl ?? c.PrimaryBackgroundImageUrl,
                 AccentColor       = c.AccentColor,
-                TotalProductCount = products.Count(p => p.CatalogueId == c.Id),
+                TotalProductCount = products.Count(p => p.CategoryId == c.Id),
                 Products = products
-                    .Where(p => p.CatalogueId == c.Id)
+                    .Where(p => p.CategoryId == c.Id)
                     .OrderBy(p => p.DisplayOrder)
                     .ThenBy(p => p.Name)
                     .Take(ShowcaseProductLimit)
@@ -158,49 +158,49 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
 
     // ── WRITE ─────────────────────────────────────────────────────────────
 
-    [Authorize(DymoEnergyPermissions.Catalogues.Create)]
-    public async Task<CatalogueDto> CreateCatalogueDataAsync(CreateUpdateCatalogueDto input)
+    [Authorize(DymoEnergyPermissions.Categories.Create)]
+    public async Task<CategoryDto> CreateCategoryDataAsync(CreateUpdateCategoryDto input)
     {
         if (!string.IsNullOrWhiteSpace(input.Slug))
             await EnsureSlugIsUniqueAsync(input.Slug);
 
-        var catalogue = new Catalogue();
-        ApplyInput(catalogue, input);
+        var category = new Category();
+        ApplyInput(category, input);
 
-        // Insert catalogue first so EF assigns the auto-increment Id
-        await _catalogueRepository.InsertAsync(catalogue, autoSave: true);
+        // Insert category first so EF assigns the auto-increment Id
+        await _categoryRepository.InsertAsync(category, autoSave: true);
 
         // Bulk-insert all images
         if (input.Images.Count > 0)
         {
             var images = input.Images
-                .Select(dto => MapToImage(dto, catalogue.Id))
+                .Select(dto => MapToImage(dto, category.Id))
                 .ToList();
 
             await _imageRepository.InsertManyAsync(images, autoSave: true);
-            catalogue.Images = images;
+            category.Images = images;
         }
 
-        return MapToDto(catalogue);
+        return MapToDto(category);
     }
 
-    [Authorize(DymoEnergyPermissions.Catalogues.Edit)]
-    public async Task<CatalogueDto> UpdateAsync(int id, CreateUpdateCatalogueDto input)
+    [Authorize(DymoEnergyPermissions.Categories.Edit)]
+    public async Task<CategoryDto> UpdateAsync(int id, CreateUpdateCategoryDto input)
     {
-        // Load catalogue WITHOUT images — scalar update only
-        var catalogue = await _catalogueRepository.GetAsync(id);
+        // Load category WITHOUT images — scalar update only
+        var category = await _categoryRepository.GetAsync(id);
 
         if (!string.IsNullOrWhiteSpace(input.Slug) &&
-            !string.Equals(catalogue.Slug, input.Slug, StringComparison.OrdinalIgnoreCase))
+            !string.Equals(category.Slug, input.Slug, StringComparison.OrdinalIgnoreCase))
             await EnsureSlugIsUniqueAsync(input.Slug);
 
-        ApplyInput(catalogue, input);
-        await _catalogueRepository.UpdateAsync(catalogue, autoSave: true);
+        ApplyInput(category, input);
+        await _categoryRepository.UpdateAsync(category, autoSave: true);
 
         // Load current images from DB (separate, targeted SQL query)
         var imageQuery   = await _imageRepository.GetQueryableAsync();
         var currentImages = await AsyncExecuter.ToListAsync(
-            imageQuery.Where(i => i.CatalogueId == id));
+            imageQuery.Where(i => i.CategoryId == id));
 
         // Classify input images
         var inputWithId = input.Images.Where(i => i.Id is > 0).ToList();
@@ -213,7 +213,7 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
             await _imageRepository.DeleteManyAsync(toDelete, autoSave: true);
 
         // ── 2. UpdateManyAsync — images that already exist ────────────────
-        var toUpdate = new List<CatalogueImage>();
+        var toUpdate = new List<CategoryImage>();
         foreach (var dto in inputWithId)
         {
             var existing = currentImages.FirstOrDefault(i => i.Id == dto.Id);
@@ -226,28 +226,28 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
 
         // ── 3. InsertManyAsync — new images added by the admin ────────────
         var toInsert = inputNewIds
-            .Select(dto => MapToImage(dto, catalogue.Id))
+            .Select(dto => MapToImage(dto, category.Id))
             .ToList();
         if (toInsert.Count > 0)
             await _imageRepository.InsertManyAsync(toInsert, autoSave: true);
 
         // Build DTO from in-memory state (no extra DB round-trip)
-        catalogue.Images = toUpdate.Concat(toInsert)
+        category.Images = toUpdate.Concat(toInsert)
             .OrderBy(i => i.DisplayOrder)
             .ToList();
 
-        return MapToDto(catalogue);
+        return MapToDto(category);
     }
 
-    [Authorize(DymoEnergyPermissions.Catalogues.Delete)]
+    [Authorize(DymoEnergyPermissions.Categories.Delete)]
     public async Task DeleteAsync(int id)
     {
-        await _catalogueRepository.DeleteAsync(id, autoSave: true);
+        await _categoryRepository.DeleteAsync(id, autoSave: true);
     }
 
     // ── PRIVATE HELPERS ───────────────────────────────────────────────────
 
-    private static void ApplyInput(Catalogue c, CreateUpdateCatalogueDto input)
+    private static void ApplyInput(Category c, CreateUpdateCategoryDto input)
     {
         c.PortalId                  = input.PortalId;
         c.Name                      = input.Name;
@@ -274,9 +274,9 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
         c.MetaKeywords              = input.MetaKeywords;
     }
 
-    private static CatalogueImage MapToImage(CreateUpdateCatalogueImageDto dto, int catalogueId) => new()
+    private static CategoryImage MapToImage(CreateUpdateCategoryImageDto dto, int categoryId) => new()
     {
-        CatalogueId  = catalogueId,
+        CategoryId  = categoryId,
         ImageUrl     = dto.ImageUrl,
         ImageType    = dto.ImageType,
         Title        = dto.Title,
@@ -285,7 +285,7 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
         IsActive     = dto.IsActive
     };
 
-    private static void ApplyImageInput(CatalogueImage img, CreateUpdateCatalogueImageDto dto)
+    private static void ApplyImageInput(CategoryImage img, CreateUpdateCategoryImageDto dto)
     {
         img.ImageUrl     = dto.ImageUrl;
         img.ImageType    = dto.ImageType;
@@ -295,7 +295,7 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
         img.IsActive     = dto.IsActive;
     }
 
-    private static CatalogueDto MapToDto(Catalogue c) => new()
+    private static CategoryDto MapToDto(Category c) => new()
     {
         Id                        = c.Id,
         CreationTime              = c.CreationTime,
@@ -330,10 +330,10 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
         MetaKeywords              = c.MetaKeywords,
         Images = c.Images
             .OrderBy(i => i.DisplayOrder)
-            .Select(i => new CatalogueImageDto
+            .Select(i => new CategoryImageDto
             {
                 Id           = i.Id,
-                CatalogueId  = i.CatalogueId,
+                CategoryId  = i.CategoryId,
                 ImageUrl     = i.ImageUrl,
                 ImageType    = i.ImageType,
                 Title        = i.Title,
@@ -347,9 +347,9 @@ public class CatalogueAppService : ApplicationService, ICatalogueAppService
     private async Task EnsureSlugIsUniqueAsync(string slug)
     {
         var normalised = slug.ToLowerInvariant().Trim();
-        var query      = await _catalogueRepository.GetQueryableAsync();
+        var query      = await _categoryRepository.GetQueryableAsync();
         var exists     = await AsyncExecuter.AnyAsync(query.Where(c => c.Slug == normalised));
         if (exists)
-            throw new BusinessException(message: $"A catalogue with slug '{slug}' already exists.");
+            throw new BusinessException(message: $"A category with slug '{slug}' already exists.");
     }
 }

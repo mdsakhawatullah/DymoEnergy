@@ -1,10 +1,10 @@
-namespace DymoEnergy.Catalogues;
+namespace DymoEnergy.Categories;
 
 /// <summary>
-/// Describes the role of an image attached to a <see cref="Catalogue"/>.
+/// Describes the role of an image attached to a <see cref="Category"/>.
 /// Admin can upload one or many images of each type to build a rich page.
 /// </summary>
-public enum CatalogueImageType
+public enum CategoryImageType
 {
     /// <summary>The main full-width hero background shown at the top of the page.</summary>
     PrimaryBackground  = 1,
@@ -18,10 +18,10 @@ public enum CatalogueImageType
     /// <summary>Images shown inside a gallery / lightbox section.</summary>
     Gallery            = 4,
 
-    /// <summary>Small card thumbnail displayed in catalogue listing grids.</summary>
+    /// <summary>Small card thumbnail displayed in category listing grids.</summary>
     Thumbnail          = 5,
 
-    /// <summary>SVG or PNG category icon shown next to the catalogue title.</summary>
+    /// <summary>SVG or PNG category icon shown next to the category title.</summary>
     Icon               = 6,
 
     /// <summary>Feature highlight image placed alongside descriptive text.</summary>

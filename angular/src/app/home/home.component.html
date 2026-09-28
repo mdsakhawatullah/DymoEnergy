@@ -207,7 +207,7 @@
           <thead>
             <tr>
               <th>Product</th>
-              <th>Catalogue</th>
+              <th>Category</th>
               <th class="tbl__num">Stock</th>
               <th class="tbl__num">Price</th>
             </tr>
@@ -216,7 +216,7 @@
             @for (row of topProducts(); track row.product.id) {
               <tr>
                 <td class="tbl__strong">{{ row.product.name || 'Untitled' }}</td>
-                <td class="tbl__muted">{{ row.catalogue }}</td>
+                <td class="tbl__muted">{{ row.category }}</td>
                 <td class="tbl__num" [class.tbl__low]="row.product.stockQuantity <= 10">
                   {{ row.product.stockQuantity | number }} left
                 </td>

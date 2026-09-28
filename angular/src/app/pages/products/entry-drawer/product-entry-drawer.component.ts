@@ -4,8 +4,8 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModule } from '../../../shared/shared.module';
 import { ProductService } from '../../../proxy/products/product.service';
 import { ProductDto, ProductStatusLabels } from '../../../proxy/products/models';
-import { CatalogueService } from '../../../proxy/catalogues/catalogue.service';
-import { SelectListDto } from '../../../proxy/catalogues/models';
+import { CategoryService } from '../../../proxy/categories/category.service';
+import { SelectListDto } from '../../../proxy/categories/models';
 import { ImageUploadService } from '../../../proxy/image-upload/image-upload.service';
 
 @Component({
@@ -24,7 +24,7 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
   form!: FormGroup;
   saving = false;
   uploadingPrimaryImage = false;
-  catalogueOptions: SelectListDto[] = [];
+  categoryOptions: SelectListDto[] = [];
 
   statusOptions = Object.entries(ProductStatusLabels).map(([value, label]) => ({
     value: +value,
@@ -34,7 +34,7 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
   constructor(
     private fb:           FormBuilder,
     private productSvc:   ProductService,
-    private catalogueSvc: CatalogueService,
+    private categorySvc: CategoryService,
     private message:      NzMessageService,
     private imageUploadSvc: ImageUploadService,
   ) {
@@ -42,9 +42,9 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
   }
 
   ngOnInit(): void {
-    this.catalogueSvc.getSelectList().subscribe({
-      next: items => this.catalogueOptions = items,
-      error: () => this.message.warning('Could not load catalogues.'),
+    this.categorySvc.getSelectList().subscribe({
+      next: items => this.categoryOptions = items,
+      error: () => this.message.warning('Could not load categories.'),
     });
   }
 
@@ -52,7 +52,7 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
     if (changes['input']) {
       if (this.input) {
         this.form.patchValue({
-          catalogueId:   this.input.catalogueId,
+          categoryId:   this.input.categoryId,
           name:          this.input.name,
           slug:          this.input.slug,
           summary:       this.input.summary,
@@ -72,14 +72,14 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
           metaKeywords:  this.input.metaKeywords,
         });
       } else {
-        this.form.reset({ status: 1, isActive: false, isFeatured: false, displayOrder: 0, stockQuantity: 0, price: 0, catalogueId: null });
+        this.form.reset({ status: 1, isActive: false, isFeatured: false, displayOrder: 0, stockQuantity: 0, price: 0, categoryId: null });
       }
     }
   }
 
   buildForm(): void {
     this.form = this.fb.group({
-      catalogueId:     [null],
+      categoryId:     [null],
       name:            [null],
       slug:            [null],
       summary:         [null],

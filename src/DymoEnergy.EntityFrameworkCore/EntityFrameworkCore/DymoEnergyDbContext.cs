@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using DymoEnergy.Books;
 using DymoEnergy.AdminSiteSettings;
-using DymoEnergy.Catalogues;
+using DymoEnergy.Categories;
 using DymoEnergy.Products;
 using DymoEnergy.SalesInvoices;
 using DymoEnergy.Orders;
@@ -34,8 +34,8 @@ public class DymoEnergyDbContext :
 
     public DbSet<Book> Books { get; set; }
     public DbSet<AdminSiteSetting> AdminSiteSettings { get; set; }
-    public DbSet<Catalogue> Catalogues { get; set; }
-    public DbSet<CatalogueImage> CatalogueImages { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<CategoryImage> CategoryImages { get; set; }
     public DbSet<Product> Products{ get; set; }
     public DbSet<ProductImage> ProductImages { get; set; }
     public DbSet<ProductReview> ProductReviews { get; set; }
@@ -108,17 +108,17 @@ public class DymoEnergyDbContext :
             b.ConfigureByConvention();
         });
 
-        /* ── Catalogues ──────────────────────────────────────────────── */
-        builder.Entity<Catalogue>(b =>
+        /* ── Categories ──────────────────────────────────────────────── */
+        builder.Entity<Category>(b =>
         {
-            b.ToTable(DymoEnergyConsts.DbTablePrefix + "Catalogues", DymoEnergyConsts.DbSchema);
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "Categories", DymoEnergyConsts.DbSchema);
             b.ConfigureByConvention();
             b.Property(x => x.Id).ValueGeneratedOnAdd();   // auto-increment int PK
         });
 
-        builder.Entity<CatalogueImage>(b =>
+        builder.Entity<CategoryImage>(b =>
         {
-            b.ToTable(DymoEnergyConsts.DbTablePrefix + "CatalogueImages", DymoEnergyConsts.DbSchema);
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "CategoryImages", DymoEnergyConsts.DbSchema);
             b.ConfigureByConvention();
 
             b.Property(x => x.Id).ValueGeneratedOnAdd();   // auto-increment int PK

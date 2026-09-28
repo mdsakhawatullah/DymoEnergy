@@ -41,9 +41,9 @@ public class UserSiteSettingDto : FullAuditedEntityDto<int>
     public string? AboutTitle       { get; set; }
     public string? AboutDescription { get; set; }
 
-    // ── Catalogues Section ────────────────────────────────────────────────
-    public string? CataloguesTitle       { get; set; }
-    public string? CataloguesDescription { get; set; }
+    // ── Categories Section ────────────────────────────────────────────────
+    public string? CategoriesTitle       { get; set; }
+    public string? CategoriesDescription { get; set; }
 
     // ── Social Media ──────────────────────────────────────────────────────
     public string? SocialLinkedinUrl  { get; set; }

@@ -4,7 +4,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModule } from '../../../shared/shared.module';
 import { CompanyService } from '../../../proxy/companies/company.service';
 import { CompanyDto, CompanyStatusLabels } from '../../../proxy/companies/models';
-import { SelectListDto } from '../../../proxy/catalogues/models';
+import { SelectListDto } from '../../../proxy/categories/models';
 
 @Component({
   selector:    'company-entry-drawer',

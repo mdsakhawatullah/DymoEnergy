@@ -71,7 +71,7 @@ function configureRoutes() {
     { path: '/product-returns', name: '::Menu:ProductReturn', parentName: '::Menu:Sales', order: 4, layout: APP, breadcrumbText: '::Menu:ProductReturn' },
     { path: '/promotions',     name: '::Menu:Promotion',    parentName: '::Menu:Sales', order: 5, layout: APP, breadcrumbText: '::Menu:Promotion' },
     { path: '/customers',      name: '::Menu:Customer',     parentName: '::Menu:Sales', order: 6, layout: APP, breadcrumbText: '::Menu:Customer' },
-    { path: '/catalogues',     name: '::Menu:Catalogue',    parentName: '::Menu:Sales', order: 7, layout: APP, breadcrumbText: '::Menu:Catalogue' },
+    { path: '/categories',     name: '::Menu:Category',    parentName: '::Menu:Sales', order: 7, layout: APP, breadcrumbText: '::Menu:Category' },
 
     {
       path: '/marketing-overview',

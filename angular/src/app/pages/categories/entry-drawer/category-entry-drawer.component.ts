@@ -2,22 +2,22 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModule } from '../../../shared/shared.module';
-import { CatalogueService } from '../../../proxy/catalogues/catalogue.service';
-import { CatalogueDto, CatalogueLayoutTypeLabels } from '../../../proxy/catalogues/models';
+import { CategoryService } from '../../../proxy/categories/category.service';
+import { CategoryDto, CategoryLayoutTypeLabels } from '../../../proxy/categories/models';
 import { ImageUploadService } from '../../../proxy/image-upload/image-upload.service';
 
 @Component({
-  selector:    'catalogue-entry-drawer',
-  templateUrl: './catalogue-entry-drawer.component.html',
-  styleUrl:    './catalogue-entry-drawer.component.css',
+  selector:    'category-entry-drawer',
+  templateUrl: './category-entry-drawer.component.html',
+  styleUrl:    './category-entry-drawer.component.css',
   imports:     [SharedModule],
 })
-export class CatalogueEntryDrawerComponent implements OnChanges {
+export class CategoryEntryDrawerComponent implements OnChanges {
 
-  @Input()  input: CatalogueDto | null = null;
+  @Input()  input: CategoryDto | null = null;
 
-  @Output() onCatalogueEntryDrawerClosed = new EventEmitter<void>();
-  @Output() handleCatalogueSaved         = new EventEmitter<void>();
+  @Output() onCategoryEntryDrawerClosed = new EventEmitter<void>();
+  @Output() handleCategorySaved         = new EventEmitter<void>();
 
   form!: FormGroup;
   saving           = false;
@@ -25,14 +25,14 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
   uploadingBg      = false;
   uploadingThumb   = false;
 
-  layoutOptions = Object.entries(CatalogueLayoutTypeLabels).map(([value, label]) => ({
+  layoutOptions = Object.entries(CategoryLayoutTypeLabels).map(([value, label]) => ({
     value: +value,
     label,
   }));
 
   constructor(
     private fb:              FormBuilder,
-    private catalogueSvc:    CatalogueService,
+    private categorySvc:    CategoryService,
     private message:         NzMessageService,
     private imageUploadSvc:  ImageUploadService,
   ) {
@@ -99,7 +99,7 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
     if (!file) return;
 
     this.uploadingBg = true;
-    this.imageUploadSvc.uploadImage(file, 'catalogues/backgrounds').subscribe({
+    this.imageUploadSvc.uploadImage(file, 'categories/backgrounds').subscribe({
       next: url => {
         this.form.patchValue({ primaryBackgroundImageUrl: url });
         this.uploadingBg = false;
@@ -117,7 +117,7 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
     if (!file) return;
 
     this.uploadingThumb = true;
-    this.imageUploadSvc.uploadImage(file, 'catalogues/thumbnails').subscribe({
+    this.imageUploadSvc.uploadImage(file, 'categories/thumbnails').subscribe({
       next: url => {
         this.form.patchValue({ thumbnailImageUrl: url });
         this.uploadingThumb = false;
@@ -136,14 +136,14 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
     const payload = { ...this.form.value, images: [], overlayOpacity: 0.4 };
 
     const request$ = this.input?.id
-      ? this.catalogueSvc.update(this.input.id, payload)
-      : this.catalogueSvc.create(payload);
+      ? this.categorySvc.update(this.input.id, payload)
+      : this.categorySvc.create(payload);
 
     request$.subscribe({
       next: () => {
-        this.message.success(this.input?.id ? 'Catalogue updated.' : 'Catalogue created.');
+        this.message.success(this.input?.id ? 'Category updated.' : 'Category created.');
         this.saving = false;
-        this.handleCatalogueSaved.emit();
+        this.handleCategorySaved.emit();
       },
       error: () => {
         this.message.error('Something went wrong. Please try again.');
@@ -153,6 +153,6 @@ export class CatalogueEntryDrawerComponent implements OnChanges {
   }
 
   close(): void {
-    this.onCatalogueEntryDrawerClosed.emit();
+    this.onCategoryEntryDrawerClosed.emit();
   }
 }
