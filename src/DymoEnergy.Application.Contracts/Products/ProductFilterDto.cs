@@ -10,4 +10,8 @@ public class ProductFilterDto : PagedAndSortedResultRequestDto
     public bool?          IsFeatured  { get; set; }
     public int?           CategoryId { get; set; }
     public int?           PortalId    { get; set; }
+    public ProductStockState? StockState { get; set; }
+
+    /// <summary>Low or out of stock, or missing a main photo.</summary>
+    public bool?          NeedsAttention { get; set; }
 }

@@ -54,6 +54,11 @@ export interface ProductFilterDto {
   isFeatured?: boolean;
   categoryId?: number;
   portalId?: number;
+  /** 1 in stock · 2 low stock · 3 out of stock — mirrors ProductStockState. */
+  stockState?: number;
+  /** Low / out of stock, or no main photo. */
+  needsAttention?: boolean;
+  /** newest · oldest · name · price-asc · price-desc · stock-asc */
   sorting?: string;
   skipCount?: number;
   maxResultCount?: number;

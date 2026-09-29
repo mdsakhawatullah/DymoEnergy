@@ -68,11 +68,45 @@ public class ProductAppService : ApplicationService, IProductAppService
         if (input.CategoryId.HasValue)
             query = query.Where(p => p.CategoryId == input.CategoryId);
 
+        if (input.IsActive.HasValue)
+            query = query.Where(p => p.IsActive == input.IsActive);
+
+        if (input.IsFeatured.HasValue)
+            query = query.Where(p => p.IsFeatured == input.IsFeatured);
+
+        if (input.PortalId.HasValue)
+            query = query.Where(p => p.PortalId == input.PortalId);
+
+        const int low = ProductConsts.LowStockThreshold;
+
+        query = input.StockState switch
+        {
+            ProductStockState.InStock    => query.Where(p => p.StockQuantity > low),
+            ProductStockState.LowStock   => query.Where(p => p.StockQuantity > 0 && p.StockQuantity <= low),
+            ProductStockState.OutOfStock => query.Where(p => p.StockQuantity <= 0),
+            _                            => query,
+        };
+
+        if (input.NeedsAttention == true)
+            query = query.Where(p =>
+                p.StockQuantity <= low ||
+                p.PrimaryImage == null || p.PrimaryImage == "");
+
         var totalCount = await AsyncExecuter.CountAsync(query);
 
+        // Whitelisted sort keys — Sorting comes straight from the query string
+        query = (input.Sorting ?? string.Empty).Trim().ToLowerInvariant() switch
+        {
+            "newest"     => query.OrderByDescending(p => p.CreationTime),
+            "oldest"     => query.OrderBy(p => p.CreationTime),
+            "name"       => query.OrderBy(p => p.Name),
+            "price-asc"  => query.OrderBy(p => p.DiscountPrice ?? p.Price),
+            "price-desc" => query.OrderByDescending(p => p.DiscountPrice ?? p.Price),
+            "stock-asc"  => query.OrderBy(p => p.StockQuantity),
+            _            => query.OrderBy(p => p.DisplayOrder).ThenBy(p => p.Name),
+        };
+
         query = query
-            .OrderBy(p => p.DisplayOrder)
-            .ThenBy(p => p.Name)
             .Skip(input.SkipCount)
             .Take(input.MaxResultCount);
 

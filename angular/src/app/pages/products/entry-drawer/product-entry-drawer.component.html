@@ -1,208 +1,317 @@
-<form nz-form [formGroup]="form" nzLayout="vertical" class="entry-form">
+<div class="pe">
 
-  <!-- ① Basic Information ─────────────────────────────────────────────── -->
-  <div class="section-header">
-    <span class="section-badge">1</span>
-    <span class="section-title">Basic Information</span>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-md-6">
-      <div class="field-label">NAME</div>
-      <input nz-input formControlName="name" placeholder="e.g. Solar Panel 400W" />
-    </div>
-    <div class="col-md-6">
-      <div class="field-label">SLUG</div>
-      <input nz-input formControlName="slug" placeholder="e.g. solar-panel-400w" />
-    </div>
-  </div>
-
-  <div class="row g-3 mt-1">
-    <div class="col-md-6">
-      <div class="field-label">SKU</div>
-      <input nz-input formControlName="sku" placeholder="e.g. SP-400W-001" />
-    </div>
-    <div class="col-md-6">
-      <div class="field-label">CATEGORY</div>
-      <nz-select
-        formControlName="categoryId"
-        nzShowSearch
-        nzAllowClear
-        nzPlaceHolder="Select category"
-        style="width:100%;"
-      >
-        @for (opt of categoryOptions; track opt.value) {
-          <nz-option [nzValue]="opt.value" [nzLabel]="opt.displayText"></nz-option>
-        }
-      </nz-select>
-    </div>
-  </div>
-
-  <div class="row g-3 mt-1">
-    <div class="col-12">
-      <div class="field-label">SUMMARY</div>
-      <textarea
-        nz-input
-        formControlName="summary"
-        [nzAutosize]="{ minRows: 2, maxRows: 4 }"
-        placeholder="Short product summary..."
-      ></textarea>
-    </div>
-  </div>
-
-  <!-- ② Pricing & Inventory ───────────────────────────────────────────── -->
-  <div class="section-header mt-4">
-    <span class="section-badge">2</span>
-    <span class="section-title">Pricing &amp; Inventory</span>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-md-4">
-      <div class="field-label">PRICE (৳)</div>
-      <nz-input-number formControlName="price" [nzMin]="0" [nzStep]="0.01" style="width:100%;"></nz-input-number>
-    </div>
-    <div class="col-md-4">
-      <div class="field-label">DISCOUNT PRICE (৳)</div>
-      <nz-input-number formControlName="discountPrice" [nzMin]="0" [nzStep]="0.01" style="width:100%;"></nz-input-number>
-    </div>
-    <div class="col-md-4">
-      <div class="field-label">STOCK QUANTITY</div>
-      <nz-input-number formControlName="stockQuantity" [nzMin]="0" style="width:100%;"></nz-input-number>
-    </div>
-  </div>
-
-  <div class="row g-3 mt-1">
-    <div class="col-md-4">
-      <div class="field-label">WEIGHT</div>
-      <input nz-input formControlName="weight" placeholder="e.g. 22kg" />
-    </div>
-  </div>
-
-  <!-- ③ Images & Media ────────────────────────────────────────────────── -->
-  <div class="section-header mt-4">
-    <span class="section-badge">3</span>
-    <span class="section-title">Images &amp; Media</span>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-md-4">
-      <div class="field-label">PRIMARY IMAGE</div>
-      <div
-        class="thumb-upload-box"
-        [class.uploading]="uploadingPrimaryImage"
-        (click)="triggerFileInput('primaryImageFileInput')"
-        nz-tooltip
-        nzTooltipTitle="Click to upload image"
-      >
-        @if (uploadingPrimaryImage) {
-          <span nz-icon nzType="loading" nzTheme="outline" class="thumb-icon spinning"></span>
-          <span class="thumb-hint">Uploading...</span>
-        } @else if (form.get('primaryImage')?.value) {
-          <img [src]="form.get('primaryImage')?.value" alt="Primary" class="thumb-preview" />
-          <div class="thumb-change-badge">
-            <span nz-icon nzType="upload"></span> Change
-          </div>
-        } @else {
-          <span nz-icon nzType="picture" nzTheme="outline" class="thumb-icon"></span>
-          <span class="thumb-hint">Click to upload</span>
-          <span class="upload-sub">JPG, PNG, WebP</span>
-        }
-      </div>
-      <input
-        nz-input
-        formControlName="primaryImage"
-        placeholder="or paste URL here..."
-        class="mt-2"
-        style="font-size:12px;"
-      />
-      <input
-        id="primaryImageFileInput"
-        type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp"
-        style="display:none"
-        (change)="onPrimaryImageSelected($event)"
-      />
-    </div>
-    <div class="col-md-8">
-      <div class="field-label">DESCRIPTION</div>
-      <textarea
-        nz-input
-        formControlName="description"
-        [nzAutosize]="{ minRows: 5, maxRows: 10 }"
-        placeholder="Full product description..."
-      ></textarea>
-    </div>
-  </div>
-
-  <!-- ④ Settings ───────────────────────────────────────────────────────── -->
-  <div class="section-header mt-4">
-    <span class="section-badge">4</span>
-    <span class="section-title">Settings</span>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-md-6">
-      <div class="field-label">STATUS</div>
-      <nz-select formControlName="status" style="width:100%">
-        @for (opt of statusOptions; track opt.value) {
-          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
-        }
-      </nz-select>
-    </div>
-    <div class="col-md-6">
-      <div class="field-label">DISPLAY ORDER</div>
-      <nz-input-number formControlName="displayOrder" [nzMin]="0" style="width:100%;"></nz-input-number>
-    </div>
-  </div>
-
-  <div class="row g-3 mt-1">
-    <div class="col-md-6">
-      <div class="field-label">ACTIVE</div>
-      <nz-switch formControlName="isActive" nzCheckedChildren="Yes" nzUnCheckedChildren="No"></nz-switch>
-    </div>
-    <div class="col-md-6">
-      <div class="field-label">FEATURED</div>
-      <nz-switch formControlName="isFeatured" nzCheckedChildren="Yes" nzUnCheckedChildren="No"></nz-switch>
-    </div>
-  </div>
-
-  <!-- ⑤ SEO ────────────────────────────────────────────────────────────── -->
-  <div class="section-header mt-4">
-    <span class="section-badge">5</span>
-    <span class="section-title">SEO</span>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-12">
-      <div class="field-label">META TITLE</div>
-      <input nz-input formControlName="metaTitle" placeholder="SEO page title" />
-    </div>
-    <div class="col-12">
-      <div class="field-label">META DESCRIPTION</div>
-      <textarea
-        nz-input
-        formControlName="metaDescription"
-        [nzAutosize]="{ minRows: 2, maxRows: 3 }"
-        placeholder="SEO description"
-      ></textarea>
-    </div>
-    <div class="col-12">
-      <div class="field-label">META KEYWORDS</div>
-      <input nz-input formControlName="metaKeywords" placeholder="keyword1, keyword2, keyword3" />
-    </div>
-  </div>
-
-</form>
-
-<!-- ── Footer ──────────────────────────────────────────────────────────── -->
-<div class="drawer-footer">
-  <span class="text-muted" style="font-size:13px;">
-    {{ input?.id ? 'Editing product #' + input?.id : 'New product' }}
-  </span>
-  <div class="d-flex gap-2">
-    <button nz-button (click)="close()" [disabled]="saving">Cancel</button>
-    <button nz-button nzType="primary" class="btn-save" (click)="save()" [nzLoading]="saving">
-      {{ input?.id ? 'Update Product' : 'Save Product' }}
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <header class="pe-head">
+    <button type="button" class="pe-x" aria-label="Close" (click)="close()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
+    <div class="pe-head__text">
+      <h2>{{ isEdit ? 'Edit product' : 'Create product' }}</h2>
+      <p>Fill the 4 sections, then save. Only name, category and price are required.</p>
+    </div>
+    <span class="pe-status" [class.pe-status--live]="isLive">
+      <i></i>{{ statusLabel }}
+    </span>
+  </header>
+
+  <!-- Section progress chips -->
+  <nav class="pe-chips" aria-label="Sections">
+    @for (s of sections; track s.key) {
+      <button type="button" class="pe-chip" [class.pe-chip--done]="sectionDone(s.key)" (click)="scrollTo(s.key)">
+        <span class="pe-chip__tick">
+          @if (sectionDone(s.key)) {
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>
+          }
+        </span>
+        {{ s.label }}
+      </button>
+    }
+  </nav>
+
+  <!-- ── Body ───────────────────────────────────────────────────────────── -->
+  <div class="pe-body">
+    @if (loading) {
+      <div class="pe-loading">
+        <span nz-icon nzType="loading"></span> Loading product…
+      </div>
+    }
+
+    <form [formGroup]="form" [class.pe-hidden]="loading" (ngSubmit)="save()">
+
+      <!-- ① Basic information -->
+      <section class="pe-sec" id="pe-basic">
+        <div class="pe-sec__head">
+          <span class="pe-num">1</span>
+          <h3>Basic information</h3>
+          <span class="pe-sec__hint">What customers see first</span>
+        </div>
+
+        <label class="pe-label" for="pe-name">Product name</label>
+        <input id="pe-name" class="pe-input" [class.pe-input--err]="invalid('name')"
+               formControlName="name" placeholder="e.g. Mono PERC Solar Panel 550W" autocomplete="off" />
+        @if (invalid('name')) {
+          <p class="pe-err">Give the product a name.</p>
+        } @else {
+          <p class="pe-help">Include the size or rating — "Inverter 500W" is easier to find than "Inverter".</p>
+        }
+
+        <div class="pe-grid2">
+          <div>
+            <label class="pe-label" for="pe-slug">Slug</label>
+            <div class="pe-affix">
+              <span class="pe-affix__pre">/p/</span>
+              <input id="pe-slug" class="pe-input pe-input--affixed" formControlName="slug"
+                     [readonly]="!slugEditing" (blur)="onSlugBlur()" placeholder="made-from-the-name" />
+            </div>
+            <p class="pe-help">
+              @if (slugEditing) { Lowercase letters, numbers and dashes. }
+              @else { Made from the name. <a (click)="editSlug()">Edit</a> }
+            </p>
+          </div>
+          <div>
+            <label class="pe-label" for="pe-sku">SKU</label>
+            <div class="pe-row">
+              <input id="pe-sku" class="pe-input pe-input--mono" formControlName="sku" placeholder="e.g. SP-550W-001" />
+              <button type="button" class="pe-btn pe-btn--ghost" (click)="generateSku()">Generate</button>
+            </div>
+            <p class="pe-help">Printed on invoices and warranty cards.</p>
+          </div>
+        </div>
+
+        <label class="pe-label" for="pe-cat">Category</label>
+        <select id="pe-cat" class="pe-input pe-select" [class.pe-input--err]="invalid('categoryId')" formControlName="categoryId">
+          <option [ngValue]="null" disabled>Choose a category</option>
+          @for (c of categoryOptions; track c.value) {
+            <option [ngValue]="c.value">{{ c.displayText }}</option>
+          }
+        </select>
+        @if (invalid('categoryId')) { <p class="pe-err">Pick the category it's sold under.</p> }
+
+        <div class="pe-label-row">
+          <label class="pe-label" for="pe-summary">Summary</label>
+          <span class="pe-count" [class.pe-count--full]="summaryLength >= summaryMax">{{ summaryLength }}/{{ summaryMax }}</span>
+        </div>
+        <textarea id="pe-summary" class="pe-input pe-textarea" formControlName="summary" rows="3"
+                  [attr.maxlength]="summaryMax"
+                  placeholder="One or two lines shown under the name on the storefront."></textarea>
+      </section>
+
+      <!-- ② Pricing & inventory -->
+      <section class="pe-sec" id="pe-pricing">
+        <div class="pe-sec__head">
+          <span class="pe-num">2</span>
+          <h3>Pricing &amp; inventory</h3>
+          <span class="pe-sec__hint">Prices in BDT, VAT included</span>
+        </div>
+
+        <div class="pe-grid2">
+          <div>
+            <label class="pe-label" for="pe-price">Price</label>
+            <div class="pe-affix">
+              <span class="pe-affix__pre">৳</span>
+              <input id="pe-price" type="number" min="0" step="1" class="pe-input pe-input--affixed"
+                     [class.pe-input--err]="invalid('price')" formControlName="price" placeholder="0" />
+            </div>
+            @if (invalid('price')) { <p class="pe-err">Set a price above ৳0.</p> }
+          </div>
+          <div>
+            <label class="pe-label" for="pe-disc">Discount price <span class="pe-opt">(optional)</span></label>
+            <div class="pe-affix">
+              <span class="pe-affix__pre">৳</span>
+              <input id="pe-disc" type="number" min="0" step="1" class="pe-input pe-input--affixed"
+                     [class.pe-input--err]="discountInvalid && showErrors" formControlName="discountPrice" placeholder="—" />
+            </div>
+            @if (discountInvalid) { <p class="pe-err">Must be lower than the price.</p> }
+          </div>
+        </div>
+
+        @if (price > 0) {
+          <div class="pe-preview-price">
+            <span class="pe-preview-price__label">Customers see</span>
+            <b>৳{{ money(sellPrice) }}</b>
+            @if (hasDiscount) {
+              <s>৳{{ money(price) }}</s>
+              <span class="pe-save">Save {{ savePercent }}%</span>
+              <span class="pe-preview-price__off">৳{{ money(price - discount) }} off</span>
+            }
+          </div>
+        }
+
+        <div class="pe-grid2">
+          <div>
+            <label class="pe-label" for="pe-stock">Stock quantity</label>
+            <div class="pe-stepper">
+              <button type="button" aria-label="Decrease" (click)="stepStock(-1)">−</button>
+              <input id="pe-stock" type="number" min="0" formControlName="stockQuantity" />
+              <button type="button" aria-label="Increase" (click)="stepStock(1)">+</button>
+            </div>
+            <p class="pe-help" [class.pe-help--warn]="stockTone === 'low'" [class.pe-help--err]="stockTone === 'out'">
+              {{ stockNote }}
+            </p>
+          </div>
+          <div>
+            <label class="pe-label" for="pe-weight">Weight <span class="pe-opt">(optional)</span></label>
+            <div class="pe-affix">
+              <input id="pe-weight" type="number" min="0" step="0.1" class="pe-input pe-input--suffixed"
+                     formControlName="weight" placeholder="0" />
+              <span class="pe-affix__post">kg</span>
+            </div>
+            <p class="pe-help">Used to work out the delivery charge.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ③ Photos -->
+      <section class="pe-sec" id="pe-photos">
+        <div class="pe-sec__head">
+          <span class="pe-num">3</span>
+          <h3>Photos</h3>
+          <span class="pe-sec__hint">{{ photos.length }} of {{ maxPhotos }} · first is the main photo</span>
+        </div>
+
+        <div class="pe-photos">
+          @for (p of photos; track p.url; let i = $index) {
+            <div class="pe-tile" [class.pe-tile--main]="i === 0" [class.pe-tile--dragging]="dragIndex === i"
+                 draggable="true"
+                 (dragstart)="onTileDragStart(i)" (dragover)="onTileDragOver($event)" (drop)="onTileDrop(i)"
+                 (dragend)="dragIndex = null">
+              <img [src]="p.url" [alt]="'Photo ' + (i + 1)" />
+              @if (i === 0) {
+                <span class="pe-tile__main">Main</span>
+              } @else {
+                <button type="button" class="pe-tile__promote" (click)="makeMain(i)">Make main</button>
+              }
+              <button type="button" class="pe-tile__x" aria-label="Remove photo" (click)="removePhoto(i)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </button>
+            </div>
+          }
+
+          @for (u of uploadSlots; track u) {
+            <div class="pe-tile pe-tile--busy"><span nz-icon nzType="loading"></span></div>
+          }
+
+          @if (slotsLeft > 0) {
+            <button type="button" class="pe-drop" [class.pe-drop--over]="dropActive"
+                    (click)="pickFiles()"
+                    (dragover)="onDropZoneOver($event)" (dragleave)="dropActive = false" (drop)="onDropZoneDrop($event)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+              <b>Upload or drop</b>
+              <span>JPG or PNG · square · 2 MB</span>
+            </button>
+          }
+        </div>
+        <input id="pe-file" type="file" multiple accept="image/jpeg,image/png,image/webp"
+               hidden (change)="onFilesPicked($event)" />
+        <p class="pe-help">Drag to reorder. A clear photo on a white background sells best.</p>
+      </section>
+
+      <!-- ④ Visibility -->
+      <section class="pe-sec" id="pe-visibility">
+        <div class="pe-sec__head">
+          <span class="pe-num">4</span>
+          <h3>Visibility</h3>
+          <span class="pe-sec__hint">Where it shows up</span>
+        </div>
+
+        <div class="pe-grid2" role="radiogroup" aria-label="Status">
+          <button type="button" role="radio" class="pe-radio" [class.pe-radio--on]="isLive"
+                  [attr.aria-checked]="isLive" (click)="setLive(true)">
+            <span class="pe-radio__dot"></span>
+            <span><b>Active</b><small>Live on the storefront</small></span>
+          </button>
+          <button type="button" role="radio" class="pe-radio" [class.pe-radio--on]="form.value.status === 1"
+                  [attr.aria-checked]="form.value.status === 1" (click)="setLive(false)">
+            <span class="pe-radio__dot"></span>
+            <span><b>Draft</b><small>Only admins can see it</small></span>
+          </button>
+        </div>
+        @if (!isLive && form.value.status !== 1) {
+          <p class="pe-help pe-help--warn">Currently {{ statusLabel }} — choose Active or Draft to change it.</p>
+        }
+
+        <label class="pe-toggle">
+          <nz-switch formControlName="isFeatured"></nz-switch>
+          <span>
+            <b>Featured product</b>
+            <small>Shown in the "Featured" row on the home page. Keep it to 8–12 products.</small>
+          </span>
+        </label>
+
+        <div class="pe-label">Storefront preview</div>
+        <div class="pe-card">
+          <div class="pe-card__img">
+            @if (photos[0]) { <img [src]="photos[0].url" alt="" /> }
+            @else {
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"
+                   stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/>
+                <circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5L5 20"/></svg>
+            }
+            @if (hasDiscount) { <span class="pe-card__badge">-{{ savePercent }}%</span> }
+          </div>
+          <div class="pe-card__text">
+            <span class="pe-card__cat">{{ categoryName }}</span>
+            <b class="pe-card__name">{{ form.value.name || 'Product name' }}</b>
+            <span class="pe-card__sum">{{ form.value.summary || 'Your summary appears here.' }}</span>
+            <span class="pe-card__price">
+              ৳{{ money(sellPrice) }}
+              @if (hasDiscount) { <s>৳{{ money(price) }}</s> }
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- More details: fields the product already had, kept out of the way -->
+      <section class="pe-sec pe-sec--more">
+        <button type="button" class="pe-more" (click)="showMore = !showMore" [attr.aria-expanded]="showMore">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" [style.transform]="showMore ? 'rotate(90deg)' : ''"><path d="M9 6l6 6-6 6"/></svg>
+          More details <span class="pe-opt">— description, display order, SEO</span>
+        </button>
+
+        @if (showMore) {
+          <label class="pe-label" for="pe-desc">Full description</label>
+          <textarea id="pe-desc" class="pe-input pe-textarea" formControlName="description" rows="5"
+                    placeholder="Specs, warranty, what's in the box…"></textarea>
+
+          <div class="pe-grid2">
+            <div>
+              <label class="pe-label" for="pe-order">Display order</label>
+              <input id="pe-order" type="number" min="0" class="pe-input" formControlName="displayOrder" />
+              <p class="pe-help">Lower numbers show first.</p>
+            </div>
+            <div>
+              <label class="pe-label" for="pe-mt">Meta title</label>
+              <input id="pe-mt" class="pe-input" formControlName="metaTitle" placeholder="Defaults to the name" />
+            </div>
+          </div>
+
+          <label class="pe-label" for="pe-md">Meta description</label>
+          <textarea id="pe-md" class="pe-input pe-textarea" formControlName="metaDescription" rows="2"></textarea>
+
+          <label class="pe-label" for="pe-mk">Meta keywords</label>
+          <input id="pe-mk" class="pe-input" formControlName="metaKeywords" placeholder="solar panel, 550w, mono perc" />
+        }
+      </section>
+    </form>
   </div>
+
+  <!-- ── Footer ─────────────────────────────────────────────────────────── -->
+  <footer class="pe-foot">
+    <span class="pe-foot__progress" [class.pe-foot__progress--done]="doneCount === sections.length">
+      <i></i>{{ doneCount }} of {{ sections.length }} sections complete
+    </span>
+    <div class="pe-foot__actions">
+      <button type="button" class="pe-btn pe-btn--ghost" (click)="close()" [disabled]="saving">Cancel</button>
+      <button type="button" class="pe-btn pe-btn--ghost" (click)="saveAsDraft()" [disabled]="saving || loading">Save as draft</button>
+      <button type="button" class="pe-btn pe-btn--solid" (click)="save()" [disabled]="saving || loading">
+        @if (saving) { <span nz-icon nzType="loading"></span> }
+        {{ isEdit ? 'Save changes' : 'Save product' }}
+      </button>
+    </div>
+  </footer>
 </div>

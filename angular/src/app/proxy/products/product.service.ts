@@ -21,6 +21,8 @@ export class ProductService {
           isFeatured:     input.isFeatured,
           categoryId:    input.categoryId,
           portalId:       input.portalId,
+          stockState:     input.stockState,
+          needsAttention: input.needsAttention,
           sorting:        input.sorting,
           skipCount:      input.skipCount,
           maxResultCount: input.maxResultCount,

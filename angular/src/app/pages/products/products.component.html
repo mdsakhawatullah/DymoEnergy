@@ -1,96 +1,144 @@
 <!-- ── Page header ─────────────────────────────────────────────────────── -->
-<div class="d-flex align-items-start justify-content-between mb-3">
+<div class="pg-head">
   <div>
-    <h4 class="mb-1 fw-bold">Products</h4>
-    <span class="text-muted small">
-      {{ stats.total }} total &nbsp;·&nbsp;
-      {{ stats.active }} active &nbsp;·&nbsp;
-      {{ stats.featured }} featured
-    </span>
+    <h1 class="pg-title">Products</h1>
+    <p class="pg-sub">Everything customers can buy on the storefront. Changes go live as soon as you save.</p>
   </div>
-  <div class="d-flex gap-2">
-    <button nz-button nzType="primary" class="btn-new-product" (click)="openDrawerForCreate()">
-      <span nz-icon nzType="plus" nzTheme="outline"></span> New Product
+  <div class="pg-actions">
+    <button type="button" class="pg-btn pg-btn--ghost" (click)="exportCsv()" [disabled]="exporting">
+      @if (exporting) {
+        <span nz-icon nzType="loading"></span>
+      } @else {
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v12M7 11l5 5 5-5M4 21h16"/>
+        </svg>
+      }
+      Export CSV
+    </button>
+    <button type="button" class="pg-btn pg-btn--solid" (click)="openDrawerForCreate()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      New product
     </button>
   </div>
 </div>
 
-<!-- ── Stat cards ──────────────────────────────────────────────────────── -->
-<div class="row g-3 mb-4">
-  <div class="col-md-3">
-    <div class="stat-card stat-card--green">
-      <div class="stat-card__label">TOTAL PRODUCTS</div>
-      <div class="stat-card__value">{{ stats.total }}</div>
-      <div class="stat-card__sub">All records</div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="stat-card stat-card--dark">
-      <div class="stat-card__label">ACTIVE</div>
-      <div class="stat-card__value">{{ stats.active }}</div>
-      <div class="stat-card__sub text-success">
-        <span nz-icon nzType="check-circle" nzTheme="outline"></span> Live
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="stat-card stat-card--orange">
-      <div class="stat-card__label">DRAFT</div>
-      <div class="stat-card__value" [class.text-warning]="stats.draft > 0">
-        {{ stats.draft }}
-      </div>
-      <div class="stat-card__sub">
-        @if (stats.draft > 0) {
-          <span class="text-warning">{{ stats.draft }} unpublished</span>
-        } @else {
-          <span class="text-muted">None</span>
-        }
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="stat-card stat-card--purple">
-      <div class="stat-card__label">FEATURED</div>
-      <div class="stat-card__value">{{ stats.featured }}</div>
-      <div class="stat-card__sub">Highlighted</div>
-    </div>
-  </div>
+<!-- ── KPI cards — each one filters the table below ───────────────────── -->
+<div class="kpi-grid" role="tablist" aria-label="Filter products">
+  <button type="button" role="tab" class="kpi" [class.kpi--on]="activeTab === 'all'"
+          [attr.aria-selected]="activeTab === 'all'" (click)="selectTab('all')">
+    <span class="kpi__chip kpi__chip--green">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 8l-9-5-9 5 9 5zM3 8v8l9 5 9-5V8M12 13v8"/>
+      </svg>
+    </span>
+    <span class="kpi__text">
+      <span class="kpi__label">Total products</span>
+      <span class="kpi__value">{{ stats.all | number }}</span>
+      <span class="kpi__note">Across {{ categoryCount | number }} {{ categoryCount === 1 ? 'category' : 'categories' }}</span>
+    </span>
+  </button>
+
+  <button type="button" role="tab" class="kpi" [class.kpi--on]="activeTab === 'active'"
+          [attr.aria-selected]="activeTab === 'active'" (click)="selectTab('active')">
+    <span class="kpi__chip kpi__chip--blue">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+      </svg>
+    </span>
+    <span class="kpi__text">
+      <span class="kpi__label">Active</span>
+      <span class="kpi__value">{{ stats.active | number }}</span>
+      <span class="kpi__note">Visible on the storefront</span>
+    </span>
+  </button>
+
+  <button type="button" role="tab" class="kpi" [class.kpi--on]="activeTab === 'draft'"
+          [attr.aria-selected]="activeTab === 'draft'" (click)="selectTab('draft')">
+    <span class="kpi__chip kpi__chip--neutral">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/>
+      </svg>
+    </span>
+    <span class="kpi__text">
+      <span class="kpi__label">Draft</span>
+      <span class="kpi__value">{{ stats.draft | number }}</span>
+      <span class="kpi__note">Hidden from customers</span>
+    </span>
+  </button>
+
+  <button type="button" role="tab" class="kpi" [class.kpi--on]="activeTab === 'featured'"
+          [attr.aria-selected]="activeTab === 'featured'" (click)="selectTab('featured')">
+    <span class="kpi__chip kpi__chip--amber">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/>
+      </svg>
+    </span>
+    <span class="kpi__text">
+      <span class="kpi__label">Featured</span>
+      <span class="kpi__value">{{ stats.featured | number }}</span>
+      <span class="kpi__note">Shown on the home page</span>
+    </span>
+  </button>
 </div>
 
 <!-- ── Main card ───────────────────────────────────────────────────────── -->
 <div class="card">
 
-  <!-- Tab strip -->
-  <div class="tab-strip">
+  <!-- Tabs — same filter as the cards above, kept in sync -->
+  <div class="ptabs" role="tablist" aria-label="Product status">
     @for (tab of tabs; track tab.key) {
-      <button
-        class="tab-strip__item"
-        [class.tab-strip__item--active]="activeTab === tab.key"
-        (click)="selectTab(tab.key)"
-      >
+      <button type="button" role="tab" class="ptabs__btn"
+              [class.ptabs__btn--on]="activeTab === tab.key"
+              [attr.aria-selected]="activeTab === tab.key"
+              (click)="selectTab(tab.key)">
         {{ tab.label }}
-        <span class="tab-strip__badge" [class.tab-strip__badge--active]="activeTab === tab.key">
-          {{ stats[tab.countKey] }}
+        <span class="ptabs__count"
+              [class.ptabs__count--on]="activeTab === tab.key"
+              [class.ptabs__count--warn]="tab.key === 'attention' && stats.attention > 0">
+          {{ stats[tab.key] | number }}
         </span>
       </button>
     }
   </div>
 
-  <!-- Filter row -->
-  <div class="px-3 py-2 d-flex gap-2 align-items-center border-bottom">
-    <nz-input-group [nzPrefix]="searchPfx" style="max-width: 260px;">
-      <input
-        nz-input
-        placeholder="Search name, SKU, slug..."
-        [(ngModel)]="filter"
-        (keyup.enter)="onSearch()"
-      />
-    </nz-input-group>
-    <ng-template #searchPfx>
-      <span nz-icon nzType="search" style="color:#bbb;"></span>
-    </ng-template>
-    <button nz-button (click)="resetFilters()" [disabled]="!filter && activeTab === 'all'">
-      Reset Filters
+  <!-- Filters -->
+  <div class="pfilters">
+    <label class="pfld pfld--search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/>
+        <path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+      <input type="search" placeholder="Search name, SKU or slug"
+             [(ngModel)]="filter" (keyup.enter)="onSearch()" (search)="onSearch()" aria-label="Search products" />
+    </label>
+
+    <select class="pfld pfld--select" [(ngModel)]="categoryId" (ngModelChange)="onFilterChange()" aria-label="Category">
+      <option [ngValue]="null">All categories</option>
+      @for (c of categories; track c.value) {
+        <option [ngValue]="c.value">{{ c.displayText }}</option>
+      }
+    </select>
+
+    <select class="pfld pfld--select" [(ngModel)]="stockState" (ngModelChange)="onFilterChange()" aria-label="Stock">
+      <option [ngValue]="null">Any stock</option>
+      @for (s of stockOptions; track s.value) {
+        <option [ngValue]="s.value">{{ s.label }}</option>
+      }
+    </select>
+
+    <select class="pfld pfld--select" [(ngModel)]="sorting" (ngModelChange)="onFilterChange()" aria-label="Sort by">
+      @for (s of sortOptions; track s.value) {
+        <option [ngValue]="s.value">{{ s.label }}</option>
+      }
+    </select>
+
+    <button type="button" class="preset" [disabled]="!hasFilters" (click)="resetFilters()">
+      Reset filters
     </button>
   </div>
 
@@ -208,13 +256,13 @@
 <nz-drawer
   *ngIf="isDrawerOpen"
   [nzVisible]="isDrawerOpen"
-  [nzBodyStyle]="{ overflow: 'auto' }"
+  [nzBodyStyle]="{ padding: '0', overflow: 'hidden', height: '100%' }"
   [nzMaskClosable]="false"
-  [nzWidth]="880"
-  nzTitle="{{ selectedProduct?.id ? 'Update' : 'Create' }} Product"
+  [nzClosable]="false"
+  nzWidth="min(820px, 100vw)"
   (nzOnClose)="onDrawerClosed()"
 >
-  <div *nzDrawerContent>
+  <div *nzDrawerContent style="height:100%">
     <product-entry-drawer
       [input]="selectedProduct"
       (onProductEntryDrawerClosed)="onDrawerClosed()"
