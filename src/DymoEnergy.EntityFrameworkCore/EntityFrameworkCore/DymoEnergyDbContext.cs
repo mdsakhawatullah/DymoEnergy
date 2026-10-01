@@ -41,6 +41,7 @@ public class DymoEnergyDbContext :
     public DbSet<ProductReview> ProductReviews { get; set; }
     public DbSet<SalesInvoice>     SalesInvoices     { get; set; }
     public DbSet<SalesInvoiceItem> SalesInvoiceItems { get; set; }
+    public DbSet<SalesInvoicePayment> SalesInvoicePayments { get; set; }
     public DbSet<Order>     Orders     { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Company>   Companies  { get; set; }
@@ -163,6 +164,14 @@ public class DymoEnergyDbContext :
             b.HasIndex(x => x.InvoiceId);
         });
 
+        builder.Entity<SalesInvoicePayment>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "SalesInvoicePayments", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.HasIndex(x => x.InvoiceId);
+        });
+
         /* ── Orders ─────────────────────────────────────────────────────── */
         builder.Entity<Order>(b =>
         {
@@ -203,6 +212,11 @@ public class DymoEnergyDbContext :
             b.Property(x => x.Email).HasMaxLength(QuoteRequestConsts.MaxEmailLength);
             b.Property(x => x.Interest).HasMaxLength(QuoteRequestConsts.MaxInterestLength);
             b.Property(x => x.Message).HasMaxLength(QuoteRequestConsts.MaxMessageLength);
+            b.Property(x => x.EstimatedSize).HasMaxLength(QuoteRequestConsts.MaxDetailLength);
+            b.Property(x => x.MonthlyBill).HasMaxLength(QuoteRequestConsts.MaxDetailLength);
+            b.Property(x => x.RoofSite).HasMaxLength(QuoteRequestConsts.MaxDetailLength);
+            b.Property(x => x.Location).HasMaxLength(QuoteRequestConsts.MaxDetailLength);
+            b.Property(x => x.AdminNote).HasMaxLength(QuoteRequestConsts.MaxAdminNoteLength);
             b.HasIndex(x => x.Status);
         });
 

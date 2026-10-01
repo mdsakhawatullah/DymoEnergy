@@ -1,9 +1,9 @@
-﻿namespace DymoEnergy.Settings;
+namespace DymoEnergy.Settings;
 
 public static class DymoEnergySettings
 {
     private const string Prefix = "DymoEnergy";
 
-    //Add your own setting names here. Example:
-    //public const string MySetting1 = Prefix + ".MySetting1";
+    /// <summary>Monthly sales target in BDT, shown on Analytics › Overview. "0" = not set.</summary>
+    public const string MonthlySalesTarget = Prefix + ".Analytics.MonthlySalesTarget";
 }

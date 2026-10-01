@@ -25,6 +25,8 @@ public class Order : FullAuditedAggregateRoot<int>
     public string? DeliveryAddress { get; set; }
     public string? DeliveryContact { get; set; }
     public string? DeliveryPhone   { get; set; }
+    /// <summary>Installation team for "Delivery + install" orders.</summary>
+    public string? InstallTeam     { get; set; }
 
     // ── Classification ────────────────────────────────────────────────────
     public OrderStatus       Status       { get; set; } = OrderStatus.Pending;

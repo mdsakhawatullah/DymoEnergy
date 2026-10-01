@@ -1,5 +1,6 @@
 import { authGuard, permissionGuard } from '@abp/ng.core';
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, Routes } from '@angular/router';
 
 const comingSoonComponent = () => import('./pages/coming-soon/coming-soon.component').then(c => c.ComingSoonComponent);
 
@@ -191,16 +192,18 @@ export const APP_ROUTES: Routes = [
   },
 
   // ── Sales ──────────────────────────────────────────────────────────────────
-  {
-    path: 'point-of-sales',
-    loadComponent: () => import('./pages/point-of-sales/point-of-sales.component').then(c => c.PointOfSalesComponent),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'pos-counters',
-    loadComponent: () => import('./pages/pos-counters/pos-counters.component').then(c => c.PosCountersComponent),
-    canActivate: [authGuard],
-  },
+  // Hidden for now: Point of Sales, POS Counters, Product Return, Promotion.
+  // Uncomment these blocks and their sidebar entries in route.provider.ts to restore.
+//   {
+//     path: 'point-of-sales',
+//     loadComponent: () => import('./pages/point-of-sales/point-of-sales.component').then(c => c.PointOfSalesComponent),
+//     canActivate: [authGuard],
+//   },
+//   {
+//     path: 'pos-counters',
+//     loadComponent: () => import('./pages/pos-counters/pos-counters.component').then(c => c.PosCountersComponent),
+//     canActivate: [authGuard],
+//   },
   {
     path: 'sales-invoices',
     loadComponent: () => import('./pages/sales-invoices/sales-invoices.component').then(c => c.SalesInvoicesComponent),
@@ -211,16 +214,16 @@ export const APP_ROUTES: Routes = [
     loadComponent: () => import('./pages/sales-invoices/invoice-details/invoice-details.component').then(c => c.InvoiceDetailsComponent),
     // No authGuard: reads are [AllowAnonymous] on backend; guard can redirect in new-tab context
   },
-  {
-    path: 'product-returns',
-    loadComponent: () => import('./pages/product-returns/product-returns.component').then(c => c.ProductReturnsComponent),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'promotions',
-    loadComponent: () => import('./pages/promotions/promotions.component').then(c => c.PromotionsComponent),
-    canActivate: [authGuard],
-  },
+//   {
+//     path: 'product-returns',
+//     loadComponent: () => import('./pages/product-returns/product-returns.component').then(c => c.ProductReturnsComponent),
+//     canActivate: [authGuard],
+//   },
+//   {
+//     path: 'promotions',
+//     loadComponent: () => import('./pages/promotions/promotions.component').then(c => c.PromotionsComponent),
+//     canActivate: [authGuard],
+//   },
   {
     path: 'customers',
     loadComponent: () => import('./pages/customers/customers.component').then(c => c.CustomersComponent),
@@ -300,15 +303,13 @@ export const APP_ROUTES: Routes = [
 
   // ── Analytics & Reporting ────────────────────────────────────────────────
   {
-    path: 'dashboard',
-    loadComponent: comingSoonComponent,
+    path: 'analytics',
+    loadComponent: () => import('./pages/analytics/analytics.component').then(c => c.AnalyticsComponent),
     canActivate: [authGuard],
   },
-  {
-    path: 'reports',
-    loadComponent: comingSoonComponent,
-    canActivate: [authGuard],
-  },
+  // Old menu targets now land on the Analytics page
+  { path: 'dashboard', redirectTo: 'analytics', pathMatch: 'full' },
+  { path: 'reports',   redirectTo: () => inject(Router).parseUrl('/analytics?tab=reports'), pathMatch: 'full' },
   {
     path: 'charts-views',
     loadComponent: comingSoonComponent,

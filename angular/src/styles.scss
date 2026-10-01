@@ -758,6 +758,8 @@ a {
 
 // ─── Invoice print — only render the cloned invoice, hide everything else ─────
 @media print {
+  @page { size: A4; margin: 12mm; }
+
   // display:none removes elements from layout entirely → no blank second page
   body.invoice-print-mode > * { display: none !important; }
 
@@ -2130,4 +2132,62 @@ a {
   font-size: 13px;
   color: var(--de-text-muted);
   font-family: var(--de-font);
+}
+
+// ─── Quote requests: status pill + tinted initials avatar (list + detail panel) ─
+.qr-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--de-neutral-bg);
+  color: var(--de-neutral-fg);
+
+  &[data-tone='amber'] { background: var(--de-pending-bg);   color: var(--de-pending-fg); }
+  &[data-tone='blue']  { background: var(--de-confirmed-bg); color: var(--de-confirmed-fg); }
+  &[data-tone='green'] { background: var(--de-success-bg);   color: var(--de-success-fg); }
+}
+
+.qr-pill__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+
+  // Standalone dot (select options) carries its own colour
+  &[data-tone='amber'] { background: #D98A0B; }
+  &[data-tone='blue']  { background: var(--de-confirmed-fg); }
+  &[data-tone='green'] { background: var(--de-success-fg); }
+  &[data-tone='gray']  { background: var(--de-neutral-fg); }
+}
+
+.qd-avatar,
+.qr-avatar {
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+  background: var(--de-leaf);
+  color: var(--de-primary-text);
+
+  &[data-tone='1'] { background: #FDF0D9; color: #8A4B00; }
+  &[data-tone='2'] { background: #E8EEFC; color: #1E40AF; }
+  &[data-tone='3'] { background: #F0EAFE; color: #5B21B6; }
+  &[data-tone='4'] { background: #E0F2F1; color: #0F5F58; }
+}
+
+
+// ─── Sidebar brand: 15px between the logo mark and "DymoEnergy" ───────────────
+// LeptonX positions the wordmark with an inline `left: 58px !important`, which is
+// only ~2px right of the 34px mark (22px padding + 34px = 56px). Inline !important
+// can't be overridden by `left`, but the positioned box honours margin-left.
+.lpx-sidebar .lpx-logo-container .lpx-brand-name {
+  margin-left: 13px !important;   // 2px natural gap + 13px = 15px
 }

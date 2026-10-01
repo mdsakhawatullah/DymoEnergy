@@ -11,5 +11,11 @@ public class QuoteRequestDto : EntityDto<int>
     public string? Interest { get; set; }
     public string? Message  { get; set; }
     public QuoteRequestStatus Status { get; set; }
-    public DateTime CreationTime { get; set; }
+    public string? EstimatedSize { get; set; }
+    public string? MonthlyBill   { get; set; }
+    public string? RoofSite      { get; set; }
+    public string? Location      { get; set; }
+    public string? AdminNote     { get; set; }
+    public DateTime  CreationTime         { get; set; }
+    public DateTime? LastModificationTime { get; set; }
 }

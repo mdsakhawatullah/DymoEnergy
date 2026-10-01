@@ -1,309 +1,309 @@
-<form nz-form [formGroup]="form" nzLayout="vertical" class="entry-form">
-
-  <!-- ① Order Details ──────────────────────────────────────────────────── -->
-  <div class="section-header">
-    <span class="section-badge">1</span>
-    <span class="section-title">Order Details</span>
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header class="od-head">
+  <button type="button" class="od-close" (click)="close()" aria-label="Close"><span nz-icon nzType="close"></span></button>
+  <div class="od-head__text">
+    <h2 class="od-title">{{ isEdit ? 'Edit order' : 'New order' }}</h2>
+    <div class="od-sub">
+      Phone, WhatsApp or showroom order
+      @if (input?.orderNumber) { · <span class="od-mono">{{ input?.orderNumber }}</span> }
+      @else { · number is assigned when you save }
+    </div>
   </div>
+  <span class="od-status">{{ statusLabel }}</span>
+</header>
 
-  <div class="row g-3">
-    @if (input?.id) {
-      <div class="col-md-4">
-        <div class="field-label">ORDER NUMBER</div>
-        <div class="order-no-readonly">{{ input?.orderNumber }}</div>
+<form class="od-body" [formGroup]="form" (ngSubmit)="save()">
+
+  <!-- ① Customer ────────────────────────────────────────────────────────── -->
+  <section class="od-card">
+    <div class="od-card__head">
+      <span class="od-num">1</span><h3>Customer</h3>
+      <span class="od-card__meta">
+        @if (customer) { {{ customer.orders + customer.invoices > 0 ? 'Returning customer' : 'New customer' }} }
+      </span>
+    </div>
+
+    @if (customer && !editingCustomer) {
+      <div class="od-customer">
+        <span class="od-avatar">{{ initials(customer.name) }}</span>
+        <div class="od-customer__info">
+          <div class="od-customer__name">
+            {{ customer.name || 'Unnamed customer' }}
+            <span class="od-tag" [class.od-tag--new]="customer.orders + customer.invoices === 0">
+              {{ customer.orders + customer.invoices > 0 ? 'Returning' : 'New' }}
+            </span>
+          </div>
+          <div class="od-customer__meta">{{ customerMeta }}</div>
+        </div>
+        <button type="button" class="od-link" (click)="changeCustomer()">Change</button>
+      </div>
+      @if (customerDue) {
+        <div class="od-warn">
+          <span nz-icon nzType="info-circle"></span>
+          Has {{ customerDue.amount | taka }} due
+          @if (customerDue.invoice) { on {{ customerDue.invoice }} }
+          @if (customerDue.dueDate) { (due {{ customerDue.dueDate | date:'d MMM' }}) }
+          @if (customerDue.count > 1) { · {{ customerDue.count }} invoices open }.
+        </div>
+      }
+    } @else {
+      <div class="od-search">
+        <span nz-icon [nzType]="customerSearching ? 'loading' : 'search'" class="od-search__icon"></span>
+        <input #cq type="text" placeholder="Search earlier customers by name or phone" autocomplete="off"
+               aria-label="Search earlier customers" (input)="onCustomerSearch(cq.value)" />
+      </div>
+
+      @if (customerResults.length) {
+        <ul class="od-results">
+          @for (c of customerResults; track c.key) {
+            <li>
+              <button type="button" (click)="selectCustomer(c)">
+                <span class="od-avatar od-avatar--sm">{{ initials(c.name) }}</span>
+                <span class="od-results__main">
+                  <strong>{{ c.name || 'Unnamed' }}</strong>
+                  <small>{{ c.phone || 'no phone' }}@if (c.address) { · {{ c.address }} }</small>
+                </span>
+                <small class="od-muted">{{ c.orders + c.invoices }} purchase{{ c.orders + c.invoices === 1 ? '' : 's' }}</small>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="od-grid-3 od-mt">
+        <label>Name<input nz-input formControlName="customerName" placeholder="Customer or business name" /></label>
+        <label>Phone<input nz-input formControlName="customerPhone" placeholder="01XXX-XXXXXX" /></label>
+        <label>Email<input nz-input formControlName="customerEmail" placeholder="Optional" /></label>
+      </div>
+      <div class="od-actions-row">
+        @if (customer) { <button type="button" nz-button nzSize="small" (click)="editingCustomer = false">Cancel</button> }
+        <button type="button" nz-button nzSize="small" nzType="primary" (click)="confirmNewCustomer()">Use this customer</button>
       </div>
     }
-    <div class="col-md-4">
-      <div class="field-label">ORDER DATE</div>
-      <nz-date-picker formControlName="orderDate" style="width:100%;" nzFormat="dd/MM/yyyy"></nz-date-picker>
-    </div>
-    <div class="col-md-4">
-      <div class="field-label">EST. DELIVERY DATE</div>
-      <nz-date-picker formControlName="estimatedDeliveryDate" style="width:100%;" nzFormat="dd/MM/yyyy"></nz-date-picker>
-    </div>
-    <div class="col-md-4">
-      <div class="field-label">ACTUAL DELIVERY DATE</div>
-      <nz-date-picker formControlName="actualDeliveryDate" style="width:100%;" nzFormat="dd/MM/yyyy"></nz-date-picker>
-    </div>
-  </div>
+  </section>
 
-  <div class="row g-3 mt-1">
-    <div class="col-md-3">
-      <div class="field-label">STATUS</div>
-      <nz-select formControlName="status" style="width:100%;">
-        @for (opt of statusOptions; track opt.value) {
-          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+  <!-- ② Products ────────────────────────────────────────────────────────── -->
+  <section class="od-card">
+    <div class="od-card__head">
+      <span class="od-num">2</span><h3>Products</h3>
+      <span class="od-card__meta">{{ items.length }} product{{ items.length === 1 ? '' : 's' }}</span>
+    </div>
+
+    <nz-select
+      class="od-picker"
+      nzShowSearch nzServerSearch nzAllowClear
+      [nzSuffixIcon]="pickerIcon"
+      nzPlaceHolder="Add product, package or service"
+      [nzLoading]="productSearching"
+      [(ngModel)]="pickedProductId"
+      [ngModelOptions]="{ standalone: true }"
+      (nzOnSearch)="onProductSearch($event)"
+      (ngModelChange)="onProductPicked($event)"
+    >
+      @for (p of productResults; track p.id) {
+        <nz-option nzCustomContent [nzValue]="p.id" [nzLabel]="p.name || ''">
+          <div class="od-opt">
+            <span>{{ p.name }} @if (p.sku) { <small>{{ p.sku }}</small> }</span>
+            <span class="od-opt__right">
+              <small [class.od-amber]="p.stockQuantity <= 10">{{ p.stockQuantity > 0 ? p.stockQuantity + ' in stock' : 'out of stock' }}</small>
+              <strong>{{ (p.discountPrice && p.discountPrice > 0 ? p.discountPrice : p.price) | taka }}</strong>
+            </span>
+          </div>
+        </nz-option>
+      }
+    </nz-select>
+    <ng-template #pickerIcon><span nz-icon nzType="search"></span></ng-template>
+
+    <ul class="od-lines" formArrayName="items">
+      @for (row of items.controls; track row; let i = $index) {
+        <li class="od-line" [formGroupName]="i">
+          <span class="od-line__ic" [attr.data-kind]="itemKind(row.get('productName')?.value)">
+            @if (imageFor(i); as img) {
+              <img [src]="img" [alt]="row.get('productName')?.value" loading="lazy" />
+            } @else {
+              <i class="bi" [ngClass]="iconFor(i)" aria-hidden="true"></i>
+            }
+          </span>
+          <div class="od-line__main">
+            @if (row.get('productId')?.value) {
+              <div class="od-line__name">{{ row.get('productName')?.value }}</div>
+              <div class="od-line__meta" [class.od-amber]="lineMeta(i).warn">{{ lineMeta(i).text }}</div>
+            } @else {
+              <input class="od-line__edit" formControlName="productName" placeholder="Item or service name" />
+              <div class="od-line__meta od-line__meta--custom">
+                <span class="od-line__cur">৳</span>
+                <input class="od-line__price" type="number" min="0" formControlName="unitPrice" aria-label="Unit price" />
+                <span>custom line</span>
+              </div>
+            }
+          </div>
+          <div class="od-stepper" role="group" aria-label="Quantity">
+            <button type="button" (click)="step(i, -1)" [disabled]="(row.get('quantity')?.value ?? 1) <= 1" aria-label="One less">−</button>
+            <input type="number" min="1" formControlName="quantity" aria-label="Quantity" />
+            <button type="button" (click)="step(i, 1)" aria-label="One more">+</button>
+          </div>
+          <div class="od-line__total">{{ row.get('lineTotal')?.value | taka }}</div>
+          <button type="button" class="od-line__remove" (click)="removeItem(i)" aria-label="Remove line">
+            <span nz-icon nzType="close"></span>
+          </button>
+        </li>
+      } @empty {
+        <li class="od-empty">No products yet — search above to add one.</li>
+      }
+    </ul>
+    <button type="button" class="od-link od-link--small" (click)="addCustomLine()">
+      <span nz-icon nzType="plus"></span> Custom line (installation, transport…)
+    </button>
+  </section>
+
+  <!-- ③ Delivery ────────────────────────────────────────────────────────── -->
+  <section class="od-card">
+    <div class="od-card__head">
+      <span class="od-num">3</span><h3>Delivery</h3>
+      <span class="od-card__meta">
+        @if (delivery === 'pickup') { No delivery }
+        @else if (+(form.get('shippingCost')?.value || 0) > 0) { {{ +form.get('shippingCost')!.value | taka }} delivery }
+        @else { Free delivery }
+      </span>
+    </div>
+
+    <div class="od-modes" role="radiogroup" aria-label="Delivery method">
+      <button type="button" role="radio" class="od-mode" [class.on]="delivery === 'home'" [attr.aria-checked]="delivery === 'home'" (click)="setDelivery('home')">
+        <strong>Home delivery</strong><small>Courier or our van</small>
+      </button>
+      <button type="button" role="radio" class="od-mode" [class.on]="delivery === 'install'" [attr.aria-checked]="delivery === 'install'" (click)="setDelivery('install')">
+        <strong>Delivery + install</strong><small>Our team installs</small>
+      </button>
+      <button type="button" role="radio" class="od-mode" [class.on]="delivery === 'pickup'" [attr.aria-checked]="delivery === 'pickup'" (click)="setDelivery('pickup')">
+        <strong>Showroom pickup</strong><small>Customer collects</small>
+      </button>
+    </div>
+
+    @if (delivery !== 'pickup') {
+      <div class="od-grid-2 od-mt">
+        <nz-select nzShowSearch [(ngModel)]="district" [ngModelOptions]="{ standalone: true }" aria-label="District">
+          @for (d of districts; track d) { <nz-option [nzValue]="d" [nzLabel]="d"></nz-option> }
+        </nz-select>
+        <input nz-input [(ngModel)]="area" [ngModelOptions]="{ standalone: true }" placeholder="Area / upazila, e.g. Halishahar" aria-label="Area" />
+      </div>
+      <input nz-input class="od-mt-s" [(ngModel)]="street" [ngModelOptions]="{ standalone: true }" placeholder="House, road, block" aria-label="Street address" />
+
+      <div class="od-grid-3 od-mt">
+        <label>{{ delivery === 'install' ? 'Installation date' : 'Delivery date' }}
+          <nz-date-picker formControlName="estimatedDeliveryDate" nzFormat="d MMM y" style="width:100%"></nz-date-picker>
+        </label>
+        @if (delivery === 'install') {
+          <label>Team<input nz-input formControlName="installTeam" placeholder="e.g. Team A · 2 technicians" /></label>
+        } @else {
+          <label>Receiver phone<input nz-input formControlName="deliveryPhone" placeholder="If not the customer" /></label>
         }
-      </nz-select>
-    </div>
-    <div class="col-md-3">
-      <div class="field-label">STAGE</div>
-      <nz-select formControlName="stage" style="width:100%;">
-        @for (opt of stageOptions; track opt.value) {
-          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
-        }
-      </nz-select>
-    </div>
-    <div class="col-md-3">
-      <div class="field-label">PRIORITY</div>
-      <nz-select formControlName="priority" style="width:100%;">
-        @for (opt of priorityOptions; track opt.value) {
-          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
-        }
-      </nz-select>
-    </div>
-    <div class="col-md-3">
-      <div class="field-label">SHIPMENT TYPE</div>
-      <nz-select formControlName="shipmentType" style="width:100%;">
-        @for (opt of shipmentTypeOptions; track opt.value) {
-          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
-        }
-      </nz-select>
-    </div>
-  </div>
+        <label>Delivery charge
+          <nz-input-number formControlName="shippingCost" [nzMin]="0" [nzStep]="100" nzPrefix="৳" style="width:100%"></nz-input-number>
+        </label>
+      </div>
+    } @else {
+      <p class="od-hint">The customer collects from the showroom. Ask them to bring the order number.</p>
+    }
+  </section>
 
-  <div class="row g-3 mt-1">
-    <div class="col-md-4">
-      <div class="field-label">CREATE METHOD</div>
-      <nz-select formControlName="createMethod" style="width:100%;">
-        @for (opt of createMethodOptions; track opt.value) {
-          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
-        }
-      </nz-select>
-    </div>
-    <div class="col-md-4">
-      <div class="field-label">CREATED HOW (CHANNEL)</div>
-      <input nz-input formControlName="createdHow" placeholder="e.g. Solar calculator form" />
-    </div>
-    <div class="col-md-4">
-      <div class="field-label">CURRENCY</div>
-      <input nz-input formControlName="currencyCode" placeholder="BDT" />
-    </div>
-  </div>
-
-  <!-- ② Customer ──────────────────────────────────────────────────────── -->
-  <div class="section-header mt-4">
-    <span class="section-badge">2</span>
-    <span class="section-title">Customer</span>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-md-5">
-      <div class="field-label">CUSTOMER NAME</div>
-      <input nz-input formControlName="customerName" placeholder="Full name or company" />
-    </div>
-    <div class="col-md-4">
-      <div class="field-label">EMAIL</div>
-      <input nz-input formControlName="customerEmail" placeholder="email@example.com" />
-    </div>
-    <div class="col-md-3">
-      <div class="field-label">PHONE</div>
-      <input nz-input formControlName="customerPhone" placeholder="+880..." />
-    </div>
-  </div>
-
-  <div class="row g-3 mt-1">
-    <div class="col-md-6">
-      <div class="field-label">CUSTOMER REFERENCE / PO NO.</div>
-      <input nz-input formControlName="customerReference" placeholder="e.g. PO-2024-001" />
-    </div>
-  </div>
-
-  <div class="row g-3 mt-1">
-    <div class="col-md-6">
-      <div class="field-label">BILLING ADDRESS</div>
-      <textarea nz-input formControlName="billingAddress"
-        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Street, City, Postcode..."></textarea>
-    </div>
-    <div class="col-md-6">
-      <div class="field-label">DELIVERY ADDRESS</div>
-      <textarea nz-input formControlName="deliveryAddress"
-        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Leave blank if same as billing"></textarea>
-    </div>
-  </div>
-
-  <div class="row g-3 mt-1">
-    <div class="col-md-6">
-      <div class="field-label">DELIVERY CONTACT</div>
-      <input nz-input formControlName="deliveryContact" placeholder="Recipient name" />
-    </div>
-    <div class="col-md-6">
-      <div class="field-label">DELIVERY PHONE</div>
-      <input nz-input formControlName="deliveryPhone" placeholder="+880..." />
-    </div>
-  </div>
-
-  <!-- ③ Line Items ─────────────────────────────────────────────────────── -->
-  <div class="section-header mt-4">
-    <span class="section-badge">3</span>
-    <span class="section-title">Line Items</span>
-  </div>
-
-  <div class="line-items-table">
-    <div class="li-header">
-      <div class="li-col li-col--desc">PRODUCT / DESCRIPTION</div>
-      <div class="li-col li-col--sku">SKU</div>
-      <div class="li-col li-col--num">QTY</div>
-      <div class="li-col li-col--num">UNIT PRICE</div>
-      <div class="li-col li-col--num">DISC %</div>
-      <div class="li-col li-col--num">TAX %</div>
-      <div class="li-col li-col--num">LINE TOTAL</div>
-      <div class="li-col li-col--action"></div>
+  <!-- ④ Payment ─────────────────────────────────────────────────────────── -->
+  <section class="od-card">
+    <div class="od-card__head">
+      <span class="od-num">4</span><h3>Payment</h3>
+      <span class="od-card__meta">{{ balanceDue > 0 ? (balanceDue | taka) + ' to collect' : 'Fully paid' }}</span>
     </div>
 
-    <div formArrayName="items">
-      @for (row of items.controls; track $index; let i = $index) {
-        <div class="li-row" [formGroupName]="i">
-          <div class="li-col li-col--desc">
-            <input nz-input formControlName="productName" placeholder="Product / item name" />
-            <input nz-input formControlName="description" placeholder="Description (optional)"
-              class="mt-1" style="font-size:11px; color:#888;" />
-          </div>
-          <div class="li-col li-col--sku">
-            <input nz-input formControlName="sku" placeholder="SKU" />
-          </div>
-          <div class="li-col li-col--num">
-            <nz-input-number formControlName="quantity" [nzMin]="0" [nzStep]="1"
-              style="width:100%;"></nz-input-number>
-          </div>
-          <div class="li-col li-col--num">
-            <nz-input-number formControlName="unitPrice" [nzMin]="0" [nzStep]="0.01"
-              style="width:100%;"></nz-input-number>
-          </div>
-          <div class="li-col li-col--num">
-            <nz-input-number formControlName="discountPercent" [nzMin]="0" [nzMax]="100"
-              style="width:100%;"></nz-input-number>
-          </div>
-          <div class="li-col li-col--num">
-            <nz-input-number formControlName="taxRate" [nzMin]="0" [nzMax]="100"
-              style="width:100%;"></nz-input-number>
-          </div>
-          <div class="li-col li-col--num li-total">
-            {{ form.get('currencyCode')?.value || '৳' }}
-            {{ row.get('lineTotal')?.value | number:'1.2-2' }}
-          </div>
-          <div class="li-col li-col--action">
-            <button nz-button nzType="text" nzSize="small" nzDanger (click)="removeItem(i)">
-              <span nz-icon nzType="delete" nzTheme="outline"></span>
-            </button>
-          </div>
-        </div>
+    <div class="od-pay" role="radiogroup" aria-label="Payment method">
+      @for (m of paymentMethods; track m.value) {
+        <button type="button" role="radio" class="od-chip" [class.on]="form.get('paymentType')?.value === m.value"
+                [attr.aria-checked]="form.get('paymentType')?.value === m.value" (click)="setPayment(m.value)">
+          @if (m.logo) { <img class="od-chip__logo" [src]="m.logo" alt="" /> }
+          @else { <span class="od-chip__mark" [attr.data-tone]="m.tone">{{ m.mark }}</span> }
+          {{ m.label }}
+        </button>
       }
     </div>
 
-    <div class="li-add-row">
-      <button nz-button nzType="dashed" nzSize="small" (click)="addItem()">
-        <span nz-icon nzType="plus" nzTheme="outline"></span> Add Line Item
-      </button>
+    <div class="od-grid-3 od-mt">
+      <label>Received now
+        <nz-input-number formControlName="amountPaid" [nzMin]="0" [nzStep]="1000" nzPrefix="৳" style="width:100%"></nz-input-number>
+      </label>
+      <label>Discount / voucher
+        <nz-input-number formControlName="voucherAmount" [nzMin]="0" [nzStep]="500" nzPrefix="−৳" style="width:100%"></nz-input-number>
+      </label>
+      <label>Voucher code<input nz-input formControlName="voucherCode" placeholder="Optional" /></label>
     </div>
-  </div>
+    <div class="od-pay-links">
+      <button type="button" class="od-link od-link--small" (click)="payInFull()">Paid in full</button>
+      <button type="button" class="od-link od-link--small" (click)="form.get('amountPaid')!.setValue(0)">Nothing yet</button>
+    </div>
+  </section>
 
-  <!-- ④ Totals ─────────────────────────────────────────────────────────── -->
-  <div class="totals-box mt-3">
-    <div class="totals-row">
-      <span class="totals-label">Subtotal</span>
-      <span class="totals-value">{{ form.get('currencyCode')?.value }} {{ subtotal | number:'1.2-2' }}</span>
-    </div>
-    <div class="totals-row">
-      <span class="totals-label">Discount</span>
-      <span class="totals-value text-danger">− {{ form.get('currencyCode')?.value }} {{ discountTotal | number:'1.2-2' }}</span>
-    </div>
-    <div class="totals-row">
-      <span class="totals-label">Tax</span>
-      <span class="totals-value">+ {{ form.get('currencyCode')?.value }} {{ taxTotal | number:'1.2-2' }}</span>
-    </div>
-    <div class="totals-row totals-row--shipping">
-      <span class="totals-label">Shipping Cost</span>
-      <nz-input-number formControlName="shippingCost" [nzMin]="0" [nzStep]="0.01"
-        nzSize="small" style="width:130px;"></nz-input-number>
-    </div>
-    <div class="totals-row totals-row--voucher">
-      <span class="totals-label">
-        Voucher
-        <input nz-input formControlName="voucherCode" placeholder="Code" class="voucher-code-input" />
-      </span>
-      <nz-input-number formControlName="voucherAmount" [nzMin]="0" [nzStep]="0.01"
-        nzSize="small" style="width:130px;"></nz-input-number>
-    </div>
-    <div class="totals-row totals-row--grand">
-      <span class="totals-label">Grand Total</span>
-      <span class="totals-value fw-bold">{{ form.get('currencyCode')?.value }} {{ grandTotal | number:'1.2-2' }}</span>
-    </div>
-  </div>
+  <!-- ⑤ More details (collapsed) ────────────────────────────────────────── -->
+  <section class="od-card od-card--quiet">
+    <button type="button" class="od-more" (click)="showDetails = !showDetails" [attr.aria-expanded]="showDetails">
+      <span class="od-num od-num--muted">5</span><h3>More details</h3>
+      <span class="od-card__meta">source, status, notes</span>
+      <span nz-icon [nzType]="showDetails ? 'up' : 'down'" class="od-muted"></span>
+    </button>
 
-  <!-- ⑤ Payment ────────────────────────────────────────────────────────── -->
-  <div class="section-header mt-4">
-    <span class="section-badge">5</span>
-    <span class="section-title">Payment</span>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-md-4">
-      <div class="field-label">PAYMENT TYPE</div>
-      <nz-select formControlName="paymentType" nzAllowClear nzPlaceHolder="Select type" style="width:100%;">
-        @for (opt of paymentTypeOptions; track opt.value) {
-          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+    @if (showDetails) {
+      <div class="od-sources" role="radiogroup" aria-label="Order came by">
+        <span class="od-label">Order came by</span>
+        @for (s of sources; track s.key) {
+          <button type="button" role="radio" class="od-chip od-chip--small" [class.on]="source === s.key"
+                  [attr.aria-checked]="source === s.key" (click)="source = s.key">{{ s.label }}</button>
         }
-      </nz-select>
-    </div>
-    <div class="col-md-4">
-      <div class="field-label">PAYMENT DATE</div>
-      <nz-date-picker formControlName="paymentDate" style="width:100%;" nzFormat="dd/MM/yyyy"></nz-date-picker>
-    </div>
-    <div class="col-md-4">
-      <div class="field-label">AMOUNT PAID</div>
-      <nz-input-number formControlName="amountPaid" [nzMin]="0" [nzStep]="0.01"
-        style="width:100%;"></nz-input-number>
-    </div>
-  </div>
-
-  <div class="balance-due-row mt-2">
-    <span class="field-label mb-0">BALANCE DUE:</span>
-    <span class="balance-amount" [class.balance-zero]="balanceDue <= 0">
-      {{ form.get('currencyCode')?.value }} {{ balanceDue | number:'1.2-2' }}
-    </span>
-  </div>
-
-  <!-- ⑥ Notes ──────────────────────────────────────────────────────────── -->
-  <div class="section-header mt-4">
-    <span class="section-badge">6</span>
-    <span class="section-title">Notes &amp; Terms</span>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-md-6">
-      <div class="field-label">NOTES</div>
-      <textarea nz-input formControlName="notes"
-        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="General order notes..."></textarea>
-    </div>
-    <div class="col-md-6">
-      <div class="field-label">INVOICE NOTES</div>
-      <textarea nz-input formControlName="notesInvoice"
-        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Notes shown on invoice..."></textarea>
-    </div>
-    <div class="col-md-6">
-      <div class="field-label">PAYMENT TERMS</div>
-      <textarea nz-input formControlName="terms"
-        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="e.g. Payment due within 30 days..."></textarea>
-    </div>
-    <div class="col-md-6">
-      <div class="field-label">INTERNAL NOTES</div>
-      <textarea nz-input formControlName="internalNotes"
-        [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Staff-only notes (not printed)..."></textarea>
-    </div>
-  </div>
-
+      </div>
+      <div class="od-grid-3 od-mt">
+        <label>Order date<nz-date-picker formControlName="orderDate" nzFormat="d MMM y" [nzAllowClear]="false" style="width:100%"></nz-date-picker></label>
+        <label>Status
+          <nz-select formControlName="status">@for (o of statusOptions; track o.value) { <nz-option [nzValue]="o.value" [nzLabel]="o.label"></nz-option> }</nz-select>
+        </label>
+        <label>Priority
+          <nz-select formControlName="priority">@for (o of priorityOptions; track o.value) { <nz-option [nzValue]="o.value" [nzLabel]="o.label"></nz-option> }</nz-select>
+        </label>
+        <label>Stage
+          <nz-select formControlName="stage">@for (o of stageOptions; track o.value) { <nz-option [nzValue]="o.value" [nzLabel]="o.label"></nz-option> }</nz-select>
+        </label>
+        <label>Customer reference / PO<input nz-input formControlName="customerReference" placeholder="Optional" /></label>
+        <label>Delivered on<nz-date-picker formControlName="actualDeliveryDate" nzFormat="d MMM y" style="width:100%"></nz-date-picker></label>
+      </div>
+      <div class="od-grid-2 od-mt">
+        <label>Billing address (if different)
+          <textarea nz-input formControlName="billingAddress" [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Defaults to the delivery address"></textarea>
+        </label>
+        <label>Note on the invoice
+          <textarea nz-input formControlName="notesInvoice" [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Printed for the customer"></textarea>
+        </label>
+        <label>Internal note
+          <textarea nz-input formControlName="internalNotes" [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Staff only"></textarea>
+        </label>
+        <label>Terms
+          <textarea nz-input formControlName="terms" [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Optional"></textarea>
+        </label>
+      </div>
+    }
+  </section>
 </form>
 
-<!-- ── Footer ──────────────────────────────────────────────────────────── -->
-<div class="drawer-footer">
-  <span class="text-muted" style="font-size:13px;">
-    {{ input?.id ? 'Editing order #' + input?.orderNumber : 'New order' }}
-  </span>
-  <div class="d-flex gap-2">
-    <button nz-button (click)="close()" [disabled]="saving">Cancel</button>
-    <button nz-button nzType="primary" class="btn-save" (click)="save()" [nzLoading]="saving">
-      {{ input?.id ? 'Update Order' : 'Save Order' }}
+<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+<footer class="od-foot">
+  <div class="od-foot__sums">
+    <span>Products <strong>{{ productsTotal | taka }}</strong></span>
+    <span>Delivery <strong>{{ delivery === 'pickup' || !(+(form.get('shippingCost')?.value || 0)) ? 'Free' : (+form.get('shippingCost')!.value | taka) }}</strong></span>
+    @if (+(form.get('voucherAmount')?.value || 0) > 0) { <span>Discount <strong>−{{ +form.get('voucherAmount')!.value | taka }}</strong></span> }
+    <span>Due <strong class="od-amber">{{ balanceDue | taka }}</strong></span>
+    <span class="od-foot__total">Total <strong>{{ grandTotal | taka }}</strong></span>
+  </div>
+  <div class="od-foot__actions">
+    @if (!isEdit) {
+      <label nz-checkbox [(ngModel)]="sendSms">SMS confirmation</label>
+    }
+    <span class="od-spacer"></span>
+    <button type="button" nz-button nzSize="large" (click)="close()" [disabled]="saving">Cancel</button>
+    <button type="button" nz-button nzType="primary" nzSize="large" (click)="save()" [nzLoading]="saving">
+      {{ isEdit ? 'Save changes' : 'Create order' }}
     </button>
   </div>
-</div>
+</footer>

@@ -23,6 +23,7 @@ public class OrderDto : FullAuditedEntityDto<int>
     public string? DeliveryAddress { get; set; }
     public string? DeliveryContact { get; set; }
     public string? DeliveryPhone   { get; set; }
+    public string? InstallTeam     { get; set; }
 
     // ── Classification ────────────────────────────────────────────────────
     public OrderStatus       Status       { get; set; }

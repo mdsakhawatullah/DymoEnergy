@@ -198,6 +198,7 @@ public class OrderAppService : ApplicationService, IOrderAppService
         o.DeliveryAddress       = input.DeliveryAddress;
         o.DeliveryContact       = input.DeliveryContact;
         o.DeliveryPhone         = input.DeliveryPhone;
+        o.InstallTeam           = input.InstallTeam;
         o.Status                = input.Status;
         o.Stage                 = input.Stage;
         o.Priority              = input.Priority;
@@ -280,6 +281,7 @@ public class OrderAppService : ApplicationService, IOrderAppService
         DeliveryAddress       = o.DeliveryAddress,
         DeliveryContact       = o.DeliveryContact,
         DeliveryPhone         = o.DeliveryPhone,
+        InstallTeam           = o.InstallTeam,
         Status                = o.Status,
         Stage                 = o.Stage,
         Priority              = o.Priority,

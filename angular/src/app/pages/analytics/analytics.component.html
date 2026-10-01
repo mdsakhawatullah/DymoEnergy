@@ -1,0 +1,58 @@
+<!-- ── Header ──────────────────────────────────────────────────────────────── -->
+<div class="an-head">
+  <h1 class="ds-page-title">Analytics</h1>
+  <div class="an-head__actions">
+    <nz-select class="an-select" [ngModel]="period()" (ngModelChange)="period.set($event)">
+      @for (p of periods; track p.key) { <nz-option [nzValue]="p.key" [nzLabel]="p.label"></nz-option> }
+    </nz-select>
+    <nz-select class="an-select an-select--wide" nzAllowClear nzPlaceHolder="All showrooms & online"
+               [ngModel]="channel()" (ngModelChange)="channel.set($event)">
+      @for (c of channels(); track c) { <nz-option [nzValue]="c" [nzLabel]="c"></nz-option> }
+    </nz-select>
+    <button nz-button (click)="exportCurrent()" [nzLoading]="!!runner.busyKey()">Export</button>
+  </div>
+</div>
+
+<!-- ── Tabs ────────────────────────────────────────────────────────────────── -->
+<nav class="an-tabs" role="tablist">
+  @for (t of tabs; track t.key) {
+    <button role="tab" class="an-tab" [class.an-tab--active]="tab() === t.key"
+            [attr.aria-selected]="tab() === t.key" (click)="selectTab(t.key)">
+      <span nz-icon [nzType]="t.icon"></span> {{ t.label }}
+    </button>
+  }
+</nav>
+
+@switch (tab()) {
+  @case ('overview')  { <an-overview-tab  [filter]="filter()" [periodLabel]="periodLabel()" [previousLabel]="previousLabel()"></an-overview-tab> }
+  @case ('sales')     { <an-sales-tab     [filter]="filter()" [periodLabel]="periodLabel()"></an-sales-tab> }
+  @case ('products')  { <an-products-tab  [filter]="filter()" [periodLabel]="periodLabel()"></an-products-tab> }
+  @case ('money')     { <an-money-tab     [filter]="filter()" [periodLabel]="periodLabel()"></an-money-tab> }
+  @case ('customers') { <an-customers-tab [filter]="filter()" [periodLabel]="periodLabel()"></an-customers-tab> }
+  @case ('reports')   { <an-reports-tab   [filter]="filter()" [periodLabel]="periodLabel()"></an-reports-tab> }
+}
+
+<!-- ── Report viewer: the same branded A4 page that prints to PDF ─────────── -->
+<nz-modal
+  [nzVisible]="!!runner.viewing()"
+  [nzTitle]="runner.viewing()?.title"
+  [nzWidth]="900"
+  [nzFooter]="viewerFooter"
+  [nzBodyStyle]="{ padding: '0' }"
+  (nzOnCancel)="runner.close()"
+>
+  <ng-container *nzModalContent>
+    @if (runner.viewerHtml(); as html) {
+      <iframe class="rv-frame" [srcdoc]="html" [title]="runner.viewing()?.title ?? 'Report'"></iframe>
+    }
+  </ng-container>
+</nz-modal>
+
+<ng-template #viewerFooter>
+  @if (runner.viewing(); as r) {
+    <span class="rv-count">{{ r.rows.length }} row{{ r.rows.length === 1 ? '' : 's' }} · {{ r.reportId }}</span>
+    <button nz-button (click)="runner.downloadCsv(r)"><span nz-icon nzType="file-excel"></span> Excel</button>
+    <button nz-button (click)="runner.pdfOf(r)"><span nz-icon nzType="file-pdf"></span> PDF</button>
+    <button nz-button nzType="primary" (click)="runner.close()">Close</button>
+  }
+</ng-template>

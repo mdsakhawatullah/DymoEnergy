@@ -1,0 +1,117 @@
+@if (!data && loading) { <div class="an-loading"><nz-spin></nz-spin></div> }
+
+@if (data; as d) {
+  <div [style.opacity]="loading ? .6 : 1">
+    <p class="an-intro">What sells, what is running out and what is sitting still — sales for {{ periodLabel }}, stock as of now.</p>
+
+    <div class="an-kpis">
+      <div class="an-kpi">
+        <div class="an-kpi__head">Stock value</div>
+        <div class="an-kpi__value">{{ money(d.stockValue) }}</div>
+        <div class="an-kpi__foot">At selling price · {{ d.productsInStock }} products</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Units in stock</div>
+        <div class="an-kpi__value">{{ num(d.unitsInStock) }}</div>
+        <div class="an-kpi__foot">Across all products</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Days of stock left</div>
+        <div class="an-kpi__value">{{ d.daysOfStockLeft != null ? num(d.daysOfStockLeft) + ' days' : '—' }}</div>
+        <div class="an-kpi__foot">At the last-30-day selling speed</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Out or running low
+          @if (d.outOfStock + d.runningLow > 0) { <span class="an-kpi__flag an-red">act now</span> }
+        </div>
+        <div class="an-kpi__value" [class.an-red]="d.outOfStock + d.runningLow > 0">{{ d.outOfStock + d.runningLow }} items</div>
+        <div class="an-kpi__foot">{{ d.outOfStock }} out · {{ d.runningLow }} running low</div>
+      </div>
+    </div>
+
+    <!-- ── Best sellers ─────────────────────────────────────────────────────── -->
+    <section class="an-card pr-best">
+      <div class="an-card__head"><h2 class="an-card__title">Best sellers</h2><span class="an-card__meta">sorted by sales</span></div>
+      <div class="pr-scroll">
+        <table class="an-table">
+          <thead>
+            <tr>
+              <th>Product</th><th>Category</th><th class="num">Sold</th><th class="num">Sales</th>
+              <th class="num">Share</th><th class="num">Stock left</th><th class="num">Runs out in</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of d.bestSellers; track r.name) {
+              <tr>
+                <td class="strong">{{ r.name }}</td>
+                <td>{{ r.category }}</td>
+                <td class="num">{{ num(r.sold) }}</td>
+                <td class="num">{{ money(r.sales) }}</td>
+                <td class="num">{{ pct(r.share) }}</td>
+                <td class="num" [class.an-amber]="r.stockState === 'low'" [class.an-red]="r.stockState === 'out'">
+                  @switch (r.stockState) {
+                    @case ('out')  { <strong>Out</strong> }
+                    @case ('low')  { <strong>{{ r.stockLeft }} · low</strong> }
+                    @case ('none') { — }
+                    @default       { {{ r.stockLeft }} }
+                  }
+                </td>
+                <td class="num" [class.an-amber]="r.stockState === 'low'" [class.an-red]="r.stockState === 'out'">
+                  @if (r.stockState === 'out') { <strong>{{ runsOut(r) }}</strong> } @else { {{ runsOut(r) }} }
+                </td>
+              </tr>
+            } @empty { <tr class="an-empty-row"><td colspan="7">No sales in this period.</td></tr> }
+          </tbody>
+        </table>
+      </div>
+      <div class="an-card__foot">
+        <button nz-button nzSize="small" (click)="go('/products')">Open products</button>
+        <button nz-button nzSize="small" (click)="openReport('sales-by-product')">Full list</button>
+      </div>
+    </section>
+
+    <div class="an-grid an-grid-2">
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">Reorder soon</h2><span class="an-card__meta">suggested quantity covers 30 days</span></div>
+        <ul class="an-list">
+          @for (r of d.reorder; track r.productId) {
+            <li class="an-list__row">
+              <span class="an-list__dot" [attr.data-tone]="r.stock <= 0 ? 'red' : 'amber'"></span>
+              <div class="an-list__main">
+                <div class="an-list__title">{{ r.name }}</div>
+                <div class="an-list__sub">
+                  @if (r.stock <= 0) { Out · sold {{ r.soldLast30 }} in the last 30 days }
+                  @else { {{ r.stock }} left · {{ daysText(r.daysLeft) }} }
+                </div>
+              </div>
+              <span class="an-list__value">order {{ r.suggestedQty }}</span>
+              <button nz-button nzSize="small" (click)="openProduct(r.name)">Reorder</button>
+            </li>
+          } @empty { <li class="an-list__empty">Nothing needs reordering in the next 2 weeks.</li> }
+        </ul>
+      </section>
+
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">Slow stock</h2><span class="an-card__meta">no sale in 60 days</span></div>
+        <ul class="an-list">
+          @for (r of d.slowStock; track r.productId) {
+            <li class="an-list__row">
+              <span class="an-list__dot"></span>
+              <div class="an-list__main">
+                <div class="an-list__title">{{ r.name }}</div>
+                <div class="an-list__sub">{{ r.stock }} pcs · {{ r.lastSold ? 'last sold ' + (r.lastSold | date:'d MMM') : 'no sale on record' }}</div>
+              </div>
+              <span class="an-list__value">{{ money(r.value) }}</span>
+              <button nz-button nzSize="small" (click)="openProduct(r.name)">Promote</button>
+            </li>
+          } @empty { <li class="an-list__empty">Everything in stock sold in the last 60 days.</li> }
+        </ul>
+      </section>
+    </div>
+
+    <section class="an-card pr-cat">
+      <div class="an-card__head"><h2 class="an-card__title">Stock value by category</h2><span class="an-card__meta">at selling price</span></div>
+      <div class="an-card__body"><an-bar-list [items]="d.stockByCategory" right="share" empty="No stock on hand."></an-bar-list></div>
+    </section>
+  </div>
+}

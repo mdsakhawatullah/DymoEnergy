@@ -22,5 +22,11 @@ public class SalesInvoiceItem : FullAuditedAggregateRoot<int>
     public double TaxAmount      { get; set; }
     public double LineTotal      { get; set; }
 
+    // ── After-sales ──────────────────────────────────────────────────────────
+    /// <summary>Comma / newline separated serial numbers.</summary>
+    public string? SerialNumbers { get; set; }
+    /// <summary>Free-text warranty, e.g. "25-yr output warranty".</summary>
+    public string? Warranty      { get; set; }
+
     public int DisplayOrder { get; set; }
 }

@@ -1,0 +1,16 @@
+.rp-row { padding-top: 10px; padding-bottom: 10px; }
+.rp-desc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.rp-icon {
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 14px;
+  background: var(--de-success-bg); color: var(--de-success-fg);
+}
+.rp-icon[data-tone='blue']   { background: var(--de-confirmed-bg);  color: var(--de-confirmed-fg); }
+.rp-icon[data-tone='amber']  { background: var(--de-pending-bg);    color: var(--de-pending-fg); }
+.rp-icon[data-tone='purple'] { background: var(--de-processing-bg); color: var(--de-processing-fg); }
+
+@media (max-width: 640px) {
+  .rp-row { flex-wrap: wrap; }
+  .rp-actions { width: 100%; justify-content: flex-end; }
+}

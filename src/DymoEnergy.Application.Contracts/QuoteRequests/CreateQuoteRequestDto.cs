@@ -20,4 +20,16 @@ public class CreateQuoteRequestDto
 
     [StringLength(QuoteRequestConsts.MaxMessageLength)]
     public string? Message { get; set; }
+
+    [StringLength(QuoteRequestConsts.MaxDetailLength)]
+    public string? EstimatedSize { get; set; }
+
+    [StringLength(QuoteRequestConsts.MaxDetailLength)]
+    public string? MonthlyBill { get; set; }
+
+    [StringLength(QuoteRequestConsts.MaxDetailLength)]
+    public string? RoofSite { get; set; }
+
+    [StringLength(QuoteRequestConsts.MaxDetailLength)]
+    public string? Location { get; set; }
 }

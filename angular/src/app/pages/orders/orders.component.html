@@ -244,17 +244,17 @@
 <nz-drawer
   *ngIf="isDrawerOpen"
   [nzVisible]="isDrawerOpen"
-  [nzBodyStyle]="{ overflow: 'auto' }"
+  [nzBodyStyle]="{ padding: '0', overflow: 'hidden', height: '100%' }"
   [nzMaskClosable]="false"
-  [nzWidth]="980"
-  nzTitle="{{ selectedOrder?.id ? 'Update' : 'Create' }} order"
+  [nzClosable]="false"
+  nzWidth="min(980px, 100vw)"
   (nzOnClose)="onDrawerClosed()"
 >
-  <div *nzDrawerContent>
+  <div *nzDrawerContent style="height:100%">
     <order-entry-drawer
       [input]="selectedOrder"
-      [items]="selectedItems"
-      (onOrderEntryDrawerClosed)="onDrawerClosed()"
+      [existingItems]="selectedItems"
+      (onDrawerClosed)="onDrawerClosed()"
       (handleOrderSaved)="onOrderSaved()"
     ></order-entry-drawer>
   </div>

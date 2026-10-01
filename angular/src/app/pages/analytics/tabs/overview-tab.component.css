@@ -1,0 +1,163 @@
+.ov-top { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; margin-bottom: 16px; align-items: start; }
+
+/* ── Hero (light card) ───────────────────────────────────────────────────── */
+.ov-hero {
+  background: var(--de-surface);
+  border: 1px solid var(--de-border);
+  border-radius: 16px;
+  padding: 22px 24px 20px;
+  min-width: 0;
+}
+.ov-hero__row   { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 28px; align-items: start; }
+.ov-hero__label { font-size: 14px; color: var(--de-text-2); }
+.ov-hero__value { font-size: 50px; font-weight: 700; letter-spacing: -.03em; line-height: 1.05; margin: 4px 0 10px; font-variant-numeric: tabular-nums; }
+.ov-hero__delta { font-size: 13.5px; color: var(--de-text-2); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ov-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 7px;
+  font-size: 13px; font-weight: 600;
+  background: var(--de-success-bg); color: var(--de-success-fg);
+}
+.ov-pill--down { background: var(--de-danger-bg); color: var(--de-danger-fg); }
+
+.ov-target { padding-top: 6px; }
+.ov-target__row  { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13.5px; color: var(--de-text-2); }
+.ov-target__row strong { color: var(--de-success-fg); font-weight: 600; }
+.ov-target__edit {
+  background: none; border: none; padding: 0; margin-left: 6px; cursor: pointer;
+  font-size: 12.5px; font-weight: 600; color: var(--de-primary-text); text-decoration: underline; text-underline-offset: 2px;
+}
+.ov-target__track { height: 10px; border-radius: 999px; background: #E9ECE6; margin: 10px 0 8px; overflow: hidden; }
+.ov-target__fill  { height: 100%; border-radius: 999px; background: var(--de-primary); }
+.ov-target__note  { font-size: 12.5px; color: var(--de-text-muted); margin: 0; }
+
+/* ── Week cards ──────────────────────────────────────────────────────────── */
+.ov-weeks__head  { display: flex; align-items: baseline; gap: 10px; margin: 26px 0 10px; }
+.ov-weeks__label { font-size: 14px; font-weight: 600; color: var(--de-text); }
+.ov-weeks__hint  { font-size: 12.5px; color: var(--de-text-muted); }
+.ov-weeks { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.ov-week {
+  display: flex; flex-direction: column; align-items: stretch; text-align: left;
+  background: var(--de-surface-muted);
+  border: 1px solid var(--de-border);
+  border-radius: 12px;
+  padding: 12px 12px 10px;
+  min-width: 0;
+  cursor: pointer;
+  font: inherit; color: inherit;
+  transition: border-color .12s, background .12s, box-shadow .12s;
+}
+.ov-week:hover { border-color: #C9CFC5; }
+.ov-week:focus-visible { outline: 2px solid var(--de-focus-ring); outline-offset: 2px; }
+.ov-week--active {
+  background: #fff;
+  border: 1.5px solid var(--de-primary);
+  box-shadow: 0 0 0 3px var(--de-leaf);
+}
+.ov-week__top   { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.ov-week__label { font-size: 12.5px; color: var(--de-text-muted); white-space: nowrap; }
+.ov-week__best  { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 5px; background: var(--de-success-bg); color: var(--de-success-fg); }
+.ov-week__value { font-size: 19px; font-weight: 700; margin: 6px 0 8px; white-space: nowrap; }
+.ov-week__track { height: 5px; border-radius: 999px; background: #E3E7E0; overflow: hidden; }
+.ov-week__fill  { display: block; height: 100%; border-radius: 999px; background: #9CCBB0; }
+.ov-week--active .ov-week__fill { background: var(--de-primary); }
+.ov-week__delta { font-size: 12px; font-weight: 500; color: var(--de-success-fg); margin-top: 8px; }
+.ov-week__delta--down { color: var(--de-danger-fg); }
+
+/* ── Days of the selected week ───────────────────────────────────────────── */
+.ov-days {
+  margin-top: 14px;
+  background: var(--de-surface-muted);
+  border-radius: 12px;
+  padding: 14px 16px 12px;
+}
+.ov-days__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13.5px; flex-wrap: wrap; }
+.ov-days__head strong { margin-right: 6px; }
+.ov-days__link { font-weight: 600; }
+.ov-days__chart {
+  display: flex; align-items: flex-end; gap: 14px;
+  height: 150px;
+  margin-top: 10px;
+  padding-bottom: 22px;           /* room for day labels */
+  position: relative;
+}
+.ov-day {
+  position: relative; flex: 1 1 0; height: 100%;
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+  outline: none;
+}
+.ov-day__value { font-size: 11.5px; font-weight: 600; color: var(--de-text-2); margin-bottom: 4px; white-space: nowrap; }
+.ov-day__bar   { width: 100%; max-width: 58px; border-radius: 4px 4px 0 0; background: #9CCBB0; transition: filter .1s; }
+.ov-day__bar--best { background: var(--de-primary); }
+.ov-day:hover .ov-day__bar, .ov-day:focus-visible .ov-day__bar { filter: brightness(1.08) saturate(1.1); }
+.ov-day:focus-visible .ov-day__bar { outline: 2px solid var(--de-focus-ring); outline-offset: 2px; }
+.ov-day__label { position: absolute; bottom: -22px; font-size: 12px; color: var(--de-text-2); white-space: nowrap; }
+.ov-day__tip {
+  position: absolute; bottom: calc(100% - 6px); left: 50%; transform: translateX(-50%);
+  background: var(--de-text); color: #fff; font-size: 12px; line-height: 1.4;
+  padding: 6px 9px; border-radius: 7px; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity .1s; z-index: 2;
+}
+.ov-day__tip strong { display: block; font-weight: 600; }
+.ov-day:hover .ov-day__tip, .ov-day:focus-visible .ov-day__tip { opacity: 1; }
+.ov-day:first-child .ov-day__tip { left: 0; transform: none; }
+.ov-day:last-child  .ov-day__tip { left: auto; right: 0; transform: none; }
+
+/* ── Today ───────────────────────────────────────────────────────────────── */
+.ov-today { display: flex; flex-direction: column; }
+.ov-live { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #16A34A; margin-right: 8px; vertical-align: middle; box-shadow: 0 0 0 3px #DCFCE7; }
+.ov-today__stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ov-today__stats div { background: var(--de-surface-muted); border-radius: 10px; padding: 10px 12px; }
+.ov-today__stats span { display: block; font-size: 12.5px; color: var(--de-text-muted); }
+.ov-today__stats strong { font-size: 22px; font-weight: 700; }
+.ov-today__label { font-size: 12.5px; color: var(--de-text-muted); margin: 14px 0 4px; }
+.ov-latest { list-style: none; margin: 0 0 10px; padding: 0; }
+.ov-latest li { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; }
+.ov-latest__text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov-latest__amt  { font-weight: 600; white-space: nowrap; }
+.ov-latest__empty { color: var(--de-placeholder); }
+.ov-badge {
+  font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 5px; flex-shrink: 0;
+  background: var(--de-neutral-bg); color: var(--de-neutral-fg);
+}
+.ov-badge[data-kind='pos']    { background: var(--de-success-bg);   color: var(--de-success-fg); }
+.ov-badge[data-kind='online'] { background: var(--de-confirmed-bg); color: var(--de-confirmed-fg); }
+.ov-badge[data-kind='other']  { background: var(--de-pending-bg);   color: var(--de-pending-fg); }
+
+/* ── Alerts ──────────────────────────────────────────────────────────────── */
+.ov-alerts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px; }
+.ov-alert {
+  background: var(--de-surface);
+  border: 1px solid var(--de-border);
+  border-left: 4px solid var(--de-confirmed-fg);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+.ov-alert[data-tone='red']   { border-left-color: var(--de-danger-fg); }
+.ov-alert[data-tone='amber'] { border-left-color: #D98A0B; }
+.ov-alert[data-tone='green'] { border-left-color: var(--de-success-fg); }
+.ov-alert__title  { font-weight: 600; font-size: 14.5px; }
+.ov-alert__text   { font-size: 13px; color: var(--de-text-muted); margin: 2px 0 6px; }
+.ov-alert__action { background: none; border: none; padding: 0; font-size: 13px; font-weight: 600; color: var(--de-primary-text); cursor: pointer; }
+
+/* ── Channel stack ───────────────────────────────────────────────────────── */
+.ov-stack { display: flex; gap: 2px; height: 26px; margin: 6px 0 16px; }
+.ov-stack__seg { flex-basis: 0; min-width: 6px; }
+.ov-stack__seg:first-child { border-radius: 4px 0 0 4px; }
+.ov-stack__seg:last-child  { border-radius: 0 4px 4px 0; }
+.ov-stack__seg:only-child  { border-radius: 4px; }
+.ov-legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; }
+.ov-legend li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; font-size: 13px; }
+.ov-legend__dot  { width: 10px; height: 10px; border-radius: 3px; }
+.ov-legend__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 1200px) {
+  .ov-top { grid-template-columns: minmax(0, 1fr); }
+  .ov-hero__row { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .ov-hero__value { font-size: 38px; }
+  .ov-days__chart { gap: 6px; }
+  .ov-day__value { font-size: 10px; }
+  .ov-legend { grid-template-columns: minmax(0, 1fr); }
+}

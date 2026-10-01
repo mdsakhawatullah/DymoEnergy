@@ -16,5 +16,7 @@ public class SalesInvoiceItemDto : FullAuditedEntityDto<int>
     public double  TaxRate         { get; set; }
     public double  TaxAmount       { get; set; }
     public double  LineTotal       { get; set; }
+    public string? SerialNumbers   { get; set; }
+    public string? Warranty        { get; set; }
     public int     DisplayOrder    { get; set; }
 }

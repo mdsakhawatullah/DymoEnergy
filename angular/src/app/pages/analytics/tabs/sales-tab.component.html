@@ -1,0 +1,143 @@
+@if (!data && loading) { <div class="an-loading"><nz-spin></nz-spin></div> }
+
+@if (data; as d) {
+  <div [style.opacity]="loading ? .6 : 1">
+    <p class="an-intro">What was sold, where, when and by whom in {{ periodLabel }}.</p>
+
+    <div class="an-kpis">
+      <div class="an-kpi">
+        <div class="an-kpi__head">Sales <an-change [value]="d.salesChange"></an-change></div>
+        <div class="an-kpi__value">{{ money(d.sales) }}</div>
+        <div class="an-kpi__foot">VAT included, after discounts</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Orders <an-change [value]="d.ordersChange"></an-change></div>
+        <div class="an-kpi__value">{{ num(d.orders) }}</div>
+        <div class="an-kpi__foot">{{ num(d.ordersPerDay) }} a day on average</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Average order <an-change [value]="d.averageChange"></an-change></div>
+        <div class="an-kpi__value">{{ money(d.averageOrder, false) }}</div>
+        <div class="an-kpi__foot">Sales ÷ orders</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Quotes won <an-change [value]="d.quoteWinChange" suffix=" pts"></an-change></div>
+        <div class="an-kpi__value">{{ pct(d.quoteWinRate) }}</div>
+        <div class="an-kpi__foot">{{ d.quotesWon }} of {{ d.quoteRequests }} quote requests became sales</div>
+      </div>
+    </div>
+
+    <!-- ── Sales per day ────────────────────────────────────────────────────── -->
+    <section class="an-card sa-daily">
+      <div class="an-card__head">
+        <h2 class="an-card__title">Sales per day</h2>
+        <span class="an-card__meta">Darker = best days · lighter = quiet · best {{ money(maxDay) }}</span>
+      </div>
+      <div class="an-card__body">
+        <div class="sa-bars" role="img" [attr.aria-label]="'Daily sales, best day ' + money(maxDay)">
+          @for (day of d.daily; track day.date; let i = $index) {
+            <div class="sa-bar" tabindex="0"
+                 [attr.aria-label]="(day.date | date:'EEE d MMM') + ': ' + money(day.sales, false) + ', ' + day.orders + ' orders'">
+              <span class="sa-bar__fill" [style.height.%]="dayHeight(day.sales)" [style.background]="dayColor(day.sales)"></span>
+              <span class="sa-tip">
+                <strong>{{ day.date | date:'EEE d MMM' }}</strong>
+                {{ money(day.sales, false) }} · {{ day.orders }} order{{ day.orders === 1 ? '' : 's' }}
+              </span>
+              <span class="sa-bar__label">{{ showDayLabel(i) ? (day.date | date:'d MMM') : '' }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <div class="an-grid an-grid-2">
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">By showroom &amp; channel</h2><span class="an-card__meta">sales · change</span></div>
+        <div class="an-card__body"><an-bar-list [items]="d.byChannel" right="change"></an-bar-list></div>
+      </section>
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">By category</h2><span class="an-card__meta">sales · change</span></div>
+        <div class="an-card__body"><an-bar-list [items]="d.byCategory" right="change"></an-bar-list></div>
+      </section>
+    </div>
+
+    <div class="an-grid an-grid-2">
+      <!-- ── Heatmap ────────────────────────────────────────────────────────── -->
+      <section class="an-card">
+        <div class="an-card__head">
+          <h2 class="an-card__title">Busiest hours</h2>
+          <span class="an-card__meta">sales by hour · Sat–Fri</span>
+        </div>
+        <div class="an-card__body">
+          <div class="sa-heat" [style.--cols]="d.heatmap.hours.length">
+            <span></span>
+            @for (h of d.heatmap.hours; track h) { <span class="sa-heat__hour">{{ hourLabel(h) }}</span> }
+            @for (day of d.heatmap.days; track day; let r = $index) {
+              <span class="sa-heat__day">{{ day }}</span>
+              @for (v of d.heatmap.cells[r]; track $index; let c = $index) {
+                <span class="sa-heat__cell" [style.background]="cellColor(v)"
+                      [title]="day + ' ' + hourLabel(d.heatmap.hours[c]) + (d.heatmap.hours[c] < 12 ? ' am' : ' pm') + ': ' + v + ' sale' + (v === 1 ? '' : 's')"></span>
+              }
+            }
+          </div>
+          <div class="sa-heat__legend">
+            <span>Fewer sales</span>
+            @for (c of ramp; track c) { <span class="sa-heat__key" [style.background]="c"></span> }
+            <span>More sales</span>
+            @if (d.heatmap.peakWindow) { <span class="an-muted">· busiest {{ d.heatmap.peakWindow }}</span> }
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Funnel ─────────────────────────────────────────────────────────── -->
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">From quote to sale</h2><span class="an-card__meta">this period</span></div>
+        <div class="an-card__body">
+          <ul class="sa-funnel">
+            @for (f of d.funnel; track f.name) {
+              <li>
+                <span class="sa-funnel__name">{{ f.name }}</span>
+                <span class="sa-funnel__track"><span class="sa-funnel__fill" [style.width.%]="funnelWidth(f.count)"></span></span>
+                <strong>{{ f.count }}</strong>
+                <span class="an-muted">{{ f.rate != null ? pct(f.rate) : '' }}</span>
+              </li>
+            }
+          </ul>
+          <p class="an-card__note">
+            {{ pct(d.quoteWinRate) }} of quote requests turn into a sale (matched by phone number).
+            Most losses happen before the first call — reply within 24 hours.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <div class="an-grid an-grid-wide">
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">By salesperson</h2><span class="an-card__meta">who created the invoice</span></div>
+        <table class="an-table">
+          <thead><tr><th>Person</th><th class="num">Orders</th><th class="num">Sales</th><th class="num">Average</th></tr></thead>
+          <tbody>
+            @for (p of d.salespeople; track p.name) {
+              <tr>
+                <td class="strong">{{ p.name }}</td>
+                <td class="num">{{ p.orders }}</td>
+                <td class="num">{{ money(p.sales) }}</td>
+                <td class="num">{{ money(p.average, false) }}</td>
+              </tr>
+            } @empty { <tr class="an-empty-row"><td colspan="4">No sales in this period.</td></tr> }
+          </tbody>
+        </table>
+      </section>
+
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">Discounts &amp; promotions</h2><span class="an-card__meta">discount given</span></div>
+        <div class="an-card__body">
+          <an-bar-list [items]="d.discounts" right="none" empty="No discounts given."></an-bar-list>
+          @if (d.discountTotal > 0) {
+            <p class="an-card__note">Total {{ money(d.discountTotal) }} — {{ d.sales > 0 ? ((d.discountTotal / d.sales) * 100 | number:'1.1-1') : 0 }}% of sales.</p>
+          }
+        </div>
+      </section>
+    </div>
+  </div>
+}

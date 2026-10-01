@@ -21,10 +21,17 @@ public class SalesInvoice : FullAuditedAggregateRoot<int>
     // ── Reference ───────────────────────────────────────────────────────────
     public string? ReferenceNumber { get; set; }
     public string  CurrencyCode    { get; set; } = "BDT";
+    /// <summary>Where the sale happened, e.g. "Showroom POS", "Online", "Field sale".</summary>
+    public string? Channel         { get; set; }
 
     // ── Totals ───────────────────────────────────────────────────────────────
     public double Subtotal      { get; set; }
     public double DiscountTotal { get; set; }
+    /// <summary>Invoice-level discount on top of line discounts (e.g. bundle promotion). Included in DiscountTotal.</summary>
+    public double  AdditionalDiscount { get; set; }
+    public string? DiscountNote       { get; set; }
+    /// <summary>When true, prices already include VAT and TaxTotal is informational only.</summary>
+    public bool    TaxInclusive       { get; set; }
     public double TaxTotal      { get; set; }
     public double ShippingCost  { get; set; }
     public double GrandTotal    { get; set; }

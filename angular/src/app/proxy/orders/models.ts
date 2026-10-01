@@ -30,11 +30,13 @@ export const OrderPriorityColors: Record<number, string> = {
 
 export const OrderShipmentTypeLabels: Record<number, string> = {
   1: 'Standard', 2: 'Express', 3: 'Overnight', 4: 'Pickup', 5: 'Local Delivery', 6: 'Freight',
+  7: 'Delivery + install',
 };
 
 export const OrderPaymentTypeLabels: Record<number, string> = {
   1: 'Cash', 2: 'Credit Card', 3: 'Debit Card', 4: 'Bank Transfer',
   5: 'Mobile Banking', 6: 'Cheque', 7: 'Online', 8: 'Cash on Delivery', 9: 'Other',
+  10: 'bKash', 11: 'Nagad', 12: 'Card EMI',
 };
 
 export const OrderCreateMethodLabels: Record<number, string> = {
@@ -78,6 +80,8 @@ export interface OrderDto {
   deliveryAddress?: string;
   deliveryContact?: string;
   deliveryPhone?: string;
+  /** Installation team for "Delivery + install" orders. */
+  installTeam?: string;
   // Classification
   status: number;
   stage: number;
@@ -156,6 +160,8 @@ export interface CreateUpdateOrderDto {
   deliveryAddress?: string;
   deliveryContact?: string;
   deliveryPhone?: string;
+  /** Installation team for "Delivery + install" orders. */
+  installTeam?: string;
   status: number;
   stage: number;
   priority: number;

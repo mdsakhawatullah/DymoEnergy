@@ -626,6 +626,9 @@ namespace DymoEnergy.Migrations
                     b.Property<double>("GrandTotal")
                         .HasColumnType("double precision");
 
+                    b.Property<string>("InstallTeam")
+                        .HasColumnType("text");
+
                     b.Property<string>("InternalNotes")
                         .HasColumnType("text");
 
@@ -1012,6 +1015,10 @@ namespace DymoEnergy.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AdminNote")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -1039,6 +1046,10 @@ namespace DymoEnergy.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string>("EstimatedSize")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<string>("ExtraProperties")
                         .IsRequired()
                         .HasColumnType("text")
@@ -1062,9 +1073,17 @@ namespace DymoEnergy.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("LastModifierId");
 
+                    b.Property<string>("Location")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<string>("Message")
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("MonthlyBill")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1074,6 +1093,10 @@ namespace DymoEnergy.Migrations
                     b.Property<string>("Phone")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("RoofSite")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -1093,6 +1116,9 @@ namespace DymoEnergy.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<double>("AdditionalDiscount")
+                        .HasColumnType("double precision");
+
                     b.Property<double>("AmountPaid")
                         .HasColumnType("double precision");
 
@@ -1100,6 +1126,9 @@ namespace DymoEnergy.Migrations
                         .HasColumnType("double precision");
 
                     b.Property<string>("BillingAddress")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Channel")
                         .HasColumnType("text");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -1140,6 +1169,9 @@ namespace DymoEnergy.Migrations
                     b.Property<DateTime?>("DeletionTime")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("DeletionTime");
+
+                    b.Property<string>("DiscountNote")
+                        .HasColumnType("text");
 
                     b.Property<double>("DiscountTotal")
                         .HasColumnType("double precision");
@@ -1201,6 +1233,9 @@ namespace DymoEnergy.Migrations
 
                     b.Property<double>("Subtotal")
                         .HasColumnType("double precision");
+
+                    b.Property<bool>("TaxInclusive")
+                        .HasColumnType("boolean");
 
                     b.Property<double>("TaxTotal")
                         .HasColumnType("double precision");
@@ -1293,6 +1328,9 @@ namespace DymoEnergy.Migrations
                     b.Property<double>("Quantity")
                         .HasColumnType("double precision");
 
+                    b.Property<string>("SerialNumbers")
+                        .HasColumnType("text");
+
                     b.Property<string>("Sku")
                         .HasColumnType("text");
 
@@ -1305,11 +1343,89 @@ namespace DymoEnergy.Migrations
                     b.Property<double>("UnitPrice")
                         .HasColumnType("double precision");
 
+                    b.Property<string>("Warranty")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("InvoiceId");
 
                     b.ToTable("DymoSalesInvoiceItems", (string)null);
+                });
+
+            modelBuilder.Entity("DymoEnergy.SalesInvoices.SalesInvoicePayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("ConcurrencyStamp");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ExtraProperties");
+
+                    b.Property<int>("InvoiceId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("PaidOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReferenceNumber")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.ToTable("DymoSalesInvoicePayments", (string)null);
                 });
 
             modelBuilder.Entity("DymoEnergy.UserSiteSettings.UserSiteSetting", b =>

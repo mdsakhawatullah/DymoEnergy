@@ -1,0 +1,138 @@
+@if (!data && loading) { <div class="an-loading"><nz-spin></nz-spin></div> }
+
+@if (data; as d) {
+  <div [style.opacity]="loading ? .6 : 1">
+    <p class="an-intro">Money in, money still to collect and refunds — for {{ periodLabel }}. Dues are as of today.</p>
+
+    <div class="an-kpis">
+      <div class="an-kpi">
+        <div class="an-kpi__head">Collected <an-change [value]="d.collectedChange"></an-change></div>
+        <div class="an-kpi__value">{{ money(d.collected) }}</div>
+        <div class="an-kpi__foot">Payments received in the period</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Still due</div>
+        <div class="an-kpi__value an-amber">{{ money(d.stillDue) }}</div>
+        <div class="an-kpi__foot">{{ d.dueInvoices }} invoices · {{ d.dueCustomers }} customers</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Overdue
+          @if (d.overdueInvoices) { <span class="an-kpi__flag an-red">{{ d.overdueInvoices }} inv.</span> }
+        </div>
+        <div class="an-kpi__value" [class.an-red]="d.overdue > 0">{{ money(d.overdue) }}</div>
+        <div class="an-kpi__foot">Past the due date</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Refunds <an-change [value]="d.refundsChange" [invert]="true"></an-change></div>
+        <div class="an-kpi__value">{{ money(d.refunds, false) }}</div>
+        <div class="an-kpi__foot">{{ d.refundCount }} refund{{ d.refundCount === 1 ? '' : 's' }}</div>
+      </div>
+    </div>
+
+    <div class="an-grid an-grid-2">
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">How money came in</h2><span class="an-card__meta">share of collected</span></div>
+        <div class="an-card__body">
+          <an-bar-list [items]="d.byMethod" right="share" empty="No payments in this period."></an-bar-list>
+          @if (d.collected > 0) {
+            <p class="an-card__note">{{ pct(d.digitalShare) }} of money came in digitally (mobile banking, card, bank).</p>
+          }
+        </div>
+      </section>
+
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">Money due — how late?</h2><span class="an-card__meta">amount · invoices</span></div>
+        <div class="an-card__body">
+          <an-bar-list [items]="agingItems" [colors]="agingColors" right="count" countSuffix=" inv."></an-bar-list>
+        </div>
+        <div class="an-card__foot">
+          <button nz-button nzSize="small" (click)="remindersOpen = true" [disabled]="!d.lateInvoices.length">
+            Send reminders to all late ({{ d.lateInvoices.length }})
+          </button>
+          <button nz-button nzSize="small" (click)="openReport('dues-by-age')">Dues by age</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="an-grid an-grid-wide">
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">Who owes the most</h2><span class="an-card__meta">late first</span></div>
+        <table class="an-table">
+          <thead><tr><th>Customer</th><th class="num">Invoices</th><th class="num">Due</th><th class="num">Late by</th></tr></thead>
+          <tbody>
+            @for (x of d.debtors; track $index) {
+              <tr>
+                <td>
+                  <div class="strong">{{ x.name }}</div>
+                  @if (x.phone) { <div class="an-muted mo-phone">{{ x.phone }}</div> }
+                </td>
+                <td class="num">{{ x.invoices }}</td>
+                <td class="num">{{ money(x.due) }}</td>
+                <td class="num" [class.an-red]="(x.lateDays ?? 0) > 30" [class.an-amber]="(x.lateDays ?? 0) > 0 && (x.lateDays ?? 0) <= 30">
+                  @if (x.lateDays) { <strong>{{ lateText(x.lateDays) }}</strong> } @else { <span class="an-muted">{{ lateText(null, x.note) }}</span> }
+                </td>
+              </tr>
+            } @empty { <tr class="an-empty-row"><td colspan="4">Nobody owes anything. </td></tr> }
+          </tbody>
+        </table>
+        <div class="an-card__foot"><button nz-button nzSize="small" (click)="go('/sales-invoices')">Open sale invoices</button></div>
+      </section>
+
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">Money expected in</h2><span class="an-card__meta">from due dates</span></div>
+        <div class="an-card__body">
+          <div class="mo-exp" role="img" aria-label="Money expected by week">
+            @for (e of d.expected; track e.name) {
+              <div class="mo-exp__col" tabindex="0" [attr.aria-label]="e.name + ': ' + money(e.value, false)">
+                <span class="mo-exp__value">{{ e.value > 0 ? money(e.value) : '' }}</span>
+                <span class="mo-exp__bar" [style.height.%]="e.value > 0 ? (e.value / maxExpected) * 100 : 0"></span>
+                <span class="mo-exp__label">{{ e.name }}</span>
+                <span class="mo-exp__tip">{{ e.name }}: {{ money(e.value, false) }} · {{ e.count }} invoice{{ e.count === 1 ? '' : 's' }}</span>
+              </div>
+            }
+          </div>
+          <p class="an-card__note">Follow up the big ones 2 days before the due date.</p>
+        </div>
+      </section>
+    </div>
+
+    <section class="an-card mo-vat">
+      <div class="an-card__head"><h2 class="an-card__title">VAT in sales</h2><span class="an-card__meta">for the monthly return</span></div>
+      <div class="an-card__body">
+        <an-bar-list right="none"
+          [items]="[{ name: 'VAT included in sales', value: d.vatInSales, share: 0 }, { name: 'VAT on refunds', value: d.vatOnRefunds, share: 0 }]">
+        </an-bar-list>
+        <p class="an-card__note">Download "VAT summary (Mushak)" for your accountant.</p>
+      </div>
+      <div class="an-card__foot">
+        <button nz-button nzSize="small" (click)="openReport('vat-summary')">VAT summary</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ── Reminders ──────────────────────────────────────────────────────────── -->
+  <nz-modal [(nzVisible)]="remindersOpen" nzTitle="Send payment reminders" [nzWidth]="640" [nzFooter]="null" (nzOnCancel)="remindersOpen = false">
+    <ng-container *nzModalContent>
+      <p class="an-card__note" style="margin-top:0">
+        Each button opens WhatsApp or your SMS app with a polite reminder ready to send. Work down the list — sent ones are ticked.
+      </p>
+      <ul class="an-list mo-rem">
+        @for (r of d.lateInvoices; track r.invoiceId) {
+          <li class="an-list__row">
+            <span class="an-list__dot" [attr.data-tone]="r.lateDays > 30 ? 'red' : 'amber'"></span>
+            <div class="an-list__main">
+              <div class="an-list__title">{{ r.name }} @if (sent.has(r.invoiceId)) { <span class="an-green">✓</span> }</div>
+              <div class="an-list__sub">{{ r.invoiceNumber }} · {{ money(r.due, false) }} · {{ r.lateDays }} days late</div>
+            </div>
+            @if (r.phone) {
+              <button nz-button nzSize="small" (click)="whatsApp(r)"><span nz-icon nzType="whats-app"></span></button>
+              <button nz-button nzSize="small" (click)="sms(r)">SMS</button>
+            } @else {
+              <span class="an-muted mo-phone">no phone</span>
+            }
+          </li>
+        }
+      </ul>
+    </ng-container>
+  </nz-modal>
+}

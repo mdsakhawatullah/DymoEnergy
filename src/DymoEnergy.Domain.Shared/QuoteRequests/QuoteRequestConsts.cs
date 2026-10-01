@@ -7,4 +7,6 @@ public static class QuoteRequestConsts
     public const int MaxEmailLength    = 256;
     public const int MaxInterestLength = 128;
     public const int MaxMessageLength  = 4000;
+    public const int MaxDetailLength   = 128;
+    public const int MaxAdminNoteLength = 2000;
 }

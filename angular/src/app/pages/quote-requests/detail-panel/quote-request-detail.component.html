@@ -1,0 +1,134 @@
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<div class="qd-head">
+  <span class="qd-avatar" [attr.data-tone]="avatarTone(request.name)">{{ initials(request.name) }}</span>
+  <div class="qd-head__text">
+    <div class="qd-name">{{ request.name }}</div>
+    <div class="qd-sub">Request #{{ request.id }} · {{ receivedStamp(request.creationTime) }}</div>
+  </div>
+  <button class="qd-close" (click)="closed.emit()" aria-label="Close">
+    <span nz-icon nzType="close"></span>
+  </button>
+</div>
+
+<!-- ── Contact actions ────────────────────────────────────────────────────── -->
+<div class="qd-actions">
+  @if (request.phone) {
+    <a class="qd-action" [href]="'tel:+' + phoneDigits" (click)="onContact()">
+      <span nz-icon nzType="phone"></span> Call
+    </a>
+    <a class="qd-action" [href]="whatsAppHref" target="_blank" rel="noopener" (click)="onContact()">
+      <span nz-icon nzType="whats-app"></span> WhatsApp
+    </a>
+  } @else {
+    <span class="qd-action qd-action--off"><span nz-icon nzType="phone"></span> Call</span>
+    <span class="qd-action qd-action--off"><span nz-icon nzType="whats-app"></span> WhatsApp</span>
+  }
+  @if (request.email) {
+    <a class="qd-action" [href]="emailHref" (click)="onContact()">
+      <span nz-icon nzType="mail"></span> Email
+    </a>
+  } @else {
+    <span class="qd-action qd-action--off"><span nz-icon nzType="mail"></span> Email</span>
+  }
+</div>
+
+<!-- ── Status ─────────────────────────────────────────────────────────────── -->
+<div class="qd-status">
+  <span class="qd-status__label">Status</span>
+  <span class="qr-pill" [attr.data-tone]="statusTone[request.status]">
+    <span class="qr-pill__dot"></span>{{ statusLabels[request.status] }}
+  </span>
+  <nz-select
+    class="qd-move"
+    nzPlaceHolder="Move to…"
+    [nzLoading]="changingStatus"
+    [(ngModel)]="moveTo"
+    (ngModelChange)="setStatus($event)"
+  >
+    @for (s of moveOptions; track s) {
+      <nz-option [nzValue]="s" [nzLabel]="statusLabels[s]" nzCustomContent>
+        <span class="status-option">
+          <span class="qr-pill__dot" [attr.data-tone]="statusTone[s]"></span>{{ statusLabels[s] }}
+        </span>
+      </nz-option>
+    }
+  </nz-select>
+</div>
+
+<div class="qd-scroll">
+  <!-- ── Requirement ──────────────────────────────────────────────────────── -->
+  <section class="qd-section">
+    <div class="qd-section__head">
+      <span class="qd-section__title">Requirement</span>
+      @if (!editing) {
+        <button class="qd-link" (click)="startEdit()"><span nz-icon nzType="edit"></span> Edit</button>
+      }
+    </div>
+
+    @if (!editing) {
+      <dl class="qd-grid">
+        <dt>System type</dt>    <dd>{{ request.interest || '—' }}</dd>
+        <dt>Estimated size</dt> <dd>{{ request.estimatedSize || '—' }}</dd>
+        <dt>Monthly bill</dt>   <dd>{{ request.monthlyBill || '—' }}</dd>
+        <dt>Roof / site</dt>    <dd>{{ request.roofSite || '—' }}</dd>
+        <dt>Location</dt>       <dd>{{ request.location || '—' }}</dd>
+        <dt>Contact</dt>
+        <dd>
+          <div>{{ request.phone || '—' }}</div>
+          @if (request.email) { <div class="qd-muted">{{ request.email }}</div> }
+        </dd>
+      </dl>
+    } @else {
+      <div class="qd-form">
+        <label>System type
+          <input nz-input [(ngModel)]="draft.interest" list="qd-system-types" placeholder="Residential rooftop" />
+          <datalist id="qd-system-types">
+            @for (t of systemTypes; track t) { <option [value]="t"></option> }
+          </datalist>
+        </label>
+        <label>Estimated size <input nz-input [(ngModel)]="draft.estimatedSize" placeholder="~5 kW" /></label>
+        <label>Monthly bill   <input nz-input [(ngModel)]="draft.monthlyBill"   placeholder="BDT 6,000–8,000" /></label>
+        <label>Roof / site    <input nz-input [(ngModel)]="draft.roofSite"      placeholder="Flat concrete, 1,200 sq ft" /></label>
+        <label>Location       <input nz-input [(ngModel)]="draft.location"      placeholder="Area, City" /></label>
+        <div class="qd-form__actions">
+          <button nz-button nzSize="small" (click)="editing = false" [disabled]="saving">Cancel</button>
+          <button nz-button nzType="primary" nzSize="small" (click)="saveDetails()" [nzLoading]="saving">Save</button>
+        </div>
+      </div>
+    }
+
+    @if (request.message) {
+      <blockquote class="qd-message">“{{ request.message }}”</blockquote>
+    }
+  </section>
+
+  <!-- ── Staff note ───────────────────────────────────────────────────────── -->
+  <section class="qd-section">
+    <div class="qd-section__head">
+      <span class="qd-section__title">Staff note</span>
+      @if (request.lastModificationTime && request.adminNote) {
+        <span class="qd-muted qd-small">Updated {{ request.lastModificationTime | date:'d MMM, h:mm a' }}</span>
+      }
+    </div>
+    <textarea
+      nz-input
+      [(ngModel)]="note"
+      [nzAutosize]="{ minRows: 2, maxRows: 6 }"
+      placeholder="Call outcome, site visit date, quoted price…"
+    ></textarea>
+    @if (noteDirty) {
+      <div class="qd-form__actions">
+        <button nz-button nzSize="small" (click)="note = request.adminNote ?? ''" [disabled]="savingNote">Discard</button>
+        <button nz-button nzType="primary" nzSize="small" (click)="saveNote()" [nzLoading]="savingNote">Save note</button>
+      </div>
+    }
+  </section>
+
+  <div class="qd-footer">
+    <button nz-button nzType="text" nzDanger nzSize="small"
+            nz-popconfirm nzPopconfirmTitle="Delete this quote request?" nzOkText="Delete" nzOkDanger
+            [nzLoading]="deleting" (nzOnConfirm)="remove()">
+      <span nz-icon nzType="delete"></span> Delete request
+    </button>
+  </div>
+</div>

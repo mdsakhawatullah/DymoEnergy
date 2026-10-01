@@ -7,4 +7,7 @@ public enum SalesInvoicePaymentMethod
     BankTransfer = 3,
     Cheque       = 4,
     Other        = 5,
+    BKash        = 6,
+    Nagad        = 7,
+    Rocket       = 8,
 }

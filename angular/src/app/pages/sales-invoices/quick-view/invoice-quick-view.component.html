@@ -1,0 +1,317 @@
+<!-- ── Top bar: pager · menu · close ──────────────────────────────────────── -->
+<div class="qv-bar">
+  <button class="qv-icon-btn" (click)="prev.emit()" [disabled]="position <= 1" nz-tooltip nzTooltipTitle="Previous (↑)">
+    <span nz-icon nzType="up"></span>
+  </button>
+  <button class="qv-icon-btn" (click)="next.emit()" [disabled]="position >= total" nz-tooltip nzTooltipTitle="Next (↓)">
+    <span nz-icon nzType="down"></span>
+  </button>
+  @if (total > 0) { <span class="qv-pos">{{ position }} of {{ total }}</span> }
+
+  <span class="qv-spacer"></span>
+
+  <button class="qv-icon-btn" nz-dropdown [nzDropdownMenu]="moreMenu" nzTrigger="click" nzPlacement="bottomRight" [disabled]="!invoice">
+    <span nz-icon nzType="more"></span>
+  </button>
+  <nz-dropdown-menu #moreMenu="nzDropdownMenu">
+    <ul nz-menu>
+      <li nz-menu-item (click)="openEdit()"><span nz-icon nzType="edit" class="me-2"></span>Edit invoice</li>
+      <li nz-menu-item (click)="openFullPage()"><span nz-icon nzType="export" class="me-2"></span>Open full page</li>
+      <li nz-menu-divider></li>
+      <li nz-menu-item nzDanger
+          nz-popconfirm nzPopconfirmTitle="Delete this invoice and its payments?"
+          nzOkText="Delete" nzOkDanger (nzOnConfirm)="deleteInvoice()">
+        <span nz-icon nzType="delete" class="me-2"></span>Delete invoice
+      </li>
+    </ul>
+  </nz-dropdown-menu>
+
+  <button class="qv-icon-btn" (click)="close()" aria-label="Close">
+    <span nz-icon nzType="close"></span>
+  </button>
+</div>
+
+@if (loading && !invoice) {
+  <div class="qv-loading"><nz-spin></nz-spin></div>
+}
+
+@if (invoice; as inv) {
+  <div class="qv-body" [class.qv-body--dim]="loading">
+
+    <!-- ── Hero: balance + ring + collect ───────────────────────────────── -->
+    <section class="qv-hero" [attr.data-tone]="tone">
+      <div class="qv-hero__top">
+        <span class="qv-inv-no">{{ inv.invoiceNumber }}</span>
+        <span class="qv-badge" [attr.data-tone]="tone">{{ shortStatus[inv.status].label }}</span>
+        <span class="qv-spacer"></span>
+        <span class="qv-hero__meta">
+          {{ inv.invoiceDate | date:'d MMM y' }}@if (inv.channel) { · {{ inv.channel }} }
+        </span>
+      </div>
+
+      <div class="qv-hero__main">
+        <div class="qv-hero__figures">
+          @if (inv.balanceDue > 0.005 && inv.status !== 6 && inv.status !== 7) {
+            <div class="qv-hero__label">
+              Still to collect
+              @if (inv.status === 5) { <span class="qv-overdue-days">· {{ daysOverdue }} day{{ daysOverdue === 1 ? '' : 's' }} overdue</span> }
+            </div>
+            <div class="qv-hero__amount">{{ inv.balanceDue | taka }}</div>
+            <div class="qv-hero__sub">of {{ inv.grandTotal | taka }} · {{ inv.amountPaid | taka }} paid</div>
+          } @else if (inv.status === 6 || inv.status === 7) {
+            <div class="qv-hero__label">{{ shortStatus[inv.status].label }}</div>
+            <div class="qv-hero__amount qv-hero__amount--muted">{{ inv.grandTotal | taka }}</div>
+            <div class="qv-hero__sub">{{ inv.amountPaid | taka }} was paid</div>
+          } @else {
+            <div class="qv-hero__label">Fully paid</div>
+            <div class="qv-hero__amount">{{ inv.grandTotal | taka }}</div>
+            <div class="qv-hero__sub">
+              @if (inv.paymentDate) { Last payment {{ inv.paymentDate | date:'d MMM y' }} }
+              @if (inv.paymentMethod) { · {{ methodLabels[inv.paymentMethod] }} }
+            </div>
+          }
+        </div>
+
+        <!-- Paid-percentage ring -->
+        <div class="qv-ring" [attr.aria-label]="paidPct + '% paid'">
+          <svg viewBox="0 0 64 64" width="84" height="84">
+            <circle cx="32" cy="32" r="26" class="qv-ring__track" />
+            <circle cx="32" cy="32" r="26" class="qv-ring__fill"
+                    [attr.stroke-dasharray]="ringC" [attr.stroke-dashoffset]="ringOffset" />
+          </svg>
+          <span class="qv-ring__pct">{{ paidPct }}<small>%</small></span>
+        </div>
+      </div>
+
+      @if (canCollect) {
+        <button class="qv-collect" (click)="openCollect()">
+          <span nz-icon nzType="credit-card"></span>
+          Collect <strong>{{ inv.balanceDue | taka }}</strong>
+        </button>
+      }
+    </section>
+
+    <!-- ── Action tiles ─────────────────────────────────────────────────── -->
+    <section class="qv-actions">
+      <button class="qv-action" (click)="openPrintable('print')">
+        <span class="qv-action__ic qv-action__ic--gray"><span nz-icon nzType="printer"></span></span>Print
+      </button>
+      <button class="qv-action" (click)="openPrintable('pdf')">
+        <span class="qv-action__ic qv-action__ic--gray"><span nz-icon nzType="file-pdf"></span></span>PDF
+      </button>
+      <button class="qv-action" (click)="sendSms()" [disabled]="!inv.customerPhone">
+        <span class="qv-action__ic qv-action__ic--blue"><span nz-icon nzType="message"></span></span>SMS
+      </button>
+      <button class="qv-action" (click)="sendWhatsApp()" [disabled]="!inv.customerPhone">
+        <span class="qv-action__ic qv-action__ic--green"><span nz-icon nzType="whats-app"></span></span>WhatsApp
+      </button>
+      <button class="qv-action" (click)="startReturn()">
+        <span class="qv-action__ic qv-action__ic--red"><span nz-icon nzType="rollback"></span></span>Return
+      </button>
+    </section>
+
+    <!-- ── Customer ─────────────────────────────────────────────────────── -->
+    <section class="qv-card qv-customer">
+      <span class="qv-avatar">{{ initials(inv.customerName) }}</span>
+      <div class="qv-customer__info">
+        <div class="qv-customer__name">{{ inv.customerName || 'Walk-in customer' }}</div>
+        <div class="qv-customer__meta">
+          {{ inv.customerPhone || 'No phone' }}
+          @if (inv.billingAddress) { · {{ inv.billingAddress.split('\n')[0] }} }
+        </div>
+      </div>
+      @if (inv.customerId || inv.customerPhone) {
+        <button nz-button nzSize="small" (click)="openProfile()">Profile</button>
+      }
+    </section>
+
+    <!-- ── Tabs ─────────────────────────────────────────────────────────── -->
+    <section class="qv-card qv-tabs-card">
+      <div class="qv-tabs" role="tablist">
+        <button role="tab" class="qv-tab" [class.qv-tab--active]="tab === 'items'" (click)="tab = 'items'">
+          Items <span>{{ items.length }}</span>
+        </button>
+        <button role="tab" class="qv-tab" [class.qv-tab--active]="tab === 'payments'" (click)="tab = 'payments'">
+          Payments <span>{{ payments.length }}</span>
+        </button>
+        <button role="tab" class="qv-tab" [class.qv-tab--active]="tab === 'activity'" (click)="tab = 'activity'">
+          Activity
+        </button>
+      </div>
+
+      <!-- Items -->
+      @if (tab === 'items') {
+        <ul class="qv-list">
+          @for (it of items; track it.id) {
+            <li class="qv-item">
+              <span class="qv-item__ic" [attr.data-kind]="itemKind(it.productName)">
+                @switch (itemKind(it.productName)) {
+                  @case ('panel')    { <span nz-icon nzType="appstore"></span> }
+                  @case ('inverter') { <span nz-icon nzType="thunderbolt"></span> }
+                  @case ('battery')  { <span nz-icon nzType="database"></span> }
+                  @case ('service')  { <span nz-icon nzType="tool"></span> }
+                  @case ('pump')     { <span nz-icon nzType="experiment"></span> }
+                  @case ('cable')    { <span nz-icon nzType="api"></span> }
+                  @case ('mount')    { <span nz-icon nzType="build"></span> }
+                  @default           { <span nz-icon nzType="shopping"></span> }
+                }
+              </span>
+              <div class="qv-item__main">
+                <div class="qv-item__name">{{ it.productName || 'Item' }}</div>
+                <div class="qv-item__meta">
+                  {{ it.quantity }} × {{ it.unitPrice | taka }}
+                  @if (it.discountAmount > 0) { <span class="qv-muted">· −{{ it.discountAmount | taka }}</span> }
+                  @if (serialCount(it) > 0 || it.warranty) {
+                    <span class="qv-chip" [nz-tooltip]="it.warranty || ''">
+                      @if (serialCount(it) > 0) { {{ serialCount(it) }} serial{{ serialCount(it) === 1 ? '' : 's' }} }
+                      @if (serialCount(it) > 0 && it.warranty) { · }
+                      @if (it.warranty) { warranty ✓ }
+                    </span>
+                  }
+                </div>
+              </div>
+              <div class="qv-item__total">{{ it.lineTotal | taka }}</div>
+            </li>
+          } @empty {
+            <li class="qv-empty">No items on this invoice.</li>
+          }
+        </ul>
+
+        <div class="qv-totals">
+          @if (inv.discountTotal > 0) {
+            <div class="qv-totals__row">
+              <span>{{ inv.discountNote || 'Discount' }}</span>
+              <span class="qv-green">−{{ inv.discountTotal | taka }}</span>
+            </div>
+          }
+          @if (inv.shippingCost > 0) {
+            <div class="qv-totals__row"><span>Delivery</span><span>{{ inv.shippingCost | taka }}</span></div>
+          }
+          @if (inv.taxTotal > 0 && !inv.taxInclusive) {
+            <div class="qv-totals__row"><span>VAT</span><span>{{ inv.taxTotal | taka }}</span></div>
+          }
+          <div class="qv-totals__row qv-totals__row--grand">
+            <span>Total</span><span>{{ inv.grandTotal | taka }}</span>
+          </div>
+          @if (inv.taxTotal > 0 && inv.taxInclusive) {
+            <div class="qv-totals__note">Prices include VAT ({{ inv.taxTotal | taka }})</div>
+          }
+        </div>
+      }
+
+      <!-- Payments -->
+      @if (tab === 'payments') {
+        <ul class="qv-list">
+          @for (p of payments; track p.id) {
+            <li class="qv-item">
+              <span class="qv-item__ic" data-kind="payment"><span nz-icon nzType="wallet"></span></span>
+              <div class="qv-item__main">
+                <div class="qv-item__name">{{ methodLabels[p.method] }}</div>
+                <div class="qv-item__meta">
+                  {{ p.paidOn | date:'d MMM y, h:mm a' }}
+                  @if (p.referenceNumber) { · Ref {{ p.referenceNumber }} }
+                  @if (p.note) { · {{ p.note }} }
+                </div>
+              </div>
+              <div class="qv-item__total qv-green">{{ p.amount | taka }}</div>
+              <button class="qv-icon-btn qv-icon-btn--sm"
+                      nz-popconfirm nzPopconfirmTitle="Remove this payment? The balance will go back up."
+                      nzOkText="Remove" nzOkDanger (nzOnConfirm)="deletePayment(p)"
+                      [disabled]="deletingPaymentId === p.id" nz-tooltip nzTooltipTitle="Remove payment">
+                <span nz-icon [nzType]="deletingPaymentId === p.id ? 'loading' : 'delete'"></span>
+              </button>
+            </li>
+          } @empty {
+            <li class="qv-empty">
+              No payments recorded yet.
+              @if (inv.amountPaid > 0) { <br><span class="qv-muted">{{ inv.amountPaid | taka }} was entered before payment tracking.</span> }
+            </li>
+          }
+        </ul>
+        <div class="qv-totals">
+          <div class="qv-totals__row"><span>Paid</span><span class="qv-green">{{ inv.amountPaid | taka }}</span></div>
+          <div class="qv-totals__row qv-totals__row--grand"><span>Balance</span><span>{{ inv.balanceDue | taka }}</span></div>
+        </div>
+      }
+
+      <!-- Activity -->
+      @if (tab === 'activity') {
+        <ol class="qv-timeline">
+          @for (a of activity; track $index) {
+            <li class="qv-tl">
+              <span class="qv-tl__dot" [attr.data-tone]="a.tone"><span nz-icon [nzType]="a.icon"></span></span>
+              <div>
+                <div class="qv-tl__title">{{ a.title }}</div>
+                @if (a.sub) { <div class="qv-tl__sub">{{ a.sub }}</div> }
+                <div class="qv-tl__time">{{ a.at | date:'d MMM y, h:mm a' }}</div>
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+
+    @if (inv.notes) {
+      <section class="qv-card qv-notes"><strong>Note</strong> {{ inv.notes }}</section>
+    }
+  </div>
+}
+
+<!-- ── Collect payment modal ──────────────────────────────────────────────── -->
+<nz-modal
+  [(nzVisible)]="collectOpen"
+  nzTitle="Collect payment"
+  [nzWidth]="440"
+  [nzOkText]="'Collect ' + (collectAmount | taka)"
+  [nzOkLoading]="collecting"
+  (nzOnOk)="submitCollect()"
+  (nzOnCancel)="collectOpen = false"
+>
+  <ng-container *nzModalContent>
+    @if (invoice; as inv) {
+      <div class="cp-summary">
+        <span>{{ inv.invoiceNumber }} · {{ inv.customerName || 'Walk-in customer' }}</span>
+        <span>Due <strong>{{ inv.balanceDue | taka }}</strong></span>
+      </div>
+
+      <label class="cp-label">Amount</label>
+      <nz-input-number
+        class="cp-amount"
+        [(ngModel)]="collectAmount"
+        [nzMin]="1" [nzMax]="inv.balanceDue" [nzStep]="500"
+        [nzPrecision]="0" nzPrefix="৳"
+      ></nz-input-number>
+      <div class="cp-quick">
+        <button type="button" (click)="setCollectFraction(1)"   [class.on]="collectAmount === inv.balanceDue">Full</button>
+        <button type="button" (click)="setCollectFraction(0.5)">Half</button>
+      </div>
+
+      <label class="cp-label">Method</label>
+      <div class="cp-methods">
+        @for (m of methodOrder; track m) {
+          <button type="button" [class.on]="collectMethod === m" (click)="collectMethod = m">{{ methodLabels[m] }}</button>
+        }
+      </div>
+
+      <div class="cp-row">
+        <div>
+          <label class="cp-label">Date</label>
+          <nz-date-picker [(ngModel)]="collectDate" nzFormat="d MMM y" [nzAllowClear]="false" style="width:100%"></nz-date-picker>
+        </div>
+        <div>
+          <label class="cp-label">
+            {{ collectMethod === 6 || collectMethod === 7 || collectMethod === 8 ? 'TrxID' : collectMethod === 4 ? 'Cheque no.' : 'Reference' }}
+          </label>
+          <input nz-input [(ngModel)]="collectRef" placeholder="Optional" />
+        </div>
+      </div>
+
+      <label class="cp-label">Note</label>
+      <input nz-input [(ngModel)]="collectNote" placeholder="Optional" />
+
+      @if (collectAmount > 0 && collectAmount < inv.balanceDue) {
+        <div class="cp-after">{{ inv.balanceDue - collectAmount | taka }} will still be due after this payment.</div>
+      }
+    }
+  </ng-container>
+</nz-modal>

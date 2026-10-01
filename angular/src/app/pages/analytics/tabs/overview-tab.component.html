@@ -1,0 +1,217 @@
+@if (!data && loading) { <div class="an-loading"><nz-spin></nz-spin></div> }
+
+@if (data; as d) {
+  <div [style.opacity]="loading ? .6 : 1">
+
+    <!-- ── Hero + Today ─────────────────────────────────────────────────────── -->
+    <div class="ov-top">
+      <section class="ov-hero">
+        <div class="ov-hero__row">
+          <div>
+            <div class="ov-hero__label">Sales in {{ periodLabel }}</div>
+            <div class="ov-hero__value">{{ money(d.sales) }}</div>
+            @if (d.salesChange != null) {
+              <div class="ov-hero__delta">
+                <span class="ov-pill" [class.ov-pill--down]="d.salesChange < 0">
+                  {{ d.salesChange >= 0 ? '▲' : '▼' }} {{ d.salesChange >= 0 ? d.salesChange : -d.salesChange }}% {{ d.salesChange >= 0 ? 'more' : 'less' }}
+                </span>
+                than {{ previousLabel }} ({{ money(d.previousSales) }})
+              </div>
+            } @else {
+              <div class="ov-hero__delta">Nothing sold in {{ previousLabel }} to compare with.</div>
+            }
+          </div>
+
+          <div class="ov-target">
+            @if (target > 0) {
+              <div class="ov-target__row">
+                <span>Target {{ money(target) }} <button class="ov-target__edit" (click)="openTarget()">Edit</button></span>
+                <strong>{{ targetPct }}% reached</strong>
+              </div>
+              <div class="ov-target__track" role="progressbar" aria-label="Progress to sales target"
+                   [attr.aria-valuenow]="targetPct" aria-valuemin="0" aria-valuemax="100">
+                <div class="ov-target__fill" [style.width.%]="targetPct > 100 ? 100 : targetPct"></div>
+              </div>
+              <p class="ov-target__note">
+                @if (targetGap <= 0) { Target beaten by {{ money(d.sales - target) }}. }
+                @else { {{ money(targetGap) }} to go.@if (periodOver) { This period has ended.} }
+              </p>
+            } @else {
+              <div class="ov-target__row"><span>No sales target yet <button class="ov-target__edit" (click)="openTarget()">Set one</button></span></div>
+              <div class="ov-target__track"></div>
+              <p class="ov-target__note">Set a monthly target to track progress here.</p>
+            }
+          </div>
+        </div>
+
+        @if (d.weeks.length) {
+          <div class="ov-weeks__head">
+            <span class="ov-weeks__label">Week by week</span>
+            <span class="ov-weeks__hint">Click one to see its days</span>
+          </div>
+          <div class="ov-weeks" role="tablist" aria-label="Weeks">
+            @for (w of d.weeks; track w.from) {
+              <button type="button" role="tab" class="ov-week"
+                      [class.ov-week--active]="selectedWeek?.from === w.from"
+                      [attr.aria-selected]="selectedWeek?.from === w.from"
+                      (click)="selectWeek(w)">
+                <span class="ov-week__top">
+                  <span class="ov-week__label">{{ w.label }}</span>
+                  @if (w.isBest) { <span class="ov-week__best">Best</span> }
+                </span>
+                <span class="ov-week__value">{{ money(w.sales) }}</span>
+                <span class="ov-week__track"><span class="ov-week__fill" [style.width.%]="weekBar(w.sales)"></span></span>
+                <span class="ov-week__delta" [class.ov-week__delta--down]="(w.change ?? 0) < 0">
+                  @if (w.change != null) { {{ w.change >= 0 ? '▲' : '▼' }} {{ w.change >= 0 ? w.change : -w.change }}% vs before }
+                  @else { <span class="an-muted">no week before</span> }
+                </span>
+              </button>
+            }
+          </div>
+
+          <!-- Days of the selected week -->
+          @if (selectedWeek; as w) {
+            <div class="ov-days" role="tabpanel">
+              <div class="ov-days__head">
+                <div><strong>{{ w.label }}</strong> <span class="an-muted">{{ money(w.sales) }} · {{ w.orders }} order{{ w.orders === 1 ? '' : 's' }}</span></div>
+                <button class="an-link ov-days__link" (click)="seeWeekInvoices()">See these invoices →</button>
+              </div>
+              <div class="ov-days__chart" role="img"
+                   [attr.aria-label]="'Sales per day, ' + w.label + ', best ' + money(maxDaySales, false)">
+                @for (day of w.days; track day.date) {
+                  <div class="ov-day" tabindex="0"
+                       [attr.aria-label]="(day.date | date:'EEE d MMM') + ': ' + money(day.sales, false) + ', ' + day.orders + ' orders'">
+                    <span class="ov-day__value">{{ dayValue(day.sales) }}</span>
+                    <span class="ov-day__bar" [class.ov-day__bar--best]="isBestDay(day)" [style.height.%]="dayHeight(day)"></span>
+                    <span class="ov-day__label">{{ day.date | date:'EEE d' }}</span>
+                    <span class="ov-day__tip">
+                      <strong>{{ day.date | date:'EEEE d MMM' }}</strong>
+                      {{ money(day.sales, false) }} · {{ day.orders }} order{{ day.orders === 1 ? '' : 's' }}
+                    </span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        }
+      </section>
+
+      <section class="an-card ov-today">
+        <div class="an-card__head">
+          <h2 class="an-card__title"><span class="ov-live"></span>Today so far</h2>
+          <span class="an-card__meta">updated {{ loadedAt | date:'HH:mm' }}</span>
+        </div>
+        <div class="an-card__body">
+          <div class="ov-today__stats">
+            <div><span>Sales</span><strong>{{ money(d.todaySales) }}</strong></div>
+            <div><span>Orders</span><strong>{{ d.todayOrders }}</strong></div>
+          </div>
+          <div class="ov-today__label">Latest sales</div>
+          <ul class="ov-latest">
+            @for (s of d.latestSales; track $index) {
+              <li>
+                <span class="ov-badge" [attr.data-kind]="channelBadge(s.channel)" [title]="s.channel">{{ channelShort(s.channel) }}</span>
+                <span class="ov-latest__text">{{ s.summary }}</span>
+                <span class="ov-latest__amt">{{ money(s.total, false) }}</span>
+              </li>
+            } @empty {
+              <li class="ov-latest__empty">No sales recorded yet.</li>
+            }
+          </ul>
+          <button class="an-link" (click)="go('/sales-invoices')">All invoices →</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── KPIs ─────────────────────────────────────────────────────────────── -->
+    <div class="an-kpis">
+      <div class="an-kpi">
+        <div class="an-kpi__head">Orders <an-change [value]="d.ordersChange"></an-change></div>
+        <div class="an-kpi__value">{{ num(d.orders) }}</div>
+        <div class="an-kpi__foot">Average {{ money(d.averageOrder, false) }} per order.</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Quotes won <an-change [value]="d.quoteWinChange" suffix=" pts"></an-change></div>
+        <div class="an-kpi__value">{{ pct(d.quoteWinRate) }}</div>
+        <div class="an-kpi__foot">{{ d.quotesWon }} of {{ d.quoteRequests }} quote requests became sales.</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Money still due</div>
+        <div class="an-kpi__value">{{ money(d.moneyStillDue) }}</div>
+        <div class="an-kpi__foot">
+          @if (d.overdueInvoices) { {{ d.overdueInvoices }} invoice{{ d.overdueInvoices === 1 ? ' is' : 's are' }} overdue — {{ money(d.overdueAmount) }}. }
+          @else { Nothing is overdue. }
+        </div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Solar sold <an-change [value]="d.solarKwChange"></an-change></div>
+        <div class="an-kpi__value">{{ num(d.solarKw) }} kW</div>
+        <div class="an-kpi__foot">{{ d.panelsSold }} panel{{ d.panelsSold === 1 ? '' : 's' }} sold.</div>
+      </div>
+    </div>
+
+    <!-- ── Alerts ───────────────────────────────────────────────────────────── -->
+    @if (d.alerts.length) {
+      <div class="ov-alerts">
+        @for (a of d.alerts; track a.title) {
+          <div class="ov-alert" [attr.data-tone]="a.tone">
+            <div class="ov-alert__title">{{ a.title }}</div>
+            <div class="ov-alert__text">{{ a.text }}</div>
+            @if (a.action) { <button class="ov-alert__action" (click)="act(a)">{{ a.action }} →</button> }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ── Top products + where sales come from ─────────────────────────────── -->
+    <div class="an-grid an-grid-2">
+      <section class="an-card">
+        <div class="an-card__head">
+          <h2 class="an-card__title">Top 5 products</h2>
+          <button class="an-link" (click)="go('/analytics?tab=products')">All products</button>
+        </div>
+        <div class="an-card__body">
+          <an-bar-list [items]="d.topProducts" right="none"></an-bar-list>
+        </div>
+      </section>
+
+      <section class="an-card">
+        <div class="an-card__head">
+          <h2 class="an-card__title">Where sales come from</h2>
+          <button class="an-link" (click)="go('/analytics?tab=sales')">Details</button>
+        </div>
+        <div class="an-card__body">
+          @if (d.channels.length) {
+            <div class="ov-stack" role="img" aria-label="Share of sales by channel">
+              @for (c of d.channels; track c.name; let i = $index) {
+                <span class="ov-stack__seg" [style.flex-grow]="c.value" [style.background]="colors[i % colors.length]"
+                      [title]="c.name + ': ' + money(c.value, false) + ' (' + pct(c.share) + ')'"></span>
+              }
+            </div>
+            <ul class="ov-legend">
+              @for (c of d.channels; track c.name; let i = $index) {
+                <li>
+                  <span class="ov-legend__dot" [style.background]="colors[i % colors.length]"></span>
+                  <span class="ov-legend__name">{{ c.name }}</span>
+                  <strong>{{ pct(c.share) }}</strong>
+                  <span class="an-muted">{{ money(c.value) }}</span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="an-card__note">No sales in this period.</p>
+          }
+        </div>
+      </section>
+    </div>
+  </div>
+}
+
+<!-- ── Target modal ─────────────────────────────────────────────────────────── -->
+<nz-modal [(nzVisible)]="targetOpen" nzTitle="Monthly sales target" [nzWidth]="380"
+          nzOkText="Save" [nzOkLoading]="savingTarget" (nzOnOk)="saveTarget()" (nzOnCancel)="targetOpen = false">
+  <ng-container *nzModalContent>
+    <p class="an-card__note" style="margin-top:0">Used on the Overview. For shorter or longer periods it is scaled by the number of days.</p>
+    <nz-input-number [(ngModel)]="targetDraft" [nzMin]="0" [nzStep]="100000" nzPrefix="৳" style="width:100%"></nz-input-number>
+  </ng-container>
+</nz-modal>

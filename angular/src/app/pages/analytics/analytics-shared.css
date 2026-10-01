@@ -1,0 +1,89 @@
+/* Shared by every Analytics tab (listed first in each tab's styleUrls). */
+
+:host { display: block; font-family: var(--de-font); color: var(--de-text); }
+
+.an-intro { font-size: 13.5px; color: var(--de-text-muted); margin: 0 0 14px; }
+
+/* ── KPI row ─────────────────────────────────────────────────────────────── */
+.an-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+.an-kpi {
+  background: var(--de-surface);
+  border: 1px solid var(--de-border);
+  border-radius: var(--de-radius-card);
+  padding: 16px 18px;
+  min-width: 0;
+}
+.an-kpi__head  { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; color: var(--de-text-2); }
+.an-kpi__value { font-size: 28px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; margin: 8px 0 6px; font-variant-numeric: tabular-nums; }
+.an-kpi__foot  { font-size: 12.5px; color: var(--de-text-muted); }
+.an-kpi__flag  { font-size: 12px; font-weight: 600; }
+
+.an-amber { color: #A15C00; }
+.an-red   { color: var(--de-danger-fg); }
+.an-green { color: var(--de-success-fg); }
+.an-muted { color: var(--de-text-muted); }
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.an-grid   { display: grid; gap: 16px; margin-bottom: 16px; align-items: start; }
+.an-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.an-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.an-grid-wide { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+
+.an-card {
+  background: var(--de-surface);
+  border: 1px solid var(--de-border);
+  border-radius: var(--de-radius-card);
+  overflow: hidden;
+  min-width: 0;
+}
+.an-card + .an-card { margin-top: 0; }
+.an-card__head  { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 16px 18px 8px; }
+.an-card__title { font-size: 15.5px; font-weight: 600; margin: 0; }
+.an-card__meta  { font-size: 12px; color: var(--de-text-muted); white-space: nowrap; }
+.an-card__body  { padding: 0 18px 16px; }
+.an-card__note  { font-size: 12.5px; color: var(--de-text-muted); margin: 10px 0 0; line-height: 1.5; }
+.an-card__foot  { padding: 12px 18px 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+.an-link { font-size: 13px; font-weight: 500; color: var(--de-primary-text); text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; }
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+.an-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.an-table th {
+  background: var(--de-surface-muted);
+  font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--de-text-muted); text-align: left;
+  padding: 10px 18px; border-bottom: 1px solid var(--de-border);
+  white-space: nowrap;
+}
+.an-table td { padding: 12px 18px; border-bottom: 1px solid var(--de-border-soft); vertical-align: middle; }
+.an-table tr:last-child td { border-bottom: none; }
+.an-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.an-table .strong { font-weight: 600; }
+.an-empty-row td { text-align: center; color: var(--de-placeholder); padding: 26px; }
+
+/* ── Small list rows (reorder, slow stock, follow-ups) ───────────────────── */
+.an-list { list-style: none; margin: 0; padding: 0; }
+.an-list__row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 18px; border-top: 1px solid var(--de-border-soft);
+}
+.an-list__dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--de-placeholder); }
+.an-list__dot[data-tone='red']   { background: var(--de-danger-fg); }
+.an-list__dot[data-tone='amber'] { background: #D98A0B; }
+.an-list__dot[data-tone='blue']  { background: var(--de-confirmed-fg); }
+.an-list__dot[data-tone='green'] { background: var(--de-success-fg); }
+.an-list__main  { flex: 1; min-width: 0; }
+.an-list__title { font-size: 14px; font-weight: 600; }
+.an-list__sub   { font-size: 12.5px; color: var(--de-text-muted); }
+.an-list__value { font-weight: 600; font-size: 14px; white-space: nowrap; }
+.an-list__empty { padding: 22px 18px; text-align: center; color: var(--de-placeholder); font-size: 13px; }
+
+.an-loading { display: flex; justify-content: center; padding: 80px 0; }
+
+@media (max-width: 1100px) {
+  .an-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .an-grid-2, .an-grid-3, .an-grid-wide { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .an-kpis { grid-template-columns: minmax(0, 1fr); }
+  .an-table th, .an-table td { padding-left: 12px; padding-right: 12px; }
+}

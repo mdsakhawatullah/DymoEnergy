@@ -11,4 +11,7 @@ public enum OrderPaymentType
     Online          = 7,
     CashOnDelivery  = 8,
     Other           = 9,
+    BKash           = 10,
+    Nagad           = 11,
+    CardEmi         = 12,
 }

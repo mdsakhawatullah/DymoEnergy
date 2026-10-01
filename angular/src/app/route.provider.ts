@@ -35,7 +35,7 @@ function configureRoutes() {
       breadcrumbText: '::Menu:Dashboard',
     },
     {
-      path: '/dashboard',
+      path: '/analytics',
       name: '::Menu:AnalyticsReporting',
       iconClass: 'bi bi-bar-chart',
       order: 3,
@@ -65,11 +65,11 @@ function configureRoutes() {
     },
 
     { path: '', name: '::Menu:Sales', iconClass: 'bi bi-cart', order: 12, layout: APP },
-    { path: '/point-of-sales', name: '::Menu:PointOfSales', parentName: '::Menu:Sales', order: 1, layout: APP, breadcrumbText: '::Menu:PointOfSales' },
-    { path: '/pos-counters',   name: '::Menu:POSCounters',  parentName: '::Menu:Sales', order: 2, layout: APP, breadcrumbText: '::Menu:POSCounters' },
+    // { path: '/point-of-sales', name: '::Menu:PointOfSales', parentName: '::Menu:Sales', order: 1, layout: APP, breadcrumbText: '::Menu:PointOfSales' },
+    // { path: '/pos-counters',   name: '::Menu:POSCounters',  parentName: '::Menu:Sales', order: 2, layout: APP, breadcrumbText: '::Menu:POSCounters' },
     { path: '/sales-invoices', name: '::Menu:SalesInvoice', parentName: '::Menu:Sales', order: 3, layout: APP, breadcrumbText: '::Menu:SalesInvoice' },
-    { path: '/product-returns', name: '::Menu:ProductReturn', parentName: '::Menu:Sales', order: 4, layout: APP, breadcrumbText: '::Menu:ProductReturn' },
-    { path: '/promotions',     name: '::Menu:Promotion',    parentName: '::Menu:Sales', order: 5, layout: APP, breadcrumbText: '::Menu:Promotion' },
+    // { path: '/product-returns', name: '::Menu:ProductReturn', parentName: '::Menu:Sales', order: 4, layout: APP, breadcrumbText: '::Menu:ProductReturn' },
+    // { path: '/promotions',     name: '::Menu:Promotion',    parentName: '::Menu:Sales', order: 5, layout: APP, breadcrumbText: '::Menu:Promotion' },
     { path: '/customers',      name: '::Menu:Customer',     parentName: '::Menu:Sales', order: 6, layout: APP, breadcrumbText: '::Menu:Customer' },
     { path: '/categories',     name: '::Menu:Category',    parentName: '::Menu:Sales', order: 7, layout: APP, breadcrumbText: '::Menu:Category' },
 

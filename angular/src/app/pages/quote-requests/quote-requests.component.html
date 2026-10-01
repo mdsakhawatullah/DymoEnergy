@@ -1,128 +1,111 @@
-<!-- ── Page header ─────────────────────────────────────────────────────── -->
-<div class="mb-3">
-  <h4 class="mb-1 fw-bold">Quote Requests</h4>
-  <span class="text-muted small">Enquiries submitted from the storefront Get a Quote page</span>
+<!-- ── Page header ─────────────────────────────────────────────────────────── -->
+<div class="ds-page-head">
+  <div>
+    <h1 class="ds-page-title">Quote requests</h1>
+    <p class="ds-page-sub">Enquiries from the storefront “Get a quote” page</p>
+  </div>
 </div>
 
-<!-- ── Main card ───────────────────────────────────────────────────────── -->
-<div class="card">
+<div class="qr-layout" [class.qr-layout--open]="!!selected">
 
-  <!-- Tab strip -->
-  <div class="tab-strip">
-    @for (tab of tabs; track tab.key) {
-      <button
-        class="tab-strip__item"
-        [class.tab-strip__item--active]="activeTab === tab.key"
-        (click)="selectTab(tab.key)"
-      >
-        {{ tab.label }}
-        <span class="tab-strip__badge" [class.tab-strip__badge--active]="activeTab === tab.key">
-          {{ counts[tab.key] }}
-        </span>
-      </button>
+  <!-- ── List ─────────────────────────────────────────────────────────────── -->
+  <div class="ds-panel qr-list">
+    <div class="qr-tabs" role="tablist">
+      @for (t of tabs; track t.key) {
+        <button role="tab" class="qr-tab" [class.qr-tab--active]="activeTab === t.key" (click)="selectTab(t.key)">
+          {{ t.label }} <span class="qr-tab__count">{{ t.count(summary) }}</span>
+        </button>
+      }
+    </div>
+
+    <div class="qr-filters">
+      <div class="qr-search">
+        <span nz-icon nzType="search" class="qr-search__icon"></span>
+        <input type="text" placeholder="Name, phone or email" aria-label="Search quote requests"
+               [(ngModel)]="filter" (ngModelChange)="onSearchInput($event)" />
+      </div>
+
+      <nz-select class="qr-type" nzAllowClear nzPlaceHolder="All system types"
+                 [(ngModel)]="systemType" (ngModelChange)="onSystemTypeChange()">
+        @for (t of summary.systemTypes; track t) { <nz-option [nzValue]="t" [nzLabel]="t"></nz-option> }
+      </nz-select>
+    </div>
+
+    <nz-table
+      [nzData]="quoteRequests"
+      [nzLoading]="loading"
+      [nzFrontPagination]="false"
+      [nzShowPagination]="false"
+      [nzNoResult]="emptyTpl"
+      class="qr-table"
+    >
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Interested in</th>
+          <th nzWidth="110px">Received</th>
+          <th nzWidth="120px">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (q of quoteRequests; track q.id) {
+          <tr class="qr-row" [class.qr-row--active]="selected?.id === q.id"
+              (click)="select(q)" tabindex="0" (keydown.enter)="select(q)">
+            <td>
+              <div class="qr-customer">
+                <span class="qr-avatar" [attr.data-tone]="avatarTone(q.name)">{{ initials(q.name) }}</span>
+                <div class="qr-min">
+                  <div class="qr-name">{{ q.name }}</div>
+                  <div class="qr-sub">{{ q.phone || q.email || '—' }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="qr-min">
+                <div class="qr-interest">{{ q.interest || 'General enquiry' }}</div>
+                @if (subline(q)) { <div class="qr-sub qr-ellipsis">{{ subline(q) }}</div> }
+              </div>
+            </td>
+            <td class="qr-received" [title]="q.creationTime | date:'d MMM y, h:mm a'">{{ relative(q.creationTime) }}</td>
+            <td>
+              <span class="qr-pill" [attr.data-tone]="statusTone[q.status]">
+                <span class="qr-pill__dot"></span>{{ statusLabels[q.status] }}
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+
+    <ng-template #emptyTpl>
+      <div class="qr-empty">
+        <span nz-icon nzType="inbox" class="qr-empty__icon"></span>
+        {{ filter || systemType ? 'No requests match your filters.' : 'No quote requests yet.' }}
+      </div>
+    </ng-template>
+
+    @if (totalCount > pageSize) {
+      <div class="qr-footer">
+        <span>{{ (pageIndex - 1) * pageSize + 1 }}–{{ (pageIndex - 1) * pageSize + quoteRequests.length }} of {{ totalCount }}</span>
+        <div class="qr-footer__pager">
+          <button nz-button nzSize="small" (click)="prevPage()" [disabled]="pageIndex <= 1 || loading">Previous</button>
+          <button nz-button nzSize="small" (click)="nextPage()" [disabled]="pageIndex >= pageCount || loading">Next</button>
+        </div>
+      </div>
     }
   </div>
 
-  <!-- Filter row -->
-  <div class="px-3 py-2 d-flex gap-2 align-items-center border-bottom">
-    <nz-input-group [nzPrefix]="searchPfx" style="max-width: 260px;">
-      <input
-        nz-input
-        placeholder="Search name, phone, email..."
-        [(ngModel)]="filter"
-        (keyup.enter)="onSearch()"
-      />
-    </nz-input-group>
-    <ng-template #searchPfx>
-      <span nz-icon nzType="search" style="color:#bbb;"></span>
-    </ng-template>
-    <button nz-button (click)="resetFilters()" [disabled]="!filter && activeTab === 'all'">
-      Reset Filters
-    </button>
-  </div>
-
-  <!-- Table -->
-  <nz-table
-    [nzData]="quoteRequests"
-    [nzTotal]="totalCount"
-    [nzPageIndex]="pageIndex"
-    [nzPageSize]="pageSize"
-    [nzLoading]="loading"
-    [nzFrontPagination]="false"
-    [nzShowSizeChanger]="true"
-    [nzPageSizeOptions]="[10, 20, 50]"
-    (nzPageIndexChange)="onPageIndexChange($event)"
-    (nzPageSizeChange)="onPageSizeChange($event)"
-    nzShowPaginationBottom
-    nzSize="small"
-  >
-    <thead>
-      <tr>
-        <th nzWidth="60px" nzAlign="center">ID</th>
-        <th nzWidth="180px">NAME</th>
-        <th nzWidth="200px">CONTACT</th>
-        <th nzWidth="180px">INTERESTED IN</th>
-        <th>MESSAGE</th>
-        <th nzWidth="150px">RECEIVED</th>
-        <th nzWidth="140px" nzAlign="center">STATUS</th>
-        <th nzWidth="80px" nzAlign="center">ACTION</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (item of quoteRequests; track item.id) {
-        <tr>
-          <td nzAlign="center" class="text-muted" style="font-size:12px;">{{ item.id }}</td>
-
-          <td><span class="fw-semibold" style="font-size:13px;">{{ item.name }}</span></td>
-
-          <td>
-            @if (item.phone) { <div style="font-size:12px;">{{ item.phone }}</div> }
-            @if (item.email) { <div style="font-size:11px; color:#888;">{{ item.email }}</div> }
-            @if (!item.phone && !item.email) { <span class="text-muted">—</span> }
-          </td>
-
-          <td style="font-size:12px;">{{ item.interest || '—' }}</td>
-
-          <td><div class="message-cell">{{ item.message || '—' }}</div></td>
-
-          <td style="font-size:12px; color:#555;">{{ item.creationTime | date: 'MMM d, y, h:mm a' }}</td>
-
-          <td nzAlign="center">
-            <nz-select
-              nzSize="small"
-              style="width:126px;"
-              [ngModel]="item.status"
-              (ngModelChange)="changeStatus(item, $event)"
-            >
-              @for (s of statusOptions; track s) {
-                <nz-option [nzValue]="s" [nzLabel]="statusLabels[s]" nzCustomContent>
-                  <span class="status-option">
-                    <i class="ds-dot" [class]="'ds-dot ds-dot--' + statusDot(s)"></i>
-                    {{ statusLabels[s] }}
-                  </span>
-                </nz-option>
-              }
-            </nz-select>
-          </td>
-
-          <td nzAlign="center">
-            <button
-              nz-button nzType="text" nzSize="small"
-              nzDanger
-              nz-tooltip nzTooltipTitle="Delete"
-              nz-popconfirm
-              nzPopconfirmTitle="Delete this quote request?"
-              nzOkText="Yes, delete"
-              nzOkDanger
-              nzCancelText="Cancel"
-              [nzLoading]="deletingIds.has(item.id)"
-              (nzOnConfirm)="deleteQuoteRequest(item.id)"
-            >
-              <span nz-icon nzType="delete" nzTheme="outline"></span>
-            </button>
-          </td>
-        </tr>
-      }
-    </tbody>
-  </nz-table>
+  <!-- ── Detail ───────────────────────────────────────────────────────────── -->
+  @if (selected) {
+    <div class="qr-backdrop" (click)="closeDetail()"></div>
+    <aside class="ds-panel qr-detail">
+      <quote-request-detail
+        [request]="selected"
+        [systemTypes]="summary.systemTypes"
+        (changed)="onChanged($event)"
+        (deleted)="onDeleted($event)"
+        (closed)="closeDetail()"
+      ></quote-request-detail>
+    </aside>
+  }
 </div>

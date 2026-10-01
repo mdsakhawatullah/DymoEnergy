@@ -1,0 +1,21 @@
+.mo-phone { font-size: 12px; }
+.mo-vat { max-width: 640px; }
+.mo-rem { margin: 0 -24px; }
+
+/* ── Expected-in columns (sequential single hue) ─────────────────────────── */
+.mo-exp { display: flex; align-items: flex-end; gap: 14px; height: 190px; padding: 0 6px; border-bottom: 1px solid var(--de-border); }
+.mo-exp__col {
+  position: relative; flex: 1 1 0; height: 100%;
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+  outline: none;
+}
+.mo-exp__bar   { width: 100%; max-width: 54px; border-radius: 4px 4px 0 0; background: var(--de-primary); min-height: 0; }
+.mo-exp__value { font-size: 12px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; }
+.mo-exp__label { position: absolute; bottom: -22px; font-size: 11.5px; color: var(--de-text-muted); white-space: nowrap; }
+.mo-exp__tip {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  background: var(--de-text); color: #fff; font-size: 12px; padding: 5px 8px; border-radius: 6px;
+  white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .1s; z-index: 2;
+}
+.mo-exp__col:hover .mo-exp__tip, .mo-exp__col:focus-visible .mo-exp__tip { opacity: 1; }
+.mo-exp + .an-card__note { margin-top: 32px; }

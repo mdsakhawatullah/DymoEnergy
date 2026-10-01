@@ -1,4 +1,10 @@
-import type { QuoteRequestDto, QuoteRequestFilterDto, UpdateQuoteRequestStatusDto } from './models';
+import type {
+  QuoteRequestDto,
+  QuoteRequestFilterDto,
+  QuoteRequestSummaryDto,
+  UpdateQuoteRequestDetailsDto,
+  UpdateQuoteRequestStatusDto,
+} from './models';
 import { DymoPagedResultDto } from '../categories/models';
 import { RestService } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
@@ -17,6 +23,7 @@ export class QuoteRequestService {
         params: {
           filter:         input.filter,
           status:         input.status,
+          interest:       input.interest,
           sorting:        input.sorting,
           skipCount:      input.skipCount,
           maxResultCount: input.maxResultCount,
@@ -25,9 +32,31 @@ export class QuoteRequestService {
       { apiName: this.apiName }
     );
 
+  getSummary = (input: QuoteRequestFilterDto) =>
+    this.restService.request<any, QuoteRequestSummaryDto>(
+      {
+        method: 'GET',
+        url: '/api/app/quote-request/summary',
+        params: { filter: input.filter, interest: input.interest },
+      },
+      { apiName: this.apiName }
+    );
+
+  get = (id: number) =>
+    this.restService.request<any, QuoteRequestDto>(
+      { method: 'GET', url: `/api/app/quote-request/${id}` },
+      { apiName: this.apiName }
+    );
+
   updateStatus = (id: number, input: UpdateQuoteRequestStatusDto) =>
     this.restService.request<any, QuoteRequestDto>(
       { method: 'PUT', url: `/api/app/quote-request/${id}/status`, body: input },
+      { apiName: this.apiName }
+    );
+
+  updateDetails = (id: number, input: UpdateQuoteRequestDetailsDto) =>
+    this.restService.request<any, QuoteRequestDto>(
+      { method: 'PUT', url: `/api/app/quote-request/${id}/details`, body: input },
       { apiName: this.apiName }
     );
 

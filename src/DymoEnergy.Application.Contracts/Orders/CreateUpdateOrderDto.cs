@@ -38,6 +38,7 @@ public class CreateUpdateOrderDto
 
     [MaxLength(32)]
     public string? DeliveryPhone { get; set; }
+    public string? InstallTeam   { get; set; }
 
     // ── Classification ────────────────────────────────────────────────────
     public OrderStatus       Status       { get; set; } = OrderStatus.Pending;

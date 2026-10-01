@@ -101,7 +101,10 @@
       <!-- Company + ORDER title -->
       <div class="paper-top">
         <div class="company-block">
-          <div class="company-name">{{ siteSettings?.siteName || 'DymoEnergy Solar' }}</div>
+          <div class="company-name company-name--logo">
+            <img src="assets/brand/dymo-icon.png" alt="" class="company-logo" />
+            <span>{{ siteSettings?.siteName || 'DymoEnergy Solar' }}</span>
+          </div>
           @if (siteSettings?.tagline) {
             <div class="company-info">{{ siteSettings!.tagline }}</div>
           }
@@ -424,13 +427,13 @@
 <nz-drawer
   *ngIf="isDrawerOpen"
   [nzVisible]="isDrawerOpen"
-  [nzBodyStyle]="{ overflow: 'auto' }"
+  [nzBodyStyle]="{ padding: '0', overflow: 'hidden', height: '100%' }"
   [nzMaskClosable]="false"
-  [nzWidth]="1100"
-  nzTitle="Update Order — {{ order?.orderNumber }}"
+  [nzClosable]="false"
+  nzWidth="min(1100px, 100vw)"
   (nzOnClose)="onDrawerClosed()"
 >
-  <div *nzDrawerContent>
+  <div *nzDrawerContent style="height:100%">
     <order-entry-drawer
       [input]="order"
       [existingItems]="items"

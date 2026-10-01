@@ -1,0 +1,28 @@
+<p class="an-intro">Ready-made reports for {{ periodLabel }}. View on screen, download for Excel, or save as PDF.</p>
+
+<div class="an-grid an-grid-2">
+  @for (g of groups; track g.title) {
+    <section class="an-card">
+      <div class="an-card__head">
+        <h2 class="an-card__title">{{ g.title }}</h2>
+        <span class="an-card__meta">{{ g.reports.length }} reports</span>
+      </div>
+      <ul class="an-list">
+        @for (r of g.reports; track r.key) {
+          <li class="an-list__row rp-row">
+            <span class="rp-icon" [attr.data-tone]="g.tone"><span nz-icon nzType="file-text"></span></span>
+            <div class="an-list__main">
+              <div class="an-list__title">{{ r.title }}</div>
+              <div class="an-list__sub rp-desc" [title]="r.description">{{ r.description }}</div>
+            </div>
+            <div class="rp-actions">
+              <button nz-button nzSize="small" (click)="runner.view(r.key, filter)" [nzLoading]="runner.busyKey() === r.key">View</button>
+              <button nz-button nzSize="small" (click)="runner.csv(r.key, filter)" title="Download CSV — opens in Excel">Excel</button>
+              <button nz-button nzSize="small" (click)="runner.pdf(r.key, filter)" title="Opens a print view — choose “Save as PDF”">PDF</button>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>

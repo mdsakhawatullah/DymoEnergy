@@ -1,109 +1,130 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { forkJoin } from 'rxjs';
-import { catchError, of } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { SharedModule } from '../../../shared/shared.module';
 import { SalesInvoiceService } from '../../../proxy/sales-invoices/sales-invoice.service';
 import {
   SalesInvoiceDto,
   SalesInvoiceItemDto,
-  SalesInvoiceStatusLabels,
-  SalesInvoiceStatusColors,
+  SalesInvoicePaymentDto,
   SalesInvoicePaymentMethodLabels,
+  SalesInvoiceShortStatus,
 } from '../../../proxy/sales-invoices/models';
 import { SalesInvoiceEntryDrawerComponent } from '../entry-drawer/sales-invoice-entry-drawer.component';
 import { AdminSiteSettingService } from '../../../proxy/admin-site-settings/admin-site-setting.service';
 import { AdminSiteSettingDto } from '../../../proxy/admin-site-settings/models';
+import { TakaPipe, describeSerials, formatTaka } from '../invoice-format';
 
+/**
+ * Printable A4 invoice. Opened in a new tab from the quick view:
+ *   /sales-invoices/:id?print=1  → opens the print dialog once loaded
+ *   /sales-invoices/:id?pdf=1    → same, with the tab titled after the invoice so
+ *                                  "Save as PDF" suggests INV-2026-00987.pdf
+ */
 @Component({
   selector:    'app-invoice-details',
   templateUrl: './invoice-details.component.html',
   styleUrl:    './invoice-details.component.css',
-  imports:     [SharedModule, SalesInvoiceEntryDrawerComponent],
+  imports:     [SharedModule, SalesInvoiceEntryDrawerComponent, TakaPipe],
 })
-export class InvoiceDetailsComponent implements OnInit {
+export class InvoiceDetailsComponent implements OnInit, OnDestroy {
 
   invoiceId = 0;
-  invoice: SalesInvoiceDto | null = null;
-  items: SalesInvoiceItemDto[] = [];
+  invoice:  SalesInvoiceDto | null = null;
+  items:    SalesInvoiceItemDto[]    = [];
+  payments: SalesInvoicePaymentDto[] = [];
   siteSettings: AdminSiteSettingDto | null = null;
   loading = true;
 
   isDrawerOpen = false;
 
-  statusLabels        = SalesInvoiceStatusLabels;
-  statusColors        = SalesInvoiceStatusColors;
-  paymentMethodLabels = SalesInvoicePaymentMethodLabels;
+  readonly shortStatus    = SalesInvoiceShortStatus;
+  readonly describeSerials = describeSerials;
 
-  // Step flow: Draft(0) → Issued(1) → Partially Paid(2) → Paid(3)
-  get currentStep(): number {
-    switch (this.invoice?.status) {
-      case 1:  return 0;
-      case 2:  return 1;
-      case 5:  return 1; // Overdue stays at Issued step
-      case 4:  return 2;
-      case 3:  return 3;
-      default: return 0;
-    }
-  }
+  private autoPrint = false;
+  private originalTitle = document.title;
 
-  get isSpecialStatus(): boolean {
-    return [5, 6, 7].includes(this.invoice?.status ?? 0);
-  }
+  constructor(
+    private route:          ActivatedRoute,
+    private router:         Router,
+    private invoiceService: SalesInvoiceService,
+    private siteSettingSvc: AdminSiteSettingService,
+    private message:        NzMessageService,
+  ) {}
 
-  get customerInitials(): string {
-    const name = this.invoice?.customerName ?? '';
-    return name.split(' ')
-      .filter(w => w.length > 0)
-      .map(w => w[0].toUpperCase())
-      .slice(0, 2)
-      .join('');
-  }
+  // ── Derived ────────────────────────────────────────────────────────────────
 
-  /** Builds a comma-separated address line from site settings */
+  get companyName(): string { return this.siteSettings?.siteName || 'DymoEnergy'; }
+
   get companyAddressLine(): string {
     const s = this.siteSettings;
     if (!s) return '';
-    return [s.address, s.city, s.state, s.zipCode, s.country]
-      .filter(v => !!v)
-      .join(', ');
+    return [s.address, s.city, s.country].filter(Boolean).join(', ');
   }
 
-  get isFullyPaid(): boolean {
-    return (this.invoice?.balanceDue ?? 1) <= 0;
+  get companyContactLine(): string {
+    const s = this.siteSettings;
+    return [s?.phone, s?.email].filter(Boolean).join(' · ');
   }
 
-  get outstanding(): number {
-    return Math.max(0, this.invoice?.balanceDue ?? 0);
+  /** Number customers pay bKash / Nagad to — WhatsApp line if set, else main phone. */
+  get payToNumber(): string {
+    return this.siteSettings?.whatsApp || this.siteSettings?.phone || '';
   }
 
-  constructor(
-    private route:           ActivatedRoute,
-    private router:          Router,
-    private invoiceService:  SalesInvoiceService,
-    private siteSettingSvc:  AdminSiteSettingService,
-    private message:         NzMessageService,
-  ) {}
+  /** "bKash ৳1,50,000 · Cash ৳90,000" — grouped by method, oldest first. */
+  get paidBreakdown(): string {
+    if (this.payments.length === 0) return '';
+    const byMethod = new Map<string, number>();
+    [...this.payments].reverse().forEach(p => {
+      const label = SalesInvoicePaymentMethodLabels[p.method];
+      byMethod.set(label, (byMethod.get(label) ?? 0) + p.amount);
+    });
+    return [...byMethod.entries()].map(([m, amt]) => `${m} ${formatTaka(amt)}`).join(' · ');
+  }
+
+  get isVoid(): boolean { return this.invoice?.status === 6 || this.invoice?.status === 7; }
+
+  itemSubline(it: SalesInvoiceItemDto): string {
+    return [describeSerials(it.serialNumbers), it.warranty, it.description].filter(Boolean).join(' · ');
+  }
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
     this.invoiceId = +this.route.snapshot.paramMap.get('id')!;
     if (!this.invoiceId) { this.router.navigate(['/sales-invoices']); return; }
+
+    const q = this.route.snapshot.queryParamMap;
+    this.autoPrint = q.has('print') || q.has('pdf');
     this.loadData();
   }
+
+  ngOnDestroy(): void { document.title = this.originalTitle; }
 
   loadData(): void {
     this.loading = true;
     forkJoin({
       invoice:      this.invoiceService.get(this.invoiceId),
       items:        this.invoiceService.getItems(this.invoiceId),
+      payments:     this.invoiceService.getPayments(this.invoiceId).pipe(catchError(() => of([] as SalesInvoicePaymentDto[]))),
       siteSettings: this.siteSettingSvc.getActive().pipe(catchError(() => of(null))),
     }).subscribe({
-      next: ({ invoice, items, siteSettings }) => {
+      next: ({ invoice, items, payments, siteSettings }) => {
         this.invoice      = invoice;
-        this.items        = items.sort((a, b) => a.displayOrder - b.displayOrder);
+        this.items        = items;
+        this.payments     = payments;
         this.siteSettings = siteSettings;
         this.loading      = false;
+        document.title    = invoice.invoiceNumber ?? 'Invoice';
+
+        if (this.autoPrint) {
+          this.autoPrint = false;
+          // Let the paper render (fonts, logo) before opening the dialog
+          setTimeout(() => this.print(), 400);
+        }
       },
       error: () => {
         this.message.error('Invoice not found.');
@@ -135,23 +156,5 @@ export class InvoiceDetailsComponent implements OnInit {
     }, { once: true });
 
     window.print();
-  }
-
-  fmtDate(d?: string | null): string {
-    if (!d) return '—';
-    return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  }
-
-  fmtDateLong(d?: string | null): string {
-    if (!d) return '—';
-    return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-  }
-
-  fmtDateTime(d?: string | null): string {
-    if (!d) return '—';
-    const dt = new Date(d);
-    const date = dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    const time = dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    return `${date}, ${time}`;
   }
 }

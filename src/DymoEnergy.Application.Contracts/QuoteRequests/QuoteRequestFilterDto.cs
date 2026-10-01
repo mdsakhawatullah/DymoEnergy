@@ -4,6 +4,8 @@ namespace DymoEnergy.QuoteRequests;
 
 public class QuoteRequestFilterDto : PagedAndSortedResultRequestDto
 {
-    public string?             Filter { get; set; }
-    public QuoteRequestStatus? Status { get; set; }
+    public string?             Filter   { get; set; }
+    public QuoteRequestStatus? Status   { get; set; }
+    /// <summary>Exact system type (Interest) match.</summary>
+    public string?             Interest { get; set; }
 }

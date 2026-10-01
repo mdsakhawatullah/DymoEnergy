@@ -1,0 +1,82 @@
+@if (!data && loading) { <div class="an-loading"><nz-spin></nz-spin></div> }
+
+@if (data; as d) {
+  <div [style.opacity]="loading ? .6 : 1">
+    <p class="an-intro">Who buys from you, where they are and who needs a follow-up — {{ periodLabel }}.</p>
+
+    <div class="an-kpis">
+      <div class="an-kpi">
+        <div class="an-kpi__head">Customers who bought <an-change [value]="d.buyersChange"></an-change></div>
+        <div class="an-kpi__value">{{ num(d.buyers) }}</div>
+        <div class="an-kpi__foot">{{ d.newCustomers }} new · {{ d.returning }} returning</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">New customers <an-change [value]="d.newChange"></an-change></div>
+        <div class="an-kpi__value">{{ num(d.newCustomers) }}</div>
+        <div class="an-kpi__foot">First purchase in this period</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Come back again</div>
+        <div class="an-kpi__value">{{ pct(d.returningRate) }}</div>
+        <div class="an-kpi__foot">Bought from you before</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi__head">Warranty ending soon <span class="an-kpi__flag an-amber">next 90 days</span></div>
+        <div class="an-kpi__value" [class.an-amber]="d.warrantyEndingSoon > 0">{{ d.warrantyEndingSoon }}</div>
+        <div class="an-kpi__foot">
+          @if (d.warrantyEndingSoon) { <button class="an-link" (click)="openReport('warranty-ending')">Offer a service plan</button> }
+          @else { From warranties recorded on invoices }
+        </div>
+      </div>
+    </div>
+
+    <div class="an-grid an-grid-wide">
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">Top customers</h2><span class="an-card__meta">this period</span></div>
+        <table class="an-table">
+          <thead><tr><th>Customer</th><th class="num">Orders</th><th class="num">Spent</th></tr></thead>
+          <tbody>
+            @for (c of d.topCustomers; track $index) {
+              <tr>
+                <td>
+                  <span class="strong">{{ c.name }}</span>
+                  @if (c.location) { <span class="an-muted"> · {{ c.location }}</span> }
+                </td>
+                <td class="num">{{ c.orders }}</td>
+                <td class="num">{{ money(c.spent) }}</td>
+              </tr>
+            } @empty { <tr class="an-empty-row"><td colspan="3">No named customers in this period.</td></tr> }
+          </tbody>
+        </table>
+        <div class="an-card__foot">
+          <button nz-button nzSize="small" (click)="go('/customers')">Open customers</button>
+          <button nz-button nzSize="small" (click)="openReport('top-customers')">Full list</button>
+        </div>
+      </section>
+
+      <section class="an-card">
+        <div class="an-card__head"><h2 class="an-card__title">Where customers are</h2><span class="an-card__meta">share of sales</span></div>
+        <div class="an-card__body">
+          <an-bar-list [items]="d.locations" right="share" empty="No addresses recorded."></an-bar-list>
+          <p class="an-card__note">From the last part of each billing address.</p>
+        </div>
+      </section>
+    </div>
+
+    <section class="an-card cu-follow">
+      <div class="an-card__head"><h2 class="an-card__title">Follow up</h2><span class="an-card__meta">good moments to call</span></div>
+      <ul class="an-list">
+        @for (f of d.followUps; track f.title) {
+          <li class="an-list__row">
+            <span class="an-list__dot" [attr.data-tone]="f.tone"></span>
+            <div class="an-list__main">
+              <div class="an-list__title">{{ f.title }}</div>
+              <div class="an-list__sub">{{ f.text }}</div>
+            </div>
+            @if (f.action) { <button nz-button nzSize="small" (click)="act(f)">{{ f.action }}</button> }
+          </li>
+        } @empty { <li class="an-list__empty">Nothing to follow up right now.</li> }
+      </ul>
+    </section>
+  </div>
+}
