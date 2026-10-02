@@ -1,244 +1,162 @@
-<form nz-form [formGroup]="form" nzLayout="vertical" class="entry-form">
-
-  <!-- ① Basic Information ─────────────────────────────────────────────── -->
-  <div class="section-header">
-    <span class="section-badge">1</span>
-    <span class="section-title">Basic Information</span>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-md-6">
-      <div class="field-label">NAME</div>
-      <input nz-input formControlName="name" placeholder="e.g. Solar Pro Category" />
-    </div>
-    <div class="col-md-6">
-      <div class="field-label">SLUG</div>
-      <input nz-input formControlName="slug" placeholder="e.g. solar-pro-category" />
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header class="cd-head">
+  <button type="button" class="cd-close" (click)="close()" aria-label="Close"><span nz-icon nzType="close"></span></button>
+  <div class="cd-head__text">
+    <h2 class="cd-title">{{ isEdit ? 'Edit category' : 'New category' }}</h2>
+    <div class="cd-sub">
+      @if (isEdit) { {{ input?.name }} · shown on the storefront as a product group }
+      @else { Group products and set how the category looks on the storefront }
     </div>
   </div>
+  <span class="cd-status" [class.cd-status--live]="form.get('isPublished')?.value">{{ statusLabel }}</span>
+</header>
 
-  <div class="row g-3 mt-1">
-    <div class="col-12">
-      <div class="field-label">DESCRIPTION</div>
-      <textarea
-        nz-input
-        formControlName="description"
-        [nzAutosize]="{ minRows: 3, maxRows: 5 }"
-        placeholder="Short description of this category..."
-      ></textarea>
+<form class="cd-body" [formGroup]="form" (ngSubmit)="save()">
+
+  <!-- ① Basic information ───────────────────────────────────────────────── -->
+  <section class="cd-card">
+    <div class="cd-card__head"><span class="cd-num">1</span><h3>Basic information</h3></div>
+
+    <div class="cd-grid-2">
+      <label>Name
+        <input nz-input formControlName="name" placeholder="e.g. Lithium Battery" />
+      </label>
+      <label>Slug
+        <input nz-input formControlName="slug" placeholder="e.g. lithium-battery" />
+        <small class="cd-hint">Used in the web address. Filled in from the name.</small>
+      </label>
     </div>
-  </div>
+    <label class="cd-mt">Description
+      <textarea nz-input formControlName="description" [nzAutosize]="{ minRows: 3, maxRows: 6 }"
+                placeholder="Short description of this category"></textarea>
+    </label>
+  </section>
 
-  <!-- ② Hero Section ──────────────────────────────────────────────────── -->
-  <div class="section-header mt-4">
-    <span class="section-badge">2</span>
-    <span class="section-title">Hero Section</span>
-  </div>
+  <!-- ② Hero section ────────────────────────────────────────────────────── -->
+  <section class="cd-card">
+    <div class="cd-card__head">
+      <span class="cd-num">2</span><h3>Hero section</h3>
+      <span class="cd-card__meta">The banner at the top of the category page</span>
+    </div>
 
-  <div class="row g-3">
-    <div class="col-md-8">
-      <div class="row g-3">
-        <div class="col-12">
-          <div class="field-label">HERO TITLE</div>
-          <input nz-input formControlName="heroTitle" placeholder="e.g. Power Your Future" />
-        </div>
-        <div class="col-12">
-          <div class="field-label">HERO SUBTITLE</div>
+    <div class="cd-hero">
+      <div class="cd-hero__fields">
+        <label>Hero title
+          <input nz-input formControlName="heroTitle" placeholder="e.g. Power your future" />
+        </label>
+        <label>Hero subtitle
           <input nz-input formControlName="heroSubtitle" placeholder="e.g. Explore our solar product range" />
-        </div>
+        </label>
 
-        <!-- Background Image Upload -->
-        <div class="col-12">
-          <div class="field-label">BACKGROUND IMAGE</div>
-
-          <!-- Preview if URL exists -->
+        <!-- Background image -->
+        <div class="cd-field">
+          <span class="cd-label">Background image</span>
           @if (form.get('primaryBackgroundImageUrl')?.value) {
-            <div class="bg-preview-wrap">
-              <img [src]="form.get('primaryBackgroundImageUrl')?.value" alt="Background" class="bg-preview" />
-              <div class="bg-preview-overlay">
-                <button
-                  nz-button
-                  nzSize="small"
-                  class="btn-reupload"
-                  type="button"
-                  [nzLoading]="uploadingBg"
-                  (click)="triggerFileInput('bgFileInput')"
-                >
+            <div class="cd-bg">
+              <img [src]="form.get('primaryBackgroundImageUrl')?.value" alt="Background" />
+              <div class="cd-bg__actions">
+                <button type="button" nz-button nzSize="small" [nzLoading]="uploadingBg" (click)="triggerFileInput('bgFileInput')">
                   <span nz-icon nzType="upload"></span> Change
                 </button>
+                <button type="button" nz-button nzSize="small" (click)="form.patchValue({ primaryBackgroundImageUrl: null })">Remove</button>
               </div>
             </div>
-          }
-
-          <!-- Upload area (shown when no image) -->
-          @if (!form.get('primaryBackgroundImageUrl')?.value) {
-            <div
-              class="upload-area"
-              [class.uploading]="uploadingBg"
-              (click)="triggerFileInput('bgFileInput')"
-            >
+          } @else {
+            <button type="button" class="cd-drop" [class.is-busy]="uploadingBg" (click)="triggerFileInput('bgFileInput')">
               @if (uploadingBg) {
-                <span nz-icon nzType="loading" nzTheme="outline" class="upload-icon spinning"></span>
-                <span class="upload-hint">Uploading...</span>
+                <span nz-icon nzType="loading" class="cd-drop__icon"></span>
+                <strong>Uploading…</strong>
               } @else {
-                <span nz-icon nzType="cloud-upload" nzTheme="outline" class="upload-icon"></span>
-                <span class="upload-hint">Click to upload background image</span>
-                <span class="upload-sub">JPG, PNG, WebP • max 5 MB</span>
+                <span nz-icon nzType="cloud-upload" class="cd-drop__icon"></span>
+                <strong>Click to upload background image</strong>
+                <small>JPG, PNG, WebP · max 5 MB</small>
               }
-            </div>
-          }
-
-          <!-- URL input with upload button -->
-          <div class="url-input-row mt-2">
-            <input
-              nz-input
-              formControlName="primaryBackgroundImageUrl"
-              placeholder="https://... or upload above"
-              style="font-size:12px;"
-            />
-            <button
-              nz-button
-              nzSize="small"
-              class="btn-upload-inline"
-              type="button"
-              [nzLoading]="uploadingBg"
-              nz-tooltip
-              nzTooltipTitle="Upload image"
-              (click)="triggerFileInput('bgFileInput')"
-            >
-              <span nz-icon nzType="upload"></span>
             </button>
-          </div>
-
-          <!-- Hidden file input -->
-          <input
-            id="bgFileInput"
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
-            style="display:none"
-            (change)="onBgImageSelected($event)"
-          />
+          }
+          <input nz-input class="cd-url" formControlName="primaryBackgroundImageUrl" placeholder="…or paste an image address" aria-label="Background image address" />
+          <input id="bgFileInput" type="file" hidden accept="image/jpeg,image/png,image/gif,image/webp" (change)="onBgImageSelected($event)" />
         </div>
       </div>
-    </div>
 
-    <!-- Thumbnail Upload -->
-    <div class="col-md-4">
-      <div class="field-label">THUMBNAIL IMAGE</div>
-
-      <!-- Clickable upload box -->
-      <div
-        class="thumb-upload-box"
-        [class.uploading]="uploadingThumb"
-        (click)="triggerFileInput('thumbFileInput')"
-        nz-tooltip
-        nzTooltipTitle="Click to upload thumbnail"
-      >
-        @if (uploadingThumb) {
-          <span nz-icon nzType="loading" nzTheme="outline" class="thumb-icon spinning"></span>
-          <span class="thumb-hint">Uploading...</span>
-        } @else if (form.get('thumbnailImageUrl')?.value) {
-          <img [src]="form.get('thumbnailImageUrl')?.value" alt="Thumbnail" class="thumb-preview" />
-          <div class="thumb-change-badge">
-            <span nz-icon nzType="upload"></span> Change
-          </div>
-        } @else {
-          <span nz-icon nzType="picture" nzTheme="outline" class="thumb-icon"></span>
-          <span class="thumb-hint">Click to upload</span>
-          <span class="upload-sub">JPG, PNG, WebP</span>
-        }
+      <!-- Thumbnail -->
+      <div class="cd-field cd-thumb">
+        <span class="cd-label">Thumbnail image</span>
+        <button type="button" class="cd-thumb__box" [class.is-busy]="uploadingThumb" (click)="triggerFileInput('thumbFileInput')"
+                [attr.aria-label]="form.get('thumbnailImageUrl')?.value ? 'Change thumbnail' : 'Upload thumbnail'">
+          @if (uploadingThumb) {
+            <span nz-icon nzType="loading" class="cd-drop__icon"></span><strong>Uploading…</strong>
+          } @else if (form.get('thumbnailImageUrl')?.value) {
+            <img [src]="form.get('thumbnailImageUrl')?.value" alt="Thumbnail" />
+            <span class="cd-thumb__badge"><span nz-icon nzType="upload"></span> Change</span>
+          } @else {
+            <span nz-icon nzType="picture" class="cd-drop__icon"></span>
+            <strong>Click to upload</strong><small>JPG, PNG, WebP</small>
+          }
+        </button>
+        <input nz-input class="cd-url" formControlName="thumbnailImageUrl" placeholder="…or paste an image address" aria-label="Thumbnail address" />
+        <input id="thumbFileInput" type="file" hidden accept="image/jpeg,image/png,image/gif,image/webp" (change)="onThumbImageSelected($event)" />
       </div>
-
-      <!-- URL fallback input -->
-      <input
-        nz-input
-        formControlName="thumbnailImageUrl"
-        placeholder="or paste URL here..."
-        class="mt-2"
-        style="font-size:12px;"
-      />
-
-      <!-- Hidden file input -->
-      <input
-        id="thumbFileInput"
-        type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp"
-        style="display:none"
-        (change)="onThumbImageSelected($event)"
-      />
     </div>
-  </div>
+  </section>
 
-  <!-- ③ Settings ───────────────────────────────────────────────────────── -->
-  <div class="section-header mt-4">
-    <span class="section-badge">3</span>
-    <span class="section-title">Settings</span>
-  </div>
+  <!-- ③ Settings ────────────────────────────────────────────────────────── -->
+  <section class="cd-card">
+    <div class="cd-card__head"><span class="cd-num">3</span><h3>Settings</h3></div>
 
-  <div class="row g-3">
-    <div class="col-md-6">
-      <div class="field-label">LAYOUT TYPE</div>
-      <nz-select formControlName="layoutType" style="width:100%">
-        @for (opt of layoutOptions; track opt.value) {
-          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
-        }
-      </nz-select>
+    <div class="cd-grid-2">
+      <label>Layout type
+        <nz-select formControlName="layoutType">
+          @for (opt of layoutOptions; track opt.value) { <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option> }
+        </nz-select>
+      </label>
+      <label>Display order
+        <nz-input-number formControlName="displayOrder" [nzMin]="0" style="width:100%"></nz-input-number>
+      </label>
     </div>
-    <div class="col-md-6">
-      <div class="field-label">DISPLAY ORDER</div>
-      <nz-input-number formControlName="displayOrder" [nzMin]="0" style="width:100%"></nz-input-number>
-    </div>
-  </div>
 
-  <div class="row g-3 mt-1">
-    <div class="col-md-6">
-      <div class="field-label">PUBLISHED</div>
-      <nz-switch formControlName="isPublished" nzCheckedChildren="Yes" nzUnCheckedChildren="No"></nz-switch>
+    <div class="cd-toggles">
+      <div class="cd-toggle">
+        <div><strong>Published</strong><small>Visible to customers on the storefront</small></div>
+        <nz-switch formControlName="isPublished" (ngModelChange)="publishNow = $event"></nz-switch>
+      </div>
+      <div class="cd-toggle">
+        <div><strong>Featured</strong><small>Highlighted on the home page</small></div>
+        <nz-switch formControlName="isFeatured"></nz-switch>
+      </div>
     </div>
-    <div class="col-md-6">
-      <div class="field-label">FEATURED</div>
-      <nz-switch formControlName="isFeatured" nzCheckedChildren="Yes" nzUnCheckedChildren="No"></nz-switch>
-    </div>
-  </div>
+  </section>
 
-  <!-- ④ SEO ────────────────────────────────────────────────────────────── -->
-  <div class="section-header mt-4">
-    <span class="section-badge">4</span>
-    <span class="section-title">SEO</span>
-  </div>
+  <!-- ④ SEO (collapsed) ─────────────────────────────────────────────────── -->
+  <section class="cd-card cd-card--quiet">
+    <button type="button" class="cd-more" (click)="showSeo = !showSeo" [attr.aria-expanded]="showSeo">
+      <span class="cd-num cd-num--muted">4</span><h3>SEO</h3>
+      <span class="cd-card__meta">Search engine title, description and keywords</span>
+      <span nz-icon [nzType]="showSeo ? 'up' : 'down'" class="cd-muted"></span>
+    </button>
 
-  <div class="row g-3">
-    <div class="col-12">
-      <div class="field-label">META TITLE</div>
-      <input nz-input formControlName="metaTitle" placeholder="SEO page title" />
-    </div>
-    <div class="col-12">
-      <div class="field-label">META DESCRIPTION</div>
-      <textarea
-        nz-input
-        formControlName="metaDescription"
-        [nzAutosize]="{ minRows: 2, maxRows: 3 }"
-        placeholder="SEO description"
-      ></textarea>
-    </div>
-    <div class="col-12">
-      <div class="field-label">META KEYWORDS</div>
-      <input nz-input formControlName="metaKeywords" placeholder="keyword1, keyword2, keyword3" />
-    </div>
-  </div>
-
+    @if (showSeo) {
+      <label class="cd-mt">Meta title
+        <input nz-input formControlName="metaTitle" placeholder="SEO page title" />
+      </label>
+      <label class="cd-mt">Meta description
+        <textarea nz-input formControlName="metaDescription" [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="SEO description"></textarea>
+      </label>
+      <label class="cd-mt">Meta keywords
+        <input nz-input formControlName="metaKeywords" placeholder="keyword1, keyword2, keyword3" />
+      </label>
+    }
+  </section>
 </form>
 
-<!-- ── Footer ──────────────────────────────────────────────────────────── -->
-<div class="drawer-footer">
-  <label class="publish-checkbox">
+<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+<footer class="cd-foot">
+  <label class="cd-publish">
     <input type="checkbox" [checked]="publishNow" (change)="onPublishNowChange($any($event.target).checked)" />
     <span>Publish immediately</span>
   </label>
-  <div class="d-flex gap-2">
-    <button nz-button (click)="close()" [disabled]="saving">Cancel</button>
-    <button nz-button nzType="primary" class="btn-save" (click)="save()" [nzLoading]="saving">
-      {{ input?.id ? 'Update Category' : 'Save Category' }}
-    </button>
-  </div>
-</div>
+  <span class="cd-spacer"></span>
+  <button type="button" nz-button nzSize="large" (click)="close()" [disabled]="saving">Cancel</button>
+  <button type="button" nz-button nzType="primary" nzSize="large" (click)="save()" [nzLoading]="saving">
+    {{ isEdit ? 'Update category' : 'Create category' }}
+  </button>
+</footer>

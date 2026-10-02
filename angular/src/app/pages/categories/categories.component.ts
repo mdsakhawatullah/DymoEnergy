@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { forkJoin } from 'rxjs';
 import { SharedModule } from '../../shared/shared.module';
@@ -22,13 +24,13 @@ interface CategoryStats {
   styleUrl:    './categories.component.css',
   imports:     [SharedModule, CategoryEntryDrawerComponent],
 })
-export class CategoriesComponent implements OnInit {
+export class CategoriesComponent implements OnInit, OnDestroy {
 
   // ── List state ────────────────────────────────────────────────────────────
   categories: CategoryDto[] = [];
   totalCount = 0;
   pageIndex  = 1;
-  pageSize   = 10;
+  readonly pageSize = 10;
   filter     = '';
   loading    = false;
   activeTab: TabKey = 'all';
@@ -53,10 +55,21 @@ export class CategoriesComponent implements OnInit {
     private message: NzMessageService,
   ) {}
 
+  private search$ = new Subject<string>();
+  private subs    = new Subscription();
+
   ngOnInit(): void {
+    this.subs.add(this.search$.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => this.onSearch()));
     this.loadStats();
     this.loadData();
   }
+
+  ngOnDestroy(): void { this.subs.unsubscribe(); }
+
+  get pageCount(): number { return Math.max(1, Math.ceil(this.totalCount / this.pageSize)); }
+  onSearchInput(v: string): void { this.search$.next(v); }
+  prevPage(): void { if (this.pageIndex > 1)              { this.pageIndex--; this.loadData(); } }
+  nextPage(): void { if (this.pageIndex < this.pageCount) { this.pageIndex++; this.loadData(); } }
 
   // ── Drawer open / close ───────────────────────────────────────────────────
   openDrawerForCreate(): void {
@@ -134,6 +147,4 @@ export class CategoriesComponent implements OnInit {
   selectTab(tab: TabKey): void { this.activeTab = tab; this.pageIndex = 1; this.loadData(); }
   onSearch(): void              { this.pageIndex = 1; this.loadData(); }
   resetFilters(): void          { this.filter = ''; this.activeTab = 'all'; this.pageIndex = 1; this.loadData(); }
-  onPageIndexChange(i: number)  { this.pageIndex = i; this.loadData(); }
-  onPageSizeChange(s: number)   { this.pageSize = s; this.pageIndex = 1; this.loadData(); }
 }

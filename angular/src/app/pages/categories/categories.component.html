@@ -1,203 +1,119 @@
-<!-- ── Page header ─────────────────────────────────────────────────────── -->
-<div class="d-flex align-items-start justify-content-between mb-3">
+<!-- ── Page header ─────────────────────────────────────────────────────────── -->
+<div class="ds-page-head">
   <div>
-    <h4 class="mb-1 fw-bold">Categories</h4>
-    <span class="text-muted small">
-      {{ stats.total }} total &nbsp;·&nbsp;
-      {{ stats.published }} published &nbsp;·&nbsp;
-      {{ stats.featured }} featured
-    </span>
+    <h1 class="ds-page-title">Categories</h1>
+    <p class="ds-page-sub">{{ stats.total }} total · {{ stats.published }} published · {{ stats.featured }} featured</p>
   </div>
-  <div class="d-flex gap-2">
-    <button nz-button nzType="primary" class="btn-new-category" (click)="openDrawerForCreate()">
-      <span nz-icon nzType="plus" nzTheme="outline"></span> New Category
+  <div class="ds-head-actions">
+    <button nz-button nzType="primary" nzSize="large" (click)="openDrawerForCreate()">
+      <span nz-icon nzType="plus"></span> New category
     </button>
   </div>
 </div>
 
-<!-- ── Stat cards ──────────────────────────────────────────────────────── -->
-<div class="row g-3 mb-4">
-  <div class="col-md-3">
-    <div class="stat-card stat-card--green">
-      <div class="stat-card__label">TOTAL CATEGORIES</div>
-      <div class="stat-card__value">{{ stats.total }}</div>
-      <div class="stat-card__sub">All records</div>
+<!-- ── Stats ───────────────────────────────────────────────────────────────── -->
+<div class="ds-stat-strip">
+  <div class="ds-stat">
+    <div class="ds-stat__label">Total categories</div>
+    <div class="ds-stat__value">{{ stats.total }}</div>
+    <div class="ds-stat__foot">All records</div>
+  </div>
+  <div class="ds-stat">
+    <div class="ds-stat__label">Published</div>
+    <div class="ds-stat__value">{{ stats.published }}</div>
+    <div class="ds-stat__foot ds-stat__foot--green">Live on the storefront</div>
+  </div>
+  <div class="ds-stat">
+    <div class="ds-stat__label">Unpublished</div>
+    <div class="ds-stat__value" [class.cat-amber]="stats.unpublished > 0">{{ stats.unpublished }}</div>
+    <div class="ds-stat__foot" [class.ds-stat__foot--amber]="stats.unpublished > 0">
+      {{ stats.unpublished > 0 ? stats.unpublished + ' still in draft' : 'None in draft' }}
     </div>
   </div>
-  <div class="col-md-3">
-    <div class="stat-card stat-card--dark">
-      <div class="stat-card__label">PUBLISHED</div>
-      <div class="stat-card__value">{{ stats.published }}</div>
-      <div class="stat-card__sub text-success">
-        <span nz-icon nzType="check-circle" nzTheme="outline"></span> Live
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="stat-card stat-card--orange">
-      <div class="stat-card__label">UNPUBLISHED</div>
-      <div class="stat-card__value" [class.text-warning]="stats.unpublished > 0">
-        {{ stats.unpublished }}
-      </div>
-      <div class="stat-card__sub">
-        @if (stats.unpublished > 0) {
-          <span class="text-warning">{{ stats.unpublished }} draft</span>
-        } @else {
-          <span class="text-muted">None</span>
-        }
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="stat-card stat-card--purple">
-      <div class="stat-card__label">FEATURED</div>
-      <div class="stat-card__value">{{ stats.featured }}</div>
-      <div class="stat-card__sub">Highlighted</div>
-    </div>
+  <div class="ds-stat">
+    <div class="ds-stat__label">Featured</div>
+    <div class="ds-stat__value">{{ stats.featured }}</div>
+    <div class="ds-stat__foot">Highlighted on the home page</div>
   </div>
 </div>
 
-<!-- ── Main card ───────────────────────────────────────────────────────── -->
-<div class="card">
-
-  <!-- Tab strip -->
-  <div class="tab-strip">
+<!-- ── Categories panel ────────────────────────────────────────────────────── -->
+<div class="ds-panel">
+  <div class="cat-tabs" role="tablist">
     @for (tab of tabs; track tab.key) {
-      <button
-        class="tab-strip__item"
-        [class.tab-strip__item--active]="activeTab === tab.key"
-        (click)="selectTab(tab.key)"
-      >
-        {{ tab.label }}
-        <span class="tab-strip__badge" [class.tab-strip__badge--active]="activeTab === tab.key">
-          {{ stats[tab.countKey] }}
-        </span>
+      <button role="tab" class="cat-tab" [class.cat-tab--active]="activeTab === tab.key" (click)="selectTab(tab.key)">
+        {{ tab.label }} <span class="cat-tab__count">{{ stats[tab.countKey] }}</span>
       </button>
     }
   </div>
 
-  <!-- Filter row -->
-  <div class="px-3 py-2 d-flex gap-2 align-items-center border-bottom">
-    <nz-input-group [nzPrefix]="searchPfx" style="max-width: 260px;">
-      <input
-        nz-input
-        placeholder="Search title, name..."
-        [(ngModel)]="filter"
-        (keyup.enter)="onSearch()"
-      />
-    </nz-input-group>
-    <ng-template #searchPfx>
-      <span nz-icon nzType="search" style="color:#bbb;"></span>
-    </ng-template>
-    <button nz-button (click)="resetFilters()" [disabled]="!filter && activeTab === 'all'">
-      Reset Filters
-    </button>
+  <div class="cat-filters">
+    <div class="cat-search">
+      <span nz-icon nzType="search" class="cat-search__icon"></span>
+      <input type="text" placeholder="Search name, slug or title" aria-label="Search categories"
+             [(ngModel)]="filter" (ngModelChange)="onSearchInput($event)" />
+    </div>
   </div>
 
-  <!-- Table -->
   <nz-table
     [nzData]="categories"
-    [nzTotal]="totalCount"
-    [nzPageIndex]="pageIndex"
-    [nzPageSize]="pageSize"
     [nzLoading]="loading"
     [nzFrontPagination]="false"
-    [nzShowSizeChanger]="true"
-    [nzPageSizeOptions]="[10, 20, 50]"
-    (nzPageIndexChange)="onPageIndexChange($event)"
-    (nzPageSizeChange)="onPageSizeChange($event)"
-    nzShowPaginationBottom
-    nzSize="small"
+    [nzShowPagination]="false"
+    [nzNoResult]="emptyTpl"
+    class="cat-table"
   >
     <thead>
       <tr>
-        <th nzWidth="60px" nzAlign="center">ID</th>
-        <th>NAME</th>
-        <th>DESCRIPTION</th>
-        <th>TITLE</th>
-        <th nzWidth="110px" nzAlign="center">STATUS</th>
-        <th nzWidth="100px" nzAlign="center">ACTION</th>
+        <th>Category</th>
+        <th>Description</th>
+        <th nzWidth="190px">Hero title</th>
+        <th nzWidth="70px" nzAlign="right">Order</th>
+        <th nzWidth="130px">Status</th>
+        <th nzWidth="92px"></th>
       </tr>
     </thead>
     <tbody>
       @for (item of categories; track item.id) {
-        <tr>
-          <td nzAlign="center" class="text-muted" style="font-size:12px;">{{ item.id }}</td>
-
-          <!-- Name + thumbnail -->
+        <tr class="cat-row" (click)="openDrawerForEdit(item)" tabindex="0" (keydown.enter)="openDrawerForEdit(item)">
           <td>
-            <div class="d-flex align-items-center gap-2">
+            <div class="cat-name">
               @if (item.thumbnailImageUrl) {
-                <img
-                  [src]="item.thumbnailImageUrl"
-                  width="38" height="38"
-                  style="object-fit:cover; border-radius:6px; flex-shrink:0;"
-                  [alt]="item.name"
-                />
+                <img class="cat-thumb" [src]="item.thumbnailImageUrl" [alt]="item.name" loading="lazy" />
               } @else {
-                <div class="thumb-placeholder">
-                  <span nz-icon nzType="picture" nzTheme="outline"></span>
-                </div>
+                <span class="cat-thumb cat-thumb--empty"><span nz-icon nzType="picture"></span></span>
               }
-              <div>
-                <div class="fw-semibold" style="font-size:13px;">{{ item.name || '—' }}</div>
-                @if (item.slug) {
-                  <div style="font-size:11px; color:#888;">{{ item.slug }}</div>
-                }
+              <div class="cat-name__text">
+                <div class="cat-name__title">
+                  {{ item.name || '—' }}
+                  @if (item.isFeatured) { <span class="cat-featured" nz-tooltip nzTooltipTitle="Featured">★ Featured</span> }
+                </div>
+                @if (item.slug) { <div class="cat-sub">/{{ item.slug }}</div> }
               </div>
             </div>
           </td>
-
-          <!-- Description -->
-          <td style="max-width:260px;">
-            @if (item.description) {
-              <span [title]="item.description">
-                {{ item.description.length > 80 ? (item.description | slice:0:80) + '…' : item.description }}
-              </span>
-            } @else {
-              <span class="text-muted">—</span>
-            }
-          </td>
-
-          <!-- Hero title -->
           <td>
-            {{ item.heroTitle || '—' }}
+            @if (item.description) { <div class="cat-desc" [title]="item.description">{{ item.description }}</div> }
+            @else { <span class="cat-muted">—</span> }
           </td>
-
-          <!-- Status -->
-          <td nzAlign="center">
-            @if (item.isPublished) {
-              <nz-tag nzColor="success">Published</nz-tag>
-            } @else {
-              <nz-tag nzColor="default">Unpublished</nz-tag>
-            }
+          <td>@if (item.heroTitle) { <div class="cat-ellipsis">{{ item.heroTitle }}</div> } @else { <span class="cat-muted">—</span> }</td>
+          <td nzAlign="right" class="cat-muted">{{ item.displayOrder }}</td>
+          <td>
+            <span class="cat-pill" [class.cat-pill--live]="item.isPublished">
+              <span class="cat-pill__dot"></span>{{ item.isPublished ? 'Published' : 'Unpublished' }}
+            </span>
           </td>
-
-          <!-- Actions: Edit + Delete -->
-          <td nzAlign="center">
-            <div class="d-flex align-items-center justify-content-center gap-1">
-              <button
-                nz-button nzType="text" nzSize="small"
-                class="btn-edit"
-                nz-tooltip nzTooltipTitle="Edit"
-                (click)="openDrawerForEdit(item)"
-              >
-                <span nz-icon nzType="edit" nzTheme="outline"></span>
+          <td (click)="$event.stopPropagation()">
+            <div class="cat-actions">
+              <button nz-button nzType="text" nzSize="small" class="cat-btn" nz-tooltip nzTooltipTitle="Edit"
+                      aria-label="Edit category" (click)="openDrawerForEdit(item)">
+                <span nz-icon nzType="edit"></span>
               </button>
-
-              <button
-                nz-button nzType="text" nzSize="small"
-                nzDanger
-                nz-tooltip nzTooltipTitle="Delete"
-                nz-popconfirm
-                nzPopconfirmTitle="Delete this category?"
-                nzOkText="Yes, delete"
-                nzOkDanger
-                nzCancelText="Cancel"
-                [nzLoading]="deletingIds.has(item.id)"
-                (nzOnConfirm)="deleteCategory(item.id)"
-              >
-                <span nz-icon nzType="delete" nzTheme="outline"></span>
+              <button nz-button nzType="text" nzSize="small" nzDanger class="cat-btn" nz-tooltip nzTooltipTitle="Delete"
+                      aria-label="Delete category" nz-popconfirm nzPopconfirmTitle="Delete this category?"
+                      nzOkText="Delete" nzOkDanger nzCancelText="Cancel"
+                      [nzLoading]="deletingIds.has(item.id)" (nzOnConfirm)="deleteCategory(item.id)">
+                <span nz-icon nzType="delete"></span>
               </button>
             </div>
           </td>
@@ -205,19 +121,36 @@
       }
     </tbody>
   </nz-table>
+
+  <ng-template #emptyTpl>
+    <div class="cat-empty">
+      <span nz-icon nzType="appstore" class="cat-empty__icon"></span>
+      {{ filter ? 'No categories match “' + filter + '”.' : 'No categories yet.' }}
+    </div>
+  </ng-template>
+
+  <div class="cat-footer">
+    <span>{{ categories.length }} of {{ totalCount }} categor{{ totalCount === 1 ? 'y' : 'ies' }}</span>
+    <div class="cat-footer__pager">
+      @if (pageCount > 1) { <span>Page {{ pageIndex }} of {{ pageCount }}</span> }
+      <button nz-button (click)="prevPage()" [disabled]="pageIndex <= 1 || loading">Previous</button>
+      <button nz-button (click)="nextPage()" [disabled]="pageIndex >= pageCount || loading">Next</button>
+    </div>
+  </div>
 </div>
+
 
 <!-- ── Create / Update Drawer ──────────────────────────────────────────── -->
 <nz-drawer
   *ngIf="isDrawerOpen"
   [nzVisible]="isDrawerOpen"
-  [nzBodyStyle]="{ overflow: 'auto' }"
+  [nzBodyStyle]="{ padding: '0', overflow: 'hidden', height: '100%' }"
   [nzMaskClosable]="false"
-  [nzWidth]="880"
-  nzTitle="{{ selectedCategory?.id ? 'Update' : 'Create' }} Category"
+  [nzClosable]="false"
+  nzWidth="min(980px, 100vw)"
   (nzOnClose)="onDrawerClosed()"
 >
-  <div *nzDrawerContent>
+  <div *nzDrawerContent style="height:100%">
     <category-entry-drawer
       [input]="selectedCategory"
       (onCategoryEntryDrawerClosed)="onDrawerClosed()"
