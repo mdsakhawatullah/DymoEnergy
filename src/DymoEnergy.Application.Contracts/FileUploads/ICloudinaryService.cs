@@ -16,6 +16,11 @@ public interface ICloudinaryService : ITransientDependency
     Task<string> UploadImageAsync(Stream fileStream, string fileName, string folder = "DymoEnergy");
 
     /// <summary>
+    /// Uploads a document (PDF, Office file, image, zip) as a raw Cloudinary asset and returns its secure URL.
+    /// </summary>
+    Task<string> UploadDocumentAsync(Stream fileStream, string fileName, string folder = "DymoEnergy/documents");
+
+    /// <summary>
     /// Deletes an image from Cloudinary
     /// </summary>
     /// <param name="publicId">The public ID of the image to delete</param>

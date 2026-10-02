@@ -1,0 +1,106 @@
+<nz-tabset [(nzSelectedIndex)]="tabIndex" nzSize="small">
+
+  <!-- Page text & colours -->
+  <nz-tab nzTitle="Page">
+    <div class="cc-body">
+      <p class="cc-help">Change any wording on the page, the accent colour and the thresholds. Clear a text box to go back to the original wording.</p>
+
+      <div class="cc-grid">
+        <div>
+          <label class="cc-label">Accent colour</label>
+          <pp-color-field [(value)]="accent" label="Accent colour"></pp-color-field>
+        </div>
+        <div>
+          <label class="cc-label" for="cc-exp">“Due soon” means within (days)</label>
+          <nz-input-number id="cc-exp" class="cc-full" [(ngModel)]="expiringDays" [nzMin]="1" [nzMax]="365"></nz-input-number>
+        </div>
+        <div class="cc-span2">
+          <label class="cc-label" for="cc-docs">Documents every import shipment should have (comma separated)</label>
+          <input id="cc-docs" nz-input [(ngModel)]="importDocs" maxlength="2000" />
+        </div>
+      </div>
+
+      @for (g of groups; track g.name) {
+        <div class="cc-group">{{ g.name }}</div>
+        <div class="cc-grid">
+          @for (l of g.labels; track l.key) {
+            <div class="cc-span2">
+              <label class="cc-label" [attr.for]="'cc-' + l.key">{{ l.caption }}</label>
+              <input [id]="'cc-' + l.key" nz-input [(ngModel)]="labelValues[l.key]" maxlength="2000" />
+            </div>
+          }
+        </div>
+      }
+
+      <div class="cc-actions">
+        <button type="button" nz-button (click)="closed.emit()">Close</button>
+        <button type="button" nz-button nzType="primary" [nzLoading]="savingSetting" (click)="saveSetting()">Save page settings</button>
+      </div>
+    </div>
+  </nz-tab>
+
+  <!-- One tab per editable list -->
+  @for (cfg of configs; track cfg.tab) {
+    <nz-tab [nzTitle]="cfg.label">
+      <div class="cc-body">
+        <p class="cc-help">{{ cfg.help }}</p>
+
+        @for (r of rows[cfg.kind]; track $index; let i = $index; let first = $first; let last = $last) {
+          <div class="cc-item" [class.is-open]="r.open">
+            <div class="cc-item__head">
+              @if (cfg.color) { <span class="cc-swatch" [style.background]="r.data.color"></span> }
+              <button type="button" class="cc-item__title" (click)="r.open = !r.open" [attr.aria-expanded]="r.open">
+                {{ r.data.title || cfg.newTitle }}
+                <span class="cc-tag">{{ summary(cfg, r) }}</span>
+              </button>
+              <button type="button" class="cc-icon" [disabled]="first" (click)="move(cfg, i, -1)" aria-label="Move up"><i class="bi bi-arrow-up"></i></button>
+              <button type="button" class="cc-icon" [disabled]="last" (click)="move(cfg, i, 1)" aria-label="Move down"><i class="bi bi-arrow-down"></i></button>
+              <button type="button" class="cc-icon" (click)="r.open = !r.open" aria-label="Edit"><i class="bi" [ngClass]="r.open ? 'bi-chevron-up' : 'bi-pencil'"></i></button>
+            </div>
+
+            @if (r.open) {
+              <div class="cc-item__body">
+                <label class="cc-label">{{ cfg.titleLabel }}</label>
+                <input nz-input [(ngModel)]="r.data.title" maxlength="256" />
+
+                @if (cfg.descriptionLabel) {
+                  <label class="cc-label">{{ cfg.descriptionLabel }}</label>
+                  <textarea nz-input rows="2" [(ngModel)]="r.data.description" maxlength="2000"></textarea>
+                }
+                @if (cfg.extraLabel) {
+                  <label class="cc-label">{{ cfg.extraLabel }}</label>
+                  @if (cfg.extraOptions) {
+                    <nz-select class="cc-full" [(ngModel)]="r.data.extra">
+                      @for (o of cfg.extraOptions; track o.value) { <nz-option [nzValue]="o.value" [nzLabel]="o.label"></nz-option> }
+                    </nz-select>
+                  } @else {
+                    <input nz-input [(ngModel)]="r.data.extra" maxlength="2000" />
+                  }
+                }
+                @if (cfg.numberLabel) {
+                  <label class="cc-label">{{ cfg.numberLabel }}</label>
+                  <nz-input-number class="cc-full" [(ngModel)]="r.data.number" [nzMin]="0"></nz-input-number>
+                }
+                @if (cfg.color) {
+                  <label class="cc-label">Colour</label>
+                  <pp-color-field [(value)]="r.data.color" label="Colour"></pp-color-field>
+                }
+                @if (cfg.flagLabel) {
+                  <label class="cc-switch"><nz-switch [(ngModel)]="r.data.flag" nzSize="small"></nz-switch> {{ cfg.flagLabel }}</label>
+                }
+
+                <div class="cc-row-actions">
+                  <button type="button" nz-button nzDanger nzSize="small" [disabled]="r.saving" nz-popconfirm nzPopconfirmTitle="Delete this entry?" (nzOnConfirm)="remove(cfg, r)">Delete</button>
+                  <span class="cc-spacer"></span>
+                  <button type="button" nz-button nzType="primary" nzSize="small" [nzLoading]="r.saving" (click)="save(cfg, r)">Save</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <button type="button" nz-button nzType="dashed" class="cc-add" (click)="add(cfg)">+ Add</button>
+      </div>
+    </nz-tab>
+  }
+</nz-tabset>

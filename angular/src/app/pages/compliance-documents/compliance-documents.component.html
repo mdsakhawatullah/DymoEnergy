@@ -1,0 +1,404 @@
+<div class="cd" [style.--cd-accent]="accent" [style.--cd-accent-soft]="tint(accent, 0.08)">
+@if (page) {
+
+  <!-- ── Header ───────────────────────────────────────────────────────── -->
+  <div class="cd-head">
+    <div>
+      <h1 class="cd-title">{{ t('page.title') }}</h1>
+      <div class="cd-subtitle">{{ t('page.subtitle') }}</div>
+    </div>
+    <div class="cd-head__actions">
+      <button type="button" class="cd-btn" (click)="openCustomize()" title="Customise this page" aria-label="Customise this page"><i class="bi bi-sliders"></i></button>
+      <button type="button" class="cd-btn" [disabled]="downloading" (click)="downloadAll()">{{ t('btn.download') }}</button>
+      <button type="button" class="cd-btn cd-btn--primary" (click)="uploadOpen = true">+ {{ t('btn.upload') }}</button>
+    </div>
+  </div>
+
+  <!-- ── Overall status ───────────────────────────────────────────────── -->
+  <div class="cd-card cd-status">
+    <div class="cd-status__main">
+      <div class="cd-status__q">{{ t('status.question') }}</div>
+      <div class="cd-status__row">
+        <span class="cd-status__word" [ngClass]="'is-' + page.summary.statusKey">{{ statusWord }}</span>
+        <span class="cd-status__detail">{{ page.summary.statusDetail }}</span>
+      </div>
+    </div>
+    <div class="cd-status__cards">
+      @for (c of cards; track c.key) {
+        <button type="button" class="cd-mini" [class.is-active]="tab === c.key" (click)="tab = c.key">
+          <span class="cd-mini__label"><span class="cd-dot" [style.background]="dotColor(c.s.tone)"></span>{{ c.label }}</span>
+          <span class="cd-mini__row">
+            <strong>{{ c.s.done }}/{{ c.s.total }}</strong>
+            <span class="cd-mini__note" [style.color]="toneColor(c.s.tone)">{{ c.s.note }}</span>
+          </span>
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (page.summary.alert) {
+    <div class="cd-alert" role="alert">
+      <i class="bi bi-exclamation-triangle"></i>
+      <span class="cd-alert__text">{{ page.summary.alert.text }}</span>
+      <button type="button" class="cd-btn cd-btn--sm" (click)="openAlertLicence()">{{ t('alert.button') }}</button>
+    </div>
+  }
+
+  <!-- ── Tabs ─────────────────────────────────────────────────────────── -->
+  <div class="cd-tabs" role="tablist">
+    @for (x of tabs; track x.key) {
+      <button type="button" role="tab" class="cd-tab" [class.is-active]="tab === x.key" [attr.aria-selected]="tab === x.key" (click)="tab = x.key">
+        <i class="bi" [ngClass]="x.icon"></i>{{ x.label }}
+        @if (x.badge) { <span class="cd-count" [ngClass]="'is-' + x.tone">{{ x.badge }}</span> }
+      </button>
+    }
+  </div>
+
+  <nz-spin [nzSpinning]="loading">
+
+  <!-- ═════════ LICENCES ═════════ -->
+  @if (tab === 'licences') {
+    <p class="cd-intro">{{ t('intro.licences') }}</p>
+    <div class="cd-card cd-table-card">
+      <div class="cd-table-wrap">
+        <table class="cd-table">
+          <thead>
+            <tr><th>Licence / registration</th><th>Number</th><th>Issued by</th><th>Valid until</th><th>Owner</th><th class="is-right">File</th></tr>
+          </thead>
+          <tbody>
+            @for (l of page.licences; track l.id) {
+              <tr>
+                <td>
+                  <button type="button" class="cd-linkrow" (click)="openLicence(l)" [attr.aria-label]="'Edit ' + l.name">
+                    <span class="cd-dot" [style.background]="dotColor(l.tone)"></span>
+                    <span>
+                      <span class="cd-strong">{{ l.name }}</span>
+                      <span class="cd-sub">{{ l.description }}</span>
+                    </span>
+                  </button>
+                </td>
+                <td class="cd-mono">{{ l.number || '—' }}</td>
+                <td>{{ l.issuedBy || '—' }}</td>
+                <td class="cd-valid">
+                  <strong [style.color]="toneColor(l.tone)">{{ l.statusText }}</strong>
+                  <span class="cd-bar"><span [style.width.%]="l.fraction * 100" [style.background]="dotColor(l.tone)"></span></span>
+                </td>
+                <td>{{ l.owner || '—' }}</td>
+                <td class="is-right cd-nowrap">
+                  @if (licenceFile(l); as f) {
+                    <a class="cd-btn cd-btn--sm" [href]="f.url" target="_blank" rel="noopener"><i class="bi bi-file-earmark"></i> PDF</a>
+                  }
+                  <label class="cd-btn cd-btn--sm" [class.is-busy]="busyIds.has('lic' + l.id)">
+                    {{ licenceFile(l) ? renewLabel(l) : 'Upload' }}
+                    <input type="file" hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.zip" (change)="replaceLicenceFile(l, $event)" />
+                  </label>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="cd-empty">No licences yet.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="cd-card__foot"><button type="button" class="cd-btn cd-btn--sm" (click)="openLicence(null)">+ Add licence</button></div>
+    </div>
+
+    <div class="cd-two">
+      <div class="cd-card cd-pad">
+        <h2>{{ t('renew.title') }}</h2>
+        <p class="cd-muted cd-tight">{{ t('renew.sub') }}</p>
+        @for (r of items(Kind.Reminder); track r.id) {
+          <div class="cd-line">
+            <div>
+              <div class="cd-strong">{{ r.title }}</div>
+              <div class="cd-sub">{{ r.description }}</div>
+            </div>
+            <nz-switch [ngModel]="r.flag" (ngModelChange)="toggleReminder(r, $event)" [attr.aria-label]="r.title"></nz-switch>
+          </div>
+        }
+      </div>
+      <div class="cd-card cd-pad">
+        <h2>{{ t('access.title') }}</h2>
+        <p class="cd-muted cd-tight">{{ t('access.sub') }}</p>
+        @for (r of items(Kind.AccessRule); track r.id) {
+          <div class="cd-line cd-line--access">
+            <div class="cd-strong">{{ r.title }}</div>
+            <div class="cd-chips">
+              @for (s of sections(r.extra); track s) { <span class="cd-chip" [class.is-green]="s === 'Everything'">{{ s }}</span> }
+            </div>
+          </div>
+        }
+        <p class="cd-sub cd-foot">Shown for reference — set who can open this page under Administration → Roles.</p>
+      </div>
+    </div>
+  }
+
+  <!-- ═════════ FILINGS ═════════ -->
+  @if (tab === 'filings') {
+    <p class="cd-intro">{{ t('intro.filings') }}</p>
+    <div class="cd-stats">
+      <div class="cd-card cd-stat">
+        <div class="cd-sub">{{ t('stat.due') }}</div>
+        <div class="cd-stat__v">{{ page.filingStats.dueThisMonth }}</div>
+        <div class="cd-sub">{{ page.filingStats.nextDueDays != null ? 'next one in ' + page.filingStats.nextDueDays + (page.filingStats.nextDueDays === 1 ? ' day' : ' days') : 'nothing waiting' }}</div>
+      </div>
+      <div class="cd-card cd-stat">
+        <div class="cd-sub">{{ t('stat.onTime') }}</div>
+        <div class="cd-stat__v is-green">{{ page.filingStats.onTimeTotal ? page.filingStats.onTime + ' of ' + page.filingStats.onTimeTotal : '—' }}</div>
+        <div class="cd-sub">last 12 months</div>
+      </div>
+      <div class="cd-card cd-stat">
+        <div class="cd-sub">{{ page.filingStats.lateCount > 1 ? 'Late ' + page.filingStats.lateCount + ' times' : t('stat.late') }}</div>
+        <div class="cd-stat__v" [class.is-red]="page.filingStats.lateCount > 0">{{ page.filingStats.lateTitle || 'Never' }}</div>
+        <div class="cd-sub">{{ page.filingStats.lateDetail || 'no late filings recorded' }}</div>
+      </div>
+    </div>
+
+    <div class="cd-card cd-table-card">
+      <div class="cd-card__head"><h2>{{ t('filings.month') }}</h2><span class="cd-muted">{{ monthName }}</span></div>
+      @for (f of monthFilings; track f.id) {
+        <div class="cd-row">
+          <span class="cd-date" [ngClass]="'is-' + f.tone"><strong>{{ dayOf(f.dueDate) }}</strong>{{ monOf(f.dueDate) }}</span>
+          <div class="cd-row__main">
+            <div class="cd-strong">{{ f.title }}</div>
+            <div class="cd-sub">{{ f.detail }}</div>
+          </div>
+          <span class="cd-pill" [ngClass]="filingChip(f).cls">{{ filingChip(f).text }}</span>
+          <span class="cd-muted cd-owner">{{ f.owner }}</span>
+          <button type="button" class="cd-btn cd-btn--sm" (click)="openFiling(f)">{{ f.actionLabel || 'Open' }}</button>
+        </div>
+      } @empty {
+        <div class="cd-empty">No filings are due this month.</div>
+      }
+      <div class="cd-card__foot"><button type="button" class="cd-btn cd-btn--sm" (click)="openFiling(null)">+ Add filing</button></div>
+    </div>
+
+    @if (otherFilings.length) {
+      <div class="cd-card cd-table-card cd-gap">
+        <div class="cd-card__head"><h2>Other dates</h2><span class="cd-muted">earlier and upcoming</span></div>
+        @for (f of otherFilings; track f.id) {
+          <div class="cd-row">
+            <span class="cd-date" [ngClass]="'is-' + f.tone"><strong>{{ dayOf(f.dueDate) }}</strong>{{ monOf(f.dueDate) }}</span>
+            <div class="cd-row__main"><div class="cd-strong">{{ f.title }}</div><div class="cd-sub">{{ f.detail }}</div></div>
+            <span class="cd-pill" [ngClass]="filingChip(f).cls">{{ filingChip(f).text }}</span>
+            <span class="cd-muted cd-owner">{{ f.owner }}</span>
+            <button type="button" class="cd-btn cd-btn--sm" (click)="openFiling(f)">{{ f.actionLabel || 'Open' }}</button>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="cd-card cd-gap">
+      <div class="cd-card__head"><h2>{{ t('filings.history') }}</h2><button type="button" class="cd-link" (click)="openCustomize('history')">Edit history</button></div>
+      <div class="cd-history">
+        @for (r of history; track r.id) {
+          <div class="cd-tile" [ngClass]="historyTone(r).cls">
+            <div class="cd-sub">{{ r.title }}</div>
+            <strong>{{ historyTone(r).word }}</strong>
+            <div class="cd-sub">{{ r.description }}</div>
+          </div>
+        } @empty {
+          <div class="cd-empty">No history yet — add months from “Edit history”.</div>
+        }
+      </div>
+      @if (t('filings.historyNote')) { <p class="cd-sub cd-histnote">{{ t('filings.historyNote') }}</p> }
+    </div>
+  }
+
+  <!-- ═════════ CERTIFICATES ═════════ -->
+  @if (tab === 'certificates') {
+    <p class="cd-intro">{{ t('intro.certificates') }}</p>
+    <div class="cd-card cd-table-card">
+      <div class="cd-filters">
+        <input class="cd-input cd-input--grow" type="search" placeholder="Search product, brand or certificate" [(ngModel)]="search" aria-label="Search certificates" />
+        <select class="cd-input" [(ngModel)]="categoryFilter" aria-label="Category">
+          <option [ngValue]="null">All categories</option>
+          @for (c of categories; track c) { <option [ngValue]="c">{{ c }}</option> }
+        </select>
+        <select class="cd-input" [(ngModel)]="supplierFilter" aria-label="Supplier">
+          <option [ngValue]="null">All suppliers</option>
+          @for (s of suppliers; track s) { <option [ngValue]="s">{{ s }}</option> }
+        </select>
+        <span class="cd-muted cd-filters__count">{{ filteredCertificates.length }} products · {{ certAttentionCount }} need attention</span>
+      </div>
+      <div class="cd-table-wrap">
+        <table class="cd-table">
+          <thead><tr><th>Product</th><th>Supplier</th><th>Certificates held</th><th>Test report</th><th>Valid until</th><th class="is-right">Files</th></tr></thead>
+          <tbody>
+            @for (c of filteredCertificates; track c.id) {
+              <tr>
+                <td>
+                  <button type="button" class="cd-linkrow" (click)="openCertificate(c)" [attr.aria-label]="'Edit ' + c.productName">
+                    <span class="cd-icon" [style.background]="tint(categoryColor(c.category), 0.12)" [style.color]="categoryColor(c.category)"><i class="bi bi-box-seam"></i></span>
+                    <span><span class="cd-strong">{{ c.productName }}</span><span class="cd-sub">{{ c.category }}</span></span>
+                  </button>
+                </td>
+                <td>{{ c.supplier || '—' }}</td>
+                <td>
+                  <span class="cd-chips">
+                    @for (b of c.badges; track b) {
+                      <span class="cd-badge" [style.background]="tint(badgeColor(b), 0.12)" [style.color]="badgeColor(b)">{{ b }}</span>
+                    }
+                  </span>
+                </td>
+                <td [class.is-red]="!c.testReport" [style.color]="c.testReport ? null : '#B42318'">{{ c.testReport || 'Missing' }}</td>
+                <td><strong [style.color]="toneColor(c.tone)">{{ c.validText }}</strong></td>
+                <td class="is-right"><button type="button" class="cd-btn cd-btn--xs" (click)="openCertificate(c)">{{ c.fileCount }} {{ c.fileCount === 1 ? 'file' : 'files' }}</button></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="cd-empty">No products match.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="cd-card__foot"><button type="button" class="cd-btn cd-btn--sm" (click)="openCertificate(null)">+ Add product</button></div>
+    </div>
+
+    <div class="cd-two">
+      <div class="cd-card cd-pad">
+        <div class="cd-card__head cd-card__head--flush"><h2>{{ t('certs.badges') }}</h2><button type="button" class="cd-link" (click)="openCustomize('badges')">Edit</button></div>
+        @for (b of items(Kind.Badge); track b.id) {
+          <div class="cd-gloss">
+            <span class="cd-badge" [style.background]="tint(b.color || '#5F6B63', 0.12)" [style.color]="b.color || '#5F6B63'">{{ b.title }}</span>
+            <span>{{ b.description }}</span>
+          </div>
+        }
+        <p class="cd-sub cd-foot">{{ t('certs.badgesNote') }}</p>
+      </div>
+      <div class="cd-card cd-pad">
+        <div class="cd-card__head cd-card__head--flush"><h2>{{ t('import.title') }}</h2><button type="button" class="cd-link" (click)="openCustomize('imports')">Edit</button></div>
+        <p class="cd-muted cd-tight">{{ t('import.sub') }}</p>
+        @for (p of papers(); track p.item.id) {
+          <div class="cd-paper">
+            <div class="cd-paper__head">
+              <strong>{{ p.item.title }}</strong>
+              @if (p.missing.length) { <span class="cd-pill is-amber">{{ p.missing[0] }} missing</span> }
+              @else { <span class="cd-pill is-green">Complete</span> }
+              <span class="cd-ref">{{ p.item.extra }}</span>
+            </div>
+            <div class="cd-chips">
+              @for (d of requiredDocs; track d) {
+                <button type="button" class="cd-chip cd-chip--btn" [class.is-have]="p.held.includes(d)" (click)="toggleImportDoc(p, d)" [attr.aria-pressed]="p.held.includes(d)">{{ d }}</button>
+              }
+            </div>
+          </div>
+        } @empty {
+          <div class="cd-empty cd-empty--flush">No shipments yet.</div>
+        }
+        <button type="button" class="cd-btn cd-btn--sm cd-addrow" (click)="openCustomize('imports')">+ Add shipment</button>
+      </div>
+    </div>
+  }
+
+  <!-- ═════════ PROJECT DOCUMENTS ═════════ -->
+  @if (tab === 'packs') {
+    <p class="cd-intro">{{ t('intro.packs') }}</p>
+    <div class="cd-card cd-table-card">
+      <div class="cd-card__head">
+        <h2>{{ t('packs.title') }}</h2>
+        <span class="cd-muted">
+          @if (handedOverIncomplete) { {{ handedOverIncomplete }} handed over without a complete pack }
+          @else { Click a cell to change it }
+        </span>
+      </div>
+      <div class="cd-table-wrap">
+        <table class="cd-table cd-table--grid">
+          <thead>
+            <tr>
+              <th>Project</th><th>Stage</th>
+              @for (d of items(Kind.DocType); track d.id) { <th class="is-center">{{ d.title }}</th> }
+              <th class="is-right">Done</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of page.packs; track p.projectId) {
+              <tr>
+                <td><span class="cd-strong">{{ p.name }}</span><span class="cd-mono cd-sub">{{ p.code }}</span></td>
+                <td><span class="cd-pill" [style.background]="tint(p.stageColor, 0.13)" [style.color]="p.stageColor">{{ p.stageName }}</span></td>
+                @for (d of items(Kind.DocType); track d.id) {
+                  <td class="is-center">
+                    <button type="button" class="cd-cell" [ngClass]="'s' + cellOf(p, d.id)" (click)="cycleCell(p, d.id)"
+                            [attr.aria-label]="d.title + ': ' + cellLabel(cellOf(p, d.id))" [title]="cellLabel(cellOf(p, d.id))">{{ cellSymbol(cellOf(p, d.id)) }}</button>
+                  </td>
+                }
+                <td class="is-right"><strong class="cd-pct" [ngClass]="percentClass(p.donePercent)">{{ p.donePercent }}%</strong></td>
+              </tr>
+            } @empty {
+              <tr><td [attr.colspan]="items(Kind.DocType).length + 3" class="cd-empty">No projects yet — jobs created in Project planning appear here.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="cd-two">
+      <div class="cd-card cd-table-card">
+        <div class="cd-card__head"><h2>{{ t('templates.title') }}</h2><span class="cd-muted">{{ t('templates.sub') }}</span></div>
+        @for (x of items(Kind.Template); track x.id) {
+          <div class="cd-row">
+            <span class="cd-icon" [style.background]="tint(x.color || '#0E6B3F', 0.12)" [style.color]="x.color || '#0E6B3F'"><i class="bi bi-file-earmark-text"></i></span>
+            <div class="cd-row__main"><div class="cd-strong">{{ x.title }}</div><div class="cd-sub">{{ x.description }}</div></div>
+            <span class="cd-muted">{{ x.extra }}</span>
+            <button type="button" class="cd-btn cd-btn--sm" (click)="openCustomize('templates')">Edit</button>
+          </div>
+        }
+      </div>
+      <div class="cd-card cd-pad">
+        <div class="cd-card__head cd-card__head--flush"><h2>{{ t('retention.title') }}</h2><button type="button" class="cd-link" (click)="openCustomize('retention')">Edit</button></div>
+        <p class="cd-muted cd-tight">{{ t('retention.sub') }}</p>
+        @for (r of items(Kind.Retention); track r.id) {
+          <div class="cd-line">
+            <div><div class="cd-strong">{{ r.title }}</div><div class="cd-sub">{{ r.description }}</div></div>
+            <strong class="cd-years">{{ r.number }} {{ r.number === 1 ? 'year' : 'years' }}</strong>
+          </div>
+        }
+        <p class="cd-sub cd-foot">{{ t('retention.note') }}</p>
+      </div>
+    </div>
+  }
+
+  </nz-spin>
+} @else {
+  <nz-spin nzSimple class="cd-loading"></nz-spin>
+}
+</div>
+
+<!-- ── Drawers ───────────────────────────────────────────────────────── -->
+@if (recordOpen && recordInput) {
+  <nz-drawer [nzVisible]="recordOpen" [nzMaskClosable]="false" [nzWidth]="520"
+             [nzTitle]="(recordInput.record ? 'Edit ' : 'Add ') + recordInput.type" (nzOnClose)="recordOpen = false">
+    <div *nzDrawerContent>
+      <compliance-record-drawer
+        [input]="recordInput"
+        [files]="page?.files ?? []"
+        [categories]="categories"
+        [suppliers]="suppliers"
+        [badges]="items(Kind.Badge)"
+        (closed)="recordOpen = false"
+        (saved)="onRecordSaved()"
+      ></compliance-record-drawer>
+    </div>
+  </nz-drawer>
+}
+
+@if (customizeOpen && page) {
+  <nz-drawer [nzVisible]="customizeOpen" [nzMaskClosable]="false" [nzWidth]="760" nzTitle="Customise this page" (nzOnClose)="closeCustomize()">
+    <div *nzDrawerContent>
+      <compliance-customize-drawer
+        [setting]="page.setting"
+        [items]="page.items"
+        [initialTab]="customizeTab"
+        (changed)="customizeChanged = true"
+        (closed)="closeCustomize()"
+      ></compliance-customize-drawer>
+    </div>
+  </nz-drawer>
+}
+
+@if (uploadOpen && page) {
+  <nz-drawer [nzVisible]="uploadOpen" [nzMaskClosable]="false" [nzWidth]="440" [nzTitle]="t('btn.upload')" (nzOnClose)="uploadOpen = false">
+    <div *nzDrawerContent>
+      <compliance-upload-drawer [licences]="page.licences" [certificates]="page.certificates" (closed)="uploadOpen = false" (uploaded)="onUploaded()"></compliance-upload-drawer>
+    </div>
+  </nz-drawer>
+}

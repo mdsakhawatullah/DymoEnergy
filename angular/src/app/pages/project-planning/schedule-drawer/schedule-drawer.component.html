@@ -1,0 +1,30 @@
+<div class="sd">
+  <label class="sd-label" for="sd-project">Job</label>
+  <nz-select id="sd-project" class="sd-field" [(ngModel)]="projectId" nzShowSearch nzPlaceHolder="Choose a job" [nzDisabled]="!!input.entryId">
+    @for (p of projects; track p.id) {
+      <nz-option [nzValue]="p.id" [nzLabel]="p.customerName + (p.title ? ' · ' + p.title : '')"></nz-option>
+    }
+  </nz-select>
+
+  <label class="sd-label" for="sd-team">Team</label>
+  <nz-select id="sd-team" class="sd-field" [(ngModel)]="teamId" nzPlaceHolder="Choose a team">
+    @for (t of teams; track t.id) {
+      <nz-option [nzValue]="t.id" [nzLabel]="t.name"></nz-option>
+    }
+  </nz-select>
+
+  <label class="sd-label" for="sd-date">Day</label>
+  <nz-date-picker id="sd-date" class="sd-field" [(ngModel)]="date" nzFormat="EEE d MMM yyyy"></nz-date-picker>
+
+  <label class="sd-label" for="sd-note">Note (shown under the job on the grid)</label>
+  <input id="sd-note" nz-input [(ngModel)]="note" maxlength="256" placeholder="e.g. Halishahar · 8 panels" />
+
+  <div class="sd-actions">
+    @if (input.entryId) {
+      <button type="button" nz-button nzDanger [disabled]="saving" nz-popconfirm nzPopconfirmTitle="Remove this booking?" (nzOnConfirm)="remove()">Remove</button>
+    }
+    <span class="sd-spacer"></span>
+    <button type="button" nz-button (click)="closed.emit()">Cancel</button>
+    <button type="button" nz-button nzType="primary" [nzLoading]="saving" (click)="save()">Save</button>
+  </div>
+</div>

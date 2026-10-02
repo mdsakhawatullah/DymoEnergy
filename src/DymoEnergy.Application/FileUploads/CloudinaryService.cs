@@ -50,6 +50,35 @@ public class CloudinaryService : ICloudinaryService
         return uploadResult.SecureUrl.ToString();
     }
 
+    private static readonly string[] DocumentExtensions =
+        { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".txt", ".zip", ".jpg", ".jpeg", ".png", ".webp" };
+
+    public async Task<string> UploadDocumentAsync(System.IO.Stream fileStream, string fileName, string folder = "DymoEnergy/documents")
+    {
+        if (fileStream == null || fileStream.Length == 0)
+            throw new InvalidOperationException("File is empty");
+        if (string.IsNullOrEmpty(fileName))
+            throw new InvalidOperationException("FileName is required");
+
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        if (Array.IndexOf(DocumentExtensions, extension) < 0)
+            throw new InvalidOperationException($"File type {extension} is not allowed. Allowed: {string.Join(", ", DocumentExtensions)}");
+
+        // Raw assets keep their extension in the public id so the URL downloads with the right type.
+        var uploadParams = new RawUploadParams
+        {
+            File = new FileDescription(fileName, fileStream),
+            Folder = folder,
+            PublicId = $"{Guid.NewGuid()}{extension}",
+        };
+
+        var result = await _cloudinary.UploadAsync(uploadParams);
+        if (result.Error != null)
+            throw new InvalidOperationException($"Upload failed: {result.Error.Message}");
+
+        return result.SecureUrl.ToString();
+    }
+
     public async Task DeleteImageAsync(string publicId)
     {
         if (string.IsNullOrEmpty(publicId))

@@ -8,6 +8,8 @@ using DymoEnergy.SalesInvoices;
 using DymoEnergy.Orders;
 using DymoEnergy.Companies;
 using DymoEnergy.QuoteRequests;
+using DymoEnergy.ProjectPlanning;
+using DymoEnergy.Compliance;
 using DymoEnergy.UserSiteSettings;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
@@ -46,6 +48,22 @@ public class DymoEnergyDbContext :
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Company>   Companies  { get; set; }
     public DbSet<QuoteRequest> QuoteRequests { get; set; }
+
+    public DbSet<ProjectStage>           ProjectStages           { get; set; }
+    public DbSet<ProjectTeam>            ProjectTeams            { get; set; }
+    public DbSet<Project>                Projects                { get; set; }
+    public DbSet<ProjectScheduleEntry>   ProjectScheduleEntries  { get; set; }
+    public DbSet<ProjectStageHistory>    ProjectStageHistories   { get; set; }
+    public DbSet<ProjectSeasonNote>      ProjectSeasonNotes      { get; set; }
+    public DbSet<ProjectPlanningSetting> ProjectPlanningSettings { get; set; }
+
+    public DbSet<ComplianceSetting>         ComplianceSettings         { get; set; }
+    public DbSet<ComplianceLicence>         ComplianceLicences         { get; set; }
+    public DbSet<ComplianceFiling>          ComplianceFilings          { get; set; }
+    public DbSet<ComplianceCertificate>     ComplianceCertificates     { get; set; }
+    public DbSet<ComplianceListItem>        ComplianceListItems        { get; set; }
+    public DbSet<ComplianceProjectDocument> ComplianceProjectDocuments { get; set; }
+    public DbSet<ComplianceFile>            ComplianceFiles            { get; set; }
     public DbSet<UserSiteSetting>      UserSiteSettings      { get; set; }
     public DbSet<UserSiteSettingImage> UserSiteSettingImages { get; set; }
 
@@ -199,6 +217,184 @@ public class DymoEnergyDbContext :
             b.Property(x => x.Id).ValueGeneratedOnAdd();
             b.HasIndex(x => x.CompanyName);
             b.HasIndex(x => x.ParentCompanyId);
+        });
+
+        /* ── Project planning ───────────────────────────────────────────── */
+        builder.Entity<ProjectStage>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ProjectStages", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ProjectPlanningConsts.MaxNameLength);
+            b.Property(x => x.Color).IsRequired().HasMaxLength(ProjectPlanningConsts.MaxColorLength);
+            b.Property(x => x.Responsible).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.DurationText).HasMaxLength(ProjectPlanningConsts.MaxNameLength);
+            b.Property(x => x.ProducesText).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.ChecklistText).HasMaxLength(ProjectPlanningConsts.MaxLongText);
+            b.HasIndex(x => x.Order);
+        });
+
+        builder.Entity<ProjectTeam>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ProjectTeams", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ProjectPlanningConsts.MaxNameLength);
+            b.Property(x => x.Description).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.Color).IsRequired().HasMaxLength(ProjectPlanningConsts.MaxColorLength);
+            b.HasIndex(x => x.Order);
+        });
+
+        builder.Entity<Project>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "Projects", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Code).IsRequired().HasMaxLength(ProjectPlanningConsts.MaxNameLength);
+            b.Property(x => x.CustomerName).IsRequired().HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.Title).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.District).HasMaxLength(ProjectPlanningConsts.MaxNameLength);
+            b.Property(x => x.Tags).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.StatusNote).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.Notes).HasMaxLength(ProjectPlanningConsts.MaxLongText);
+            b.Property(x => x.BlockedReason).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.WaitingFor).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.ActionLabel).HasMaxLength(ProjectPlanningConsts.MaxNameLength);
+            b.Property(x => x.MaterialNote).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.ChecklistDone).HasMaxLength(ProjectPlanningConsts.MaxLongText);
+            b.HasIndex(x => x.StageId);
+            b.HasIndex(x => x.TeamId);
+        });
+
+        builder.Entity<ProjectScheduleEntry>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ProjectScheduleEntries", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Note).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.HasIndex(x => x.Date);
+            b.HasIndex(x => x.ProjectId);
+            b.HasIndex(x => x.TeamId);
+        });
+
+        builder.Entity<ProjectStageHistory>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ProjectStageHistories", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.HasIndex(x => x.ProjectId);
+            b.HasIndex(x => x.StageId);
+        });
+
+        builder.Entity<ProjectSeasonNote>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ProjectSeasonNotes", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Title).IsRequired().HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.Period).HasMaxLength(ProjectPlanningConsts.MaxNameLength);
+            b.Property(x => x.Description).HasMaxLength(ProjectPlanningConsts.MaxLongText);
+            b.Property(x => x.Color).IsRequired().HasMaxLength(ProjectPlanningConsts.MaxColorLength);
+        });
+
+        builder.Entity<ProjectPlanningSetting>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ProjectPlanningSettings", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.AccentColor).IsRequired().HasMaxLength(ProjectPlanningConsts.MaxColorLength);
+            b.Property(x => x.CurrencySymbol).IsRequired().HasMaxLength(8);
+            b.Property(x => x.PageTitle).IsRequired().HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.PageSubtitle).HasMaxLength(ProjectPlanningConsts.MaxLongText);
+            b.Property(x => x.NewProjectLabel).HasMaxLength(ProjectPlanningConsts.MaxNameLength);
+            b.Property(x => x.BoardTabLabel).HasMaxLength(ProjectPlanningConsts.MaxNameLength);
+            b.Property(x => x.WeekTabLabel).HasMaxLength(ProjectPlanningConsts.MaxNameLength);
+            b.Property(x => x.AttentionTabLabel).HasMaxLength(ProjectPlanningConsts.MaxNameLength);
+            b.Property(x => x.StagesTabLabel).HasMaxLength(ProjectPlanningConsts.MaxNameLength);
+            b.Property(x => x.StagesIntro).HasMaxLength(ProjectPlanningConsts.MaxLongText);
+            b.Property(x => x.AttentionTitle).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.ScheduleTitle).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.TimeTitle).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.TimeFootnote).HasMaxLength(ProjectPlanningConsts.MaxLongText);
+            b.Property(x => x.SeasonTitle).HasMaxLength(ProjectPlanningConsts.MaxShortText);
+            b.Property(x => x.SeasonSubtitle).HasMaxLength(ProjectPlanningConsts.MaxLongText);
+        });
+
+        /* ── Compliance & documents ─────────────────────────────────────── */
+        builder.Entity<ComplianceSetting>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ComplianceSettings", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.AccentColor).IsRequired().HasMaxLength(ComplianceConsts.MaxColor);
+            b.Property(x => x.ImportRequiredDocs).HasMaxLength(ComplianceConsts.MaxText);
+        });
+
+        builder.Entity<ComplianceLicence>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ComplianceLicences", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ComplianceConsts.MaxName);
+            b.Property(x => x.Description).HasMaxLength(ComplianceConsts.MaxText);
+            b.Property(x => x.Number).HasMaxLength(ComplianceConsts.MaxName);
+            b.Property(x => x.IssuedBy).HasMaxLength(ComplianceConsts.MaxName);
+            b.Property(x => x.Owner).HasMaxLength(ComplianceConsts.MaxName);
+            b.HasIndex(x => x.Order);
+        });
+
+        builder.Entity<ComplianceFiling>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ComplianceFilings", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Title).IsRequired().HasMaxLength(ComplianceConsts.MaxName);
+            b.Property(x => x.Detail).HasMaxLength(ComplianceConsts.MaxText);
+            b.Property(x => x.Owner).HasMaxLength(ComplianceConsts.MaxName);
+            b.Property(x => x.ActionLabel).HasMaxLength(ComplianceConsts.MaxShort);
+            b.HasIndex(x => x.DueDate);
+        });
+
+        builder.Entity<ComplianceCertificate>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ComplianceCertificates", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.ProductName).IsRequired().HasMaxLength(ComplianceConsts.MaxName);
+            b.Property(x => x.Category).HasMaxLength(ComplianceConsts.MaxShort);
+            b.Property(x => x.Supplier).HasMaxLength(ComplianceConsts.MaxName);
+            b.Property(x => x.Badges).HasMaxLength(ComplianceConsts.MaxText);
+            b.Property(x => x.TestReport).HasMaxLength(ComplianceConsts.MaxName);
+        });
+
+        builder.Entity<ComplianceListItem>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ComplianceListItems", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Title).IsRequired().HasMaxLength(ComplianceConsts.MaxName);
+            b.Property(x => x.Description).HasMaxLength(ComplianceConsts.MaxText);
+            b.Property(x => x.Extra).HasMaxLength(ComplianceConsts.MaxText);
+            b.Property(x => x.Color).HasMaxLength(ComplianceConsts.MaxColor);
+            b.HasIndex(x => new { x.Kind, x.Order });
+        });
+
+        builder.Entity<ComplianceProjectDocument>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ComplianceProjectDocuments", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.HasIndex(x => new { x.ProjectId, x.DocTypeId }).IsUnique();
+        });
+
+        builder.Entity<ComplianceFile>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ComplianceFiles", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.FileName).IsRequired().HasMaxLength(ComplianceConsts.MaxName);
+            b.Property(x => x.Url).IsRequired().HasMaxLength(ComplianceConsts.MaxUrl);
+            b.HasIndex(x => new { x.OwnerKind, x.OwnerId });
         });
 
         /* ── Quote Requests ─────────────────────────────────────────────── */

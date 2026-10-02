@@ -1,0 +1,5 @@
+.sd { display: flex; flex-direction: column; gap: 6px; }
+.sd-label { font-size: 12px; font-weight: 600; color: var(--de-text-muted, #5F6B63); margin-top: 10px; }
+.sd-field { width: 100%; }
+.sd-actions { display: flex; gap: 8px; margin-top: 24px; }
+.sd-spacer { flex: 1; }

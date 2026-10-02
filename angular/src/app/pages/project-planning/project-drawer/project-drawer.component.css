@@ -1,0 +1,24 @@
+.pd-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.pd-code { font-family: var(--de-font-mono, monospace); font-size: 12px; color: var(--de-text-muted, #5F6B63); }
+.pd-stage { border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
+.pd-muted { font-size: 13px; color: var(--de-text-muted, #5F6B63); }
+
+.pd-section { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--de-text-muted, #5F6B63); margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--de-border-soft, #F1F3EE); }
+.pd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.pd-gap { margin-top: 12px; }
+.pd-span2 { grid-column: span 2; }
+.pd-label { display: block; font-size: 12px; font-weight: 600; color: var(--de-text-muted, #5F6B63); margin-bottom: 4px; }
+.pd-full { width: 100%; }
+:host ::ng-deep .pd-full.ant-input-number { width: 100%; }
+
+.pd-alert { margin-bottom: 12px; }
+.pd-progress { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.pd-checklist { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pd-check { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; cursor: pointer; }
+.pd-check input { margin-top: 3px; accent-color: var(--pp-accent, #0E6B3F); }
+.pd-move { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pd-move__select { min-width: 200px; flex: 1; }
+.pd-switch { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+
+.pd-actions { display: flex; gap: 8px; margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--de-border-soft, #F1F3EE); }
+.pd-spacer { flex: 1; }

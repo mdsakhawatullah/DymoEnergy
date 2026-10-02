@@ -1,0 +1,24 @@
+.cc-body { padding-top: 4px; }
+.cc-help { font-size: 13px; color: var(--de-text-muted, #5F6B63); margin: 0 0 14px; }
+.cc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cc-span2 { grid-column: span 2; }
+.cc-label { display: block; font-size: 12px; font-weight: 600; color: var(--de-text-muted, #5F6B63); margin: 10px 0 4px; }
+.cc-grid .cc-label { margin-top: 0; }
+.cc-full { width: 100%; }
+:host ::ng-deep .cc-full.ant-input-number { width: 100%; }
+.cc-group { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--de-text-muted, #5F6B63); margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--de-border-soft, #F1F3EE); }
+.cc-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
+
+.cc-item { border: 1px solid var(--de-border, #E3E6E0); border-radius: 10px; margin-bottom: 8px; background: #fff; }
+.cc-item__head { display: flex; align-items: center; gap: 8px; padding: 8px 10px 8px 14px; }
+.cc-swatch { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.cc-item__title { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 4px 0; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; gap: 8px; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-tag { font-size: 11px; color: var(--de-text-muted, #5F6B63); font-weight: 500; }
+.cc-icon { width: 28px; height: 28px; border: 0; border-radius: 6px; background: none; color: var(--de-text-muted, #5F6B63); cursor: pointer; }
+.cc-icon:hover:not([disabled]) { background: var(--de-border-soft, #F1F3EE); color: var(--de-text, #16201A); }
+.cc-icon[disabled] { opacity: 0.35; cursor: default; }
+.cc-item__body { padding: 4px 14px 14px; border-top: 1px solid var(--de-border-soft, #F1F3EE); }
+.cc-switch { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 14px; }
+.cc-row-actions { display: flex; gap: 8px; margin-top: 16px; }
+.cc-spacer { flex: 1; }
+.cc-add { width: 100%; margin-top: 4px; }

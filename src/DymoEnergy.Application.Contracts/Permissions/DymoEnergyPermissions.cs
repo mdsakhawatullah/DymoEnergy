@@ -61,6 +61,22 @@ public static class DymoEnergyPermissions
         public const string Delete  = Default + ".Delete";
     }
 
+    public static class ProjectPlanning
+    {
+        public const string Default = GroupName + ".ProjectPlanning";
+        public const string Create  = Default + ".Create";
+        public const string Edit    = Default + ".Edit";
+        public const string Delete  = Default + ".Delete";
+    }
+
+    public static class Compliance
+    {
+        public const string Default = GroupName + ".Compliance";
+        public const string Create  = Default + ".Create";
+        public const string Edit    = Default + ".Edit";
+        public const string Delete  = Default + ".Delete";
+    }
+
     public static class Companies
     {
         public const string Default = GroupName + ".Companies";

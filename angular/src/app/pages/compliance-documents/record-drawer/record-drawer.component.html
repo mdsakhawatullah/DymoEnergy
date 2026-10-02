@@ -1,0 +1,112 @@
+<div class="rd">
+
+  @switch (input.type) {
+
+    @case ('licence') {
+      <label class="rd-label" for="rd-name">Licence / registration</label>
+      <input id="rd-name" nz-input [(ngModel)]="name" maxlength="256" placeholder="e.g. Trade licence" />
+
+      <label class="rd-label" for="rd-desc">Note under the name</label>
+      <input id="rd-desc" nz-input [(ngModel)]="description" maxlength="2000" placeholder="e.g. City Corporation · renew every year" />
+
+      <div class="rd-grid">
+        <div><label class="rd-label" for="rd-num">Number</label><input id="rd-num" nz-input [(ngModel)]="number" maxlength="256" /></div>
+        <div><label class="rd-label" for="rd-by">Issued by</label><input id="rd-by" nz-input [(ngModel)]="issuedBy" maxlength="256" /></div>
+        <div><label class="rd-label" for="rd-owner">Owner (who renews it)</label><input id="rd-owner" nz-input [(ngModel)]="owner" maxlength="256" /></div>
+        <div class="rd-switch"><nz-switch [(ngModel)]="hasExpiry"></nz-switch><span>This licence expires</span></div>
+        @if (hasExpiry) {
+          <div><label class="rd-label" for="rd-issued">Issued on</label><nz-date-picker id="rd-issued" class="rd-full" [(ngModel)]="issuedOn"></nz-date-picker></div>
+          <div><label class="rd-label" for="rd-valid">Valid until</label><nz-date-picker id="rd-valid" class="rd-full" [(ngModel)]="validUntil"></nz-date-picker></div>
+        }
+      </div>
+    }
+
+    @case ('filing') {
+      <label class="rd-label" for="rd-title">Filing</label>
+      <input id="rd-title" nz-input [(ngModel)]="title" maxlength="256" placeholder="e.g. Monthly VAT return" />
+
+      <label class="rd-label" for="rd-detail">Detail</label>
+      <input id="rd-detail" nz-input [(ngModel)]="detail" maxlength="2000" />
+
+      <div class="rd-grid">
+        <div><label class="rd-label" for="rd-due">Due date</label><nz-date-picker id="rd-due" class="rd-full" [(ngModel)]="dueDate"></nz-date-picker></div>
+        <div>
+          <label class="rd-label" for="rd-status">Status</label>
+          <nz-select id="rd-status" class="rd-full" [(ngModel)]="status">
+            @for (s of filingStatuses; track s.value) { <nz-option [nzValue]="s.value" [nzLabel]="s.label"></nz-option> }
+          </nz-select>
+        </div>
+        <div><label class="rd-label" for="rd-fowner">Who does it</label><input id="rd-fowner" nz-input [(ngModel)]="owner" maxlength="256" placeholder="e.g. Accounts" /></div>
+        <div><label class="rd-label" for="rd-act">Button text</label><input id="rd-act" nz-input [(ngModel)]="actionLabel" maxlength="128" placeholder="e.g. Open report" /></div>
+      </div>
+    }
+
+    @case ('certificate') {
+      <label class="rd-label" for="rd-prod">Product</label>
+      <input id="rd-prod" nz-input [(ngModel)]="productName" maxlength="256" placeholder="e.g. Mono PERC Panel 550W" />
+
+      <div class="rd-grid">
+        <div>
+          <label class="rd-label" for="rd-cat">Category</label>
+          <input id="rd-cat" nz-input [(ngModel)]="category" maxlength="128" list="rd-cats" />
+          <datalist id="rd-cats">@for (c of categories; track c) { <option [value]="c"></option> }</datalist>
+        </div>
+        <div>
+          <label class="rd-label" for="rd-sup">Supplier</label>
+          <input id="rd-sup" nz-input [(ngModel)]="supplier" maxlength="256" list="rd-sups" />
+          <datalist id="rd-sups">@for (s of suppliers; track s) { <option [value]="s"></option> }</datalist>
+        </div>
+      </div>
+
+      <label class="rd-label" for="rd-badges">Certificates held</label>
+      <nz-select id="rd-badges" class="rd-full" nzMode="tags" [(ngModel)]="badgeCodes" nzPlaceHolder="Pick or type a badge">
+        @for (b of badges; track b.id) { <nz-option [nzValue]="b.title" [nzLabel]="b.title"></nz-option> }
+      </nz-select>
+
+      <div class="rd-grid">
+        <div><label class="rd-label" for="rd-report">Test report</label><input id="rd-report" nz-input [(ngModel)]="testReport" maxlength="256" placeholder="e.g. Lab report 2025" /></div>
+        <div><label class="rd-label" for="rd-cvalid">Valid until</label><nz-date-picker id="rd-cvalid" class="rd-full" [(ngModel)]="validUntil"></nz-date-picker></div>
+      </div>
+    }
+  }
+
+  <!-- ── Files ─────────────────────────────────────────────────────────── -->
+  @if (ownerKind != null) {
+    <div class="rd-section">Files</div>
+    @if (!id) {
+      <p class="rd-help">Save first, then you can attach documents.</p>
+    } @else {
+      @for (f of localFiles; track f.id) {
+        <div class="rd-file">
+          <i class="bi bi-file-earmark"></i>
+          <a [href]="f.url" target="_blank" rel="noopener">{{ f.fileName }}</a>
+          <span class="rd-help">{{ size(f.sizeBytes) }}</span>
+          <button type="button" class="rd-x" (click)="removeFile(f)" [attr.aria-label]="'Remove ' + f.fileName"><i class="bi bi-x-lg"></i></button>
+        </div>
+      } @empty {
+        <p class="rd-help">No documents attached yet.</p>
+      }
+      <div class="rd-upload">
+        <label nz-button [class.is-busy]="uploading">
+          <i class="bi bi-upload"></i> {{ uploading ? 'Uploading…' : 'Add file' }}
+          <input type="file" hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.zip" (change)="addFile($event, false)" />
+        </label>
+        @if (localFiles.length) {
+          <label nz-button [class.is-busy]="uploading">
+            Replace all with new file
+            <input type="file" hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.zip" (change)="addFile($event, true)" />
+          </label>
+        }
+      </div>
+    }
+  }
+
+  <div class="rd-actions">
+    @if (id) {
+      <button type="button" nz-button nzDanger [disabled]="saving" nz-popconfirm nzPopconfirmTitle="Delete this record?" (nzOnConfirm)="remove()">Delete</button>
+    }
+    <span class="rd-spacer"></span>
+    <button type="button" nz-button (click)="closed.emit()">Cancel</button>
+    <button type="button" nz-button nzType="primary" [nzLoading]="saving" (click)="save()">Save</button>
+  </div>
+</div>

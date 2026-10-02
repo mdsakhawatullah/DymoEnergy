@@ -1,0 +1,24 @@
+<div style="display:flex;flex-direction:column;gap:6px">
+  <label for="ud-target" style="font-size:12px;font-weight:600;color:#5F6B63">Attach to</label>
+  <nz-select id="ud-target" [(ngModel)]="target" nzShowSearch nzPlaceHolder="Choose a licence or product" style="width:100%">
+    <nz-option-group nzLabel="Licences">
+      @for (l of licences; track l.id) { <nz-option [nzValue]="'licence:' + l.id" [nzLabel]="l.name"></nz-option> }
+    </nz-option-group>
+    <nz-option-group nzLabel="Product certificates">
+      @for (c of certificates; track c.id) { <nz-option [nzValue]="'certificate:' + c.id" [nzLabel]="c.productName"></nz-option> }
+    </nz-option-group>
+  </nz-select>
+
+  <label for="ud-file" style="font-size:12px;font-weight:600;color:#5F6B63;margin-top:12px">File (PDF, Office, image or zip · up to 15 MB)</label>
+  <input id="ud-file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.zip" (change)="pick($event)" />
+
+  <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:12px">
+    <input type="checkbox" [(ngModel)]="replace" /> Replace the files already attached
+  </label>
+
+  <div style="display:flex;gap:8px;margin-top:24px">
+    <span style="flex:1"></span>
+    <button type="button" nz-button (click)="closed.emit()">Cancel</button>
+    <button type="button" nz-button nzType="primary" [nzLoading]="busy" (click)="upload()">Upload</button>
+  </div>
+</div>

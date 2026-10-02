@@ -47,7 +47,7 @@ export const APP_ROUTES: Routes = [
   // ── Project Planning & Execution ──────────────────────────────────────────
   {
     path: 'projects',
-    loadComponent: comingSoonComponent,
+    loadComponent: () => import('./pages/project-planning/project-planning.component').then(c => c.ProjectPlanningComponent),
     canActivate: [authGuard],
   },
   {
@@ -292,7 +292,7 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: 'compliance-documents',
-    loadComponent: comingSoonComponent,
+    loadComponent: () => import('./pages/compliance-documents/compliance-documents.component').then(c => c.ComplianceDocumentsComponent),
     canActivate: [authGuard],
   },
   {

@@ -1,0 +1,148 @@
+<div class="pd">
+
+  @if (project) {
+    <div class="pd-meta">
+      <span class="pd-code">{{ project.code }}</span>
+      <span class="pd-stage" [style.background]="project.stageColor + '22'" [style.color]="project.stageColor">{{ project.stageName }}</span>
+      <span class="pd-muted">{{ project.daysInStage }}d in this stage</span>
+    </div>
+  }
+
+  <div class="pd-section">Job</div>
+  <div class="pd-grid">
+    <div class="pd-span2">
+      <label class="pd-label" for="pd-customer">Customer</label>
+      <input id="pd-customer" nz-input [(ngModel)]="model.customerName" maxlength="256" placeholder="Customer or business name" />
+    </div>
+    <div>
+      <label class="pd-label" for="pd-title">What is being built</label>
+      <input id="pd-title" nz-input [(ngModel)]="model.title" maxlength="256" placeholder="e.g. 3 kW on-grid" />
+    </div>
+    <div>
+      <label class="pd-label" for="pd-district">District</label>
+      <input id="pd-district" nz-input [(ngModel)]="model.district" maxlength="128" list="pd-districts" placeholder="e.g. Chattogram" />
+      <datalist id="pd-districts">
+        @for (d of districts; track d) { <option [value]="d"></option> }
+      </datalist>
+    </div>
+    <div>
+      <label class="pd-label" for="pd-value">Job value</label>
+      <nz-input-number id="pd-value" class="pd-full" [(ngModel)]="model.value" [nzMin]="0" [nzStep]="1000"></nz-input-number>
+    </div>
+    <div>
+      <label class="pd-label" for="pd-due">Promised date</label>
+      <nz-date-picker id="pd-due" class="pd-full" [(ngModel)]="dueDate"></nz-date-picker>
+    </div>
+    <div>
+      <label class="pd-label" for="pd-team">Team</label>
+      <nz-select id="pd-team" class="pd-full" [(ngModel)]="model.teamId" nzAllowClear nzPlaceHolder="Not assigned">
+        @for (t of teams; track t.id) { <nz-option [nzValue]="t.id" [nzLabel]="t.name"></nz-option> }
+      </nz-select>
+    </div>
+    @if (!isEdit) {
+      <div>
+        <label class="pd-label" for="pd-stage">Starting stage</label>
+        <nz-select id="pd-stage" class="pd-full" [(ngModel)]="stageId">
+          @for (s of stages; track s.id) { <nz-option [nzValue]="s.id" [nzLabel]="s.name"></nz-option> }
+        </nz-select>
+      </div>
+    }
+    <div class="pd-span2">
+      <label class="pd-label" for="pd-tags">Tags (comma separated)</label>
+      <input id="pd-tags" nz-input [(ngModel)]="tagsText" placeholder="e.g. Large job, Farm, Green loan" />
+    </div>
+    <div class="pd-span2">
+      <label class="pd-label" for="pd-note">Card footer note</label>
+      <input id="pd-note" nz-input [(ngModel)]="model.statusNote" maxlength="256" placeholder="e.g. Survey 4 Oct" />
+    </div>
+    <div class="pd-span2">
+      <label class="pd-label" for="pd-notes">Internal notes</label>
+      <textarea id="pd-notes" nz-input rows="2" [(ngModel)]="model.notes" maxlength="2000"></textarea>
+    </div>
+  </div>
+
+  <!-- ── Stage & checklist ─────────────────────────────────────────────── -->
+  @if (isEdit && currentStage) {
+    <div class="pd-section">Stage: {{ currentStage.name }}</div>
+
+    @if (moveError) {
+      <nz-alert nzType="warning" nzShowIcon class="pd-alert" [nzMessage]="moveError"
+                nzDescription="Finish the ticks below, or move the job anyway if the step is not needed.">
+      </nz-alert>
+    }
+
+    @if (checklist.length) {
+      <div class="pd-progress">{{ doneCount }} of {{ checklist.length }} done</div>
+      <ul class="pd-checklist">
+        @for (c of checklist; track $index) {
+          <li>
+            <label class="pd-check">
+              <input type="checkbox" [checked]="isTicked(c)" (change)="toggle(c, $any($event.target).checked)" />
+              <span>{{ c }}</span>
+            </label>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="pd-muted">This stage has no checklist.</div>
+    }
+
+    <div class="pd-move">
+      <nz-select class="pd-move__select" [(ngModel)]="moveTarget" nzPlaceHolder="Move to stage…">
+        @for (s of movableStages; track s.id) { <nz-option [nzValue]="s.id" [nzLabel]="s.name"></nz-option> }
+      </nz-select>
+      <button type="button" nz-button [disabled]="moveTarget == null || saving" (click)="move(moveTarget)">Move</button>
+      @if (moveError) {
+        <button type="button" nz-button nzDanger [disabled]="moveTarget == null || saving" (click)="move(moveTarget, true)">Move anyway</button>
+      }
+    </div>
+  }
+
+  <!-- ── Blocked ───────────────────────────────────────────────────────── -->
+  <div class="pd-section">Blocked?</div>
+  <label class="pd-switch"><nz-switch [(ngModel)]="model.isBlocked"></nz-switch><span>This job is waiting on someone else</span></label>
+  @if (model.isBlocked) {
+    <div class="pd-grid pd-gap">
+      <div class="pd-span2">
+        <label class="pd-label" for="pd-reason">Problem</label>
+        <input id="pd-reason" nz-input [(ngModel)]="model.blockedReason" maxlength="256" placeholder="e.g. 8 panels short — supplier delivers 5 Oct" />
+      </div>
+      <div>
+        <label class="pd-label" for="pd-waiting">Waiting for</label>
+        <input id="pd-waiting" nz-input [(ngModel)]="model.waitingFor" maxlength="256" placeholder="e.g. Utility office" />
+      </div>
+      <div>
+        <label class="pd-label" for="pd-since">Waiting since</label>
+        <nz-date-picker id="pd-since" class="pd-full" [(ngModel)]="waitingSince"></nz-date-picker>
+      </div>
+      <div class="pd-span2">
+        <label class="pd-label" for="pd-action">Action button label</label>
+        <input id="pd-action" nz-input [(ngModel)]="model.actionLabel" maxlength="128" placeholder="e.g. Call supplier" />
+      </div>
+    </div>
+  }
+
+  <!-- ── Materials ─────────────────────────────────────────────────────── -->
+  <div class="pd-section">Materials</div>
+  <div class="pd-grid">
+    <div>
+      <label class="pd-label" for="pd-mat">Status</label>
+      <nz-select id="pd-mat" class="pd-full" [(ngModel)]="model.materialStatus">
+        @for (o of materialOptions; track o.value) { <nz-option [nzValue]="o.value" [nzLabel]="o.label"></nz-option> }
+      </nz-select>
+    </div>
+    <div>
+      <label class="pd-label" for="pd-matnote">Note</label>
+      <input id="pd-matnote" nz-input [(ngModel)]="model.materialNote" maxlength="256" placeholder="e.g. 8 × Panel 550W short" />
+    </div>
+  </div>
+
+  <div class="pd-actions">
+    @if (isEdit) {
+      <button type="button" nz-button nzDanger [disabled]="saving" nz-popconfirm nzPopconfirmTitle="Delete this project and its bookings?" (nzOnConfirm)="remove()">Delete</button>
+    }
+    <span class="pd-spacer"></span>
+    <button type="button" nz-button (click)="closed.emit()">Cancel</button>
+    <button type="button" nz-button nzType="primary" [nzLoading]="saving" (click)="save()">{{ isEdit ? 'Save changes' : 'Create project' }}</button>
+  </div>
+</div>

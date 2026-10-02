@@ -1,0 +1,399 @@
+<div class="pp" [style.--pp-accent]="setting.accentColor" [style.--pp-accent-soft]="tint(setting.accentColor, 0.09)">
+
+  <!-- ── Header ───────────────────────────────────────────────────────── -->
+  <div class="pp-head">
+    <div>
+      <h1 class="pp-title">{{ setting.pageTitle }}</h1>
+      @if (setting.pageSubtitle) {
+        <div class="pp-subtitle">{{ setting.pageSubtitle }}</div>
+      }
+    </div>
+    <div class="pp-head__actions">
+      <select class="pp-select" [ngModel]="teamFilter" (ngModelChange)="teamFilter = $event; onFilterChange()" aria-label="Filter by team">
+        <option [ngValue]="null">All teams</option>
+        @for (t of board?.teams ?? []; track t.id) {
+          <option [ngValue]="t.id">{{ t.name }}</option>
+        }
+      </select>
+      <select class="pp-select" [ngModel]="districtFilter" (ngModelChange)="districtFilter = $event; onFilterChange()" aria-label="Filter by district">
+        <option [ngValue]="null">All districts</option>
+        @for (d of board?.districts ?? []; track d) {
+          <option [ngValue]="d">{{ d }}</option>
+        }
+      </select>
+      <button type="button" class="pp-btn pp-btn--icon" (click)="openCustomize()" title="Customise this page" aria-label="Customise this page">
+        <i class="bi bi-sliders"></i>
+      </button>
+      <button type="button" class="pp-btn pp-btn--primary" (click)="openNewProject()">
+        + {{ setting.newProjectLabel || 'New project' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Stage KPI strip ──────────────────────────────────────────────── -->
+  <div class="pp-card pp-kpis">
+    @for (s of stageSummaries; track s.stage.id) {
+      <div class="pp-kpi" [class.is-off]="!s.stage.isActive">
+        <div class="pp-kpi__name"><span class="pp-dot" [style.background]="s.stage.color"></span>{{ s.stage.name }}</div>
+        <div class="pp-kpi__row">
+          <span class="pp-kpi__count">{{ s.count }}</span>
+          <span class="pp-kpi__value">{{ money(s.totalValue) }}</span>
+        </div>
+        <div class="pp-kpi__bar" [style.background]="s.stage.color"></div>
+      </div>
+    }
+    @if (!stageSummaries.length && !loading) {
+      <div class="pp-empty">No stages yet — add them from the customise button.</div>
+    }
+  </div>
+
+  <!-- ── Tabs ─────────────────────────────────────────────────────────── -->
+  <div class="pp-tabs" role="tablist">
+    @for (t of tabs; track t.key) {
+      <button type="button" role="tab" class="pp-tab" [class.is-active]="tab === t.key" [attr.aria-selected]="tab === t.key" (click)="setTab(t.key)">
+        <i class="bi" [ngClass]="t.icon"></i>{{ t.label }}
+        @if (t.badge) { <span class="pp-badge">{{ t.badge }}</span> }
+      </button>
+    }
+  </div>
+
+  <nz-spin [nzSpinning]="loading">
+
+  <!-- ═════════ BOARD ═════════ -->
+  @if (tab === 'board') {
+    <div class="pp-board">
+      @for (s of stageSummaries; track s.stage.id) {
+        <section class="pp-col"
+                 [class.is-over]="dragOverStageId === s.stage.id"
+                 (dragover)="onColumnDragOver($event, s.stage.id)"
+                 (dragleave)="dragOverStageId = null"
+                 (drop)="onColumnDrop($event, s.stage.id)">
+          <header class="pp-col__head">
+            <span class="pp-dot" [style.background]="s.stage.color"></span>
+            <span class="pp-col__name">{{ s.stage.name }}</span>
+            <span class="pp-col__count">{{ s.count }}</span>
+          </header>
+
+          @for (p of projectsIn(s.stage.id); track p.id) {
+            <article class="pp-job" draggable="true" tabindex="0"
+                     [class.is-dragging]="draggingProjectId === p.id"
+                     (dragstart)="onCardDragStart($event, p)" (dragend)="onCardDragEnd()"
+                     (click)="openProject(p)" (keydown.enter)="openProject(p)">
+              <div class="pp-job__name">{{ p.customerName }}</div>
+              <div class="pp-job__sub">{{ p.title }}@if (p.title && p.district) { · }{{ p.district }}</div>
+              @if (p.isBlocked || p.isDueSoon || p.isLate || p.tags.length) {
+                <div class="pp-chips">
+                  @for (tag of p.tags; track tag) {
+                    <span class="pp-chip" [style.background]="tagStyle(tag).background" [style.color]="tagStyle(tag).color">{{ tag }}</span>
+                  }
+                  @if (p.isLate) { <span class="pp-chip pp-chip--red">Late</span> }
+                  @else if (p.isDueSoon) { <span class="pp-chip pp-chip--amber">Due soon</span> }
+                  @if (p.isBlocked) { <span class="pp-chip pp-chip--red">Blocked</span> }
+                </div>
+              }
+              <div class="pp-job__foot">
+                @if (p.teamName) {
+                  <span class="pp-avatar pp-avatar--sm" [style.background]="tint(p.teamColor, 0.16)" [style.color]="p.teamColor" [title]="p.teamName">{{ teamInitial(p) }}</span>
+                } @else {
+                  <span class="pp-avatar pp-avatar--sm pp-avatar--none">–</span>
+                }
+                <span class="pp-job__note">{{ p.statusNote }}</span>
+                <span class="pp-job__days" [ngClass]="daysClass(p)">{{ p.daysInStage }}d</span>
+              </div>
+            </article>
+          }
+        </section>
+      }
+    </div>
+
+    <div class="pp-card pp-legend">
+      <strong>Legend</strong>
+      <span class="pp-chip pp-chip--red">Blocked</span><span class="pp-legend__t">waiting on someone else</span>
+      <span class="pp-chip pp-chip--amber">Due soon</span><span class="pp-legend__t">next {{ setting.dueSoonDays }} days</span>
+      <span class="pp-chip pp-chip--blue">Tag</span><span class="pp-legend__t">free-text label set on the job</span>
+      <span class="pp-legend__right">Number on the right of each card = days in this stage. Drag a card to move it.</span>
+    </div>
+  }
+
+  <!-- ═════════ THIS WEEK ═════════ -->
+  @if (tab === 'week') {
+    <div class="pp-card pp-grid-card">
+      <div class="pp-card__head">
+        <h2>{{ setting.scheduleTitle || 'Crew schedule' }} · {{ weekTitle }}</h2>
+        <div class="pp-card__tools">
+          <button type="button" class="pp-btn pp-btn--sm" (click)="shiftWeek(-1)" aria-label="Previous week"><i class="bi bi-chevron-left"></i></button>
+          <button type="button" class="pp-btn pp-btn--sm" (click)="thisWeek()">Today</button>
+          <button type="button" class="pp-btn pp-btn--sm" (click)="shiftWeek(1)" aria-label="Next week"><i class="bi bi-chevron-right"></i></button>
+          <span class="pp-hint">Drag a job to another day or team</span>
+        </div>
+      </div>
+
+      @if (week) {
+        <div class="pp-sched-wrap">
+          <table class="pp-sched">
+            <thead>
+              <tr>
+                <th class="pp-sched__team"></th>
+                @for (d of weekDays; track d.key) {
+                  <th [class.is-today]="d.isToday"><strong>{{ d.weekday }}</strong> {{ d.date }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of week.rows; track row.team.id; let ri = $index) {
+                <tr>
+                  <td class="pp-sched__team">
+                    <span class="pp-avatar" [style.background]="tint(row.team.color, 0.16)" [style.color]="row.team.color">{{ teamBadge(row.team.name) }}</span>
+                    <div>
+                      <div class="pp-sched__tname">{{ row.team.name }}</div>
+                      <div class="pp-sched__tsub">{{ row.team.description }}</div>
+                    </div>
+                  </td>
+                  @for (d of weekDays; track d.key) {
+                    <td class="pp-cell"
+                        [class.is-over]="dragOverCell === row.team.id + '|' + d.key"
+                        (dragover)="onCellDragOver($event, row.team.id, d.key)"
+                        (dragleave)="dragOverCell = null"
+                        (drop)="onCellDrop($event, row.team.id, d.key)">
+                      @for (e of entriesAt(ri, d.key); track e.id) {
+                        <div class="pp-entry" draggable="true" tabindex="0"
+                             [style.background]="e.isBlocked ? 'var(--pp-red-bg)' : tint(e.color, 0.12)"
+                             [style.border-color]="e.isBlocked ? 'var(--pp-red)' : tint(e.color, 0.55)"
+                             [style.color]="e.isBlocked ? 'var(--pp-red)' : e.color"
+                             [title]="e.title"
+                             (dragstart)="onEntryDragStart($event, e)" (dragend)="onEntryDragEnd()"
+                             (click)="editEntry(e)" (keydown.enter)="editEntry(e)">
+                          <div class="pp-entry__t">{{ e.title }}</div>
+                          @if (e.note) { <div class="pp-entry__n">{{ e.note }}</div> }
+                        </div>
+                      } @empty {
+                        <button type="button" class="pp-free" (click)="scheduleCell(row.team.id, d.key)">free</button>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+              @if (!week.rows.length) {
+                <tr><td [attr.colspan]="7" class="pp-empty">No teams yet — add a team from the customise button.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <div class="pp-two">
+      <div class="pp-card">
+        <div class="pp-card__head">
+          <h2>Waiting to be scheduled</h2>
+          <span class="pp-muted">{{ week?.waiting?.length ?? 0 }} jobs</span>
+        </div>
+        @for (p of week?.waiting ?? []; track p.id) {
+          <div class="pp-row">
+            <div class="pp-row__main">
+              <div class="pp-row__title">{{ p.customerName }} · {{ p.title }}</div>
+              <div class="pp-row__sub">{{ p.district }}@if (p.statusNote) { · {{ p.statusNote }} }</div>
+            </div>
+            <span class="pp-pill" [style.background]="tint(p.stageColor, 0.13)" [style.color]="p.stageColor">{{ p.stageName }}</span>
+            <button type="button" class="pp-btn pp-btn--sm" (click)="scheduleProject(p)">Schedule</button>
+          </div>
+        } @empty {
+          <div class="pp-empty">Everything that needs a crew is booked.</div>
+        }
+      </div>
+
+      <div class="pp-card">
+        <div class="pp-card__head">
+          <h2>Materials for this week</h2>
+          <span class="pp-muted">reserved from stock</span>
+        </div>
+        @for (p of week?.materials ?? []; track p.id) {
+          <div class="pp-row">
+            <span class="pp-dot pp-dot--lg"
+                  [style.background]="p.materialStatus === MaterialStatus.Short ? 'var(--pp-red)' : p.materialStatus === MaterialStatus.OnSite ? '#2563EB' : 'var(--pp-accent)'"></span>
+            <div class="pp-row__main">
+              <div class="pp-row__title">{{ p.customerName }} · {{ p.title }}</div>
+              <div class="pp-row__sub">{{ p.materialNote }}@if (p.nextScheduleDate) { · {{ shortDate(p.nextScheduleDate) }} }</div>
+            </div>
+            @if (p.materialStatus === MaterialStatus.Short) {
+              <button type="button" class="pp-btn pp-btn--sm" (click)="markMaterialsReady(p)">Mark ready</button>
+            } @else {
+              <span class="pp-status" [class.is-blue]="p.materialStatus === MaterialStatus.OnSite">
+                {{ p.materialStatus === MaterialStatus.OnSite ? 'On site' : 'Ready' }}
+              </span>
+            }
+          </div>
+        } @empty {
+          <div class="pp-empty">No material status set for this week's jobs.</div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ═════════ NEEDS ATTENTION ═════════ -->
+  @if (tab === 'attention' && attention) {
+    <div class="pp-stats">
+      <div class="pp-card pp-stat">
+        <div class="pp-stat__label">Jobs running</div>
+        <div class="pp-stat__value">{{ attention.running }}</div>
+        <div class="pp-stat__sub">{{ money(attention.runningValue) }} of work</div>
+      </div>
+      <div class="pp-card pp-stat">
+        <div class="pp-stat__label">Blocked</div>
+        <div class="pp-stat__value is-red">{{ attention.blocked }}</div>
+        <div class="pp-stat__sub">waiting on others</div>
+      </div>
+      <div class="pp-card pp-stat">
+        <div class="pp-stat__label">Late</div>
+        <div class="pp-stat__value is-amber">{{ attention.late }}</div>
+        <div class="pp-stat__sub">past the promised date</div>
+      </div>
+      <div class="pp-card pp-stat">
+        <div class="pp-stat__label">Scheduled this week</div>
+        <div class="pp-stat__value">{{ attention.installsThisWeek }}</div>
+        <div class="pp-stat__sub">{{ attention.installTeams }} {{ attention.installTeams === 1 ? 'team' : 'teams' }}</div>
+      </div>
+    </div>
+
+    <div class="pp-card pp-table-card">
+      <div class="pp-card__head">
+        <h2>{{ setting.attentionTitle || 'Jobs that need a decision today' }}</h2>
+        <span class="pp-muted">oldest first</span>
+      </div>
+      <div class="pp-table-wrap">
+        <table class="pp-table">
+          <thead>
+            <tr><th>Project</th><th>Problem</th><th>Stage</th><th>Who we are waiting for</th><th class="is-right">Waiting</th><th class="is-right">Action</th></tr>
+          </thead>
+          <tbody>
+            @for (p of attention.items; track p.id) {
+              <tr>
+                <td>
+                  <div class="pp-row__title">{{ p.customerName }}</div>
+                  <div class="pp-code">{{ p.code }}</div>
+                </td>
+                <td class="pp-problem">{{ p.blockedReason || (p.isLate ? 'Past the promised date' : '') }}</td>
+                <td><span class="pp-pill" [style.background]="tint(p.stageColor, 0.13)" [style.color]="p.stageColor">{{ p.stageName }}</span></td>
+                <td>{{ p.waitingFor || '—' }}</td>
+                <td class="is-right"><strong class="pp-days" [ngClass]="waitingClass(p.waitingDays)">{{ p.waitingDays }} {{ p.waitingDays === 1 ? 'day' : 'days' }}</strong></td>
+                <td class="is-right"><button type="button" class="pp-btn pp-btn--sm" (click)="openProject(p)">{{ p.actionLabel || 'Review' }}</button></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="pp-empty">Nothing is stuck. 🎉</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pp-two">
+      <div class="pp-card pp-pad">
+        <h2>{{ setting.timeTitle || 'Where time goes' }}</h2>
+        <p class="pp-muted pp-tight">Average days a job spends in each stage, last 20 finished projects.</p>
+        @for (t of attention.timePerStage; track t.stageId) {
+          <div class="pp-time">
+            <span class="pp-time__name">{{ t.name }}</span>
+            <span class="pp-time__track"><span class="pp-time__bar" [style.width]="timeBar(t, maxTime()).width" [style.background]="timeBar(t, maxTime()).color"></span></span>
+            <span class="pp-time__val" [style.color]="timeBar(t, maxTime()).color">{{ t.averageDays == null ? '—' : t.averageDays + 'd' }}</span>
+          </div>
+        }
+        @if (setting.timeFootnote) {
+          <p class="pp-muted pp-foot">{{ setting.timeFootnote }}</p>
+        }
+      </div>
+
+      <div class="pp-card pp-pad">
+        <h2>{{ setting.seasonTitle || 'Season plan' }}</h2>
+        @if (setting.seasonSubtitle) { <p class="pp-muted pp-tight">{{ setting.seasonSubtitle }}</p> }
+        @for (n of attention.seasonNotes; track n.id) {
+          <div class="pp-season" [style.background]="tint(n.color, 0.1)">
+            <div class="pp-season__title"><span class="pp-dot" [style.background]="n.color"></span>{{ n.period }}@if (n.period && n.title) { · }{{ n.title }}</div>
+            <div class="pp-season__text">{{ n.description }}</div>
+          </div>
+        } @empty {
+          <div class="pp-empty">No season notes — add some from the customise button.</div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ═════════ STAGES & CHECKLIST ═════════ -->
+  @if (tab === 'stages') {
+    @if (setting.stagesIntro) { <p class="pp-intro">{{ setting.stagesIntro }}</p> }
+    <div class="pp-stages">
+      @for (st of activeStages; track st.id; let i = $index) {
+        <section class="pp-card pp-stage">
+          <header class="pp-stage__head" [style.background]="tint(st.color, 0.07)">
+            <span class="pp-stage__no" [style.background]="st.color">{{ i + 1 }}</span>
+            <h3>{{ st.name }}</h3>
+            <span class="pp-muted">{{ st.durationText }}</span>
+            <button type="button" class="pp-icon-btn" (click)="openCustomize('stages', st.id)" [attr.aria-label]="'Edit ' + st.name" title="Edit stage"><i class="bi bi-pencil"></i></button>
+          </header>
+          <div class="pp-stage__body">
+            @if (st.responsible) { <div class="pp-muted pp-resp">{{ st.responsible }}</div> }
+            <ul class="pp-checks">
+              @for (c of st.checklist; track $index) {
+                <li><i class="bi bi-check2" [style.color]="st.color"></i>{{ c }}</li>
+              }
+            </ul>
+            @if (st.producesText) {
+              <div class="pp-produces"><strong>Produces:</strong> {{ st.producesText }}</div>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  }
+
+  </nz-spin>
+</div>
+
+<!-- ── Drawers ───────────────────────────────────────────────────────── -->
+@if (projectDrawerOpen) {
+  <nz-drawer [nzVisible]="projectDrawerOpen" [nzMaskClosable]="false" [nzWidth]="560"
+             [nzTitle]="selectedProject ? selectedProject.customerName : 'New project'"
+             (nzOnClose)="closeProjectDrawer()">
+    <div *nzDrawerContent>
+      <project-drawer
+        [project]="selectedProject"
+        [stages]="activeStages"
+        [teams]="board?.teams ?? []"
+        [districts]="board?.districts ?? []"
+        [defaultStageId]="newProjectStageId"
+        [pendingMove]="pendingMove"
+        (closed)="closeProjectDrawer()"
+        (saved)="onProjectSaved()"
+      ></project-drawer>
+    </div>
+  </nz-drawer>
+}
+
+@if (customizeOpen) {
+  <nz-drawer [nzVisible]="customizeOpen" [nzMaskClosable]="false" [nzWidth]="760" nzTitle="Customise project planning"
+             (nzOnClose)="closeCustomize()">
+    <div *nzDrawerContent>
+      <customize-drawer
+        [initialTab]="customizeTab"
+        [initialStageId]="customizeStageId"
+        (changed)="customizeChanged = true"
+        (closed)="closeCustomize()"
+      ></customize-drawer>
+    </div>
+  </nz-drawer>
+}
+
+@if (scheduleOpen && scheduleInput) {
+  <nz-drawer [nzVisible]="scheduleOpen" [nzMaskClosable]="false" [nzWidth]="440"
+             [nzTitle]="scheduleInput.entryId ? 'Edit booking' : 'Schedule a job'"
+             (nzOnClose)="scheduleOpen = false">
+    <div *nzDrawerContent>
+      <schedule-drawer
+        [input]="scheduleInput"
+        [teams]="board?.teams ?? []"
+        [projects]="board?.projects ?? []"
+        (closed)="scheduleOpen = false"
+        (saved)="onScheduleSaved()"
+      ></schedule-drawer>
+    </div>
+  </nz-drawer>
+}

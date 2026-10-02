@@ -1,0 +1,238 @@
+<nz-spin [nzSpinning]="loading">
+  <nz-tabset [(nzSelectedIndex)]="tabIndex">
+
+    <!-- ① Page ─────────────────────────────────────────────────────────── -->
+    <nz-tab nzTitle="Page">
+      @if (setting) {
+        <div class="cd-body">
+          <p class="cd-help">Change the wording and accent colour of the Project planning page. Leave a label empty to use its default.</p>
+
+          <div class="cd-grid">
+            <div class="cd-span2">
+              <label class="cd-label" for="cd-title">Page title</label>
+              <input id="cd-title" nz-input [(ngModel)]="setting.pageTitle" maxlength="256" />
+            </div>
+            <div class="cd-span2">
+              <label class="cd-label" for="cd-sub">Subtitle</label>
+              <input id="cd-sub" nz-input [(ngModel)]="setting.pageSubtitle" maxlength="2000" />
+            </div>
+            <div>
+              <label class="cd-label" for="cd-new">“New” button text</label>
+              <input id="cd-new" nz-input [(ngModel)]="setting.newProjectLabel" maxlength="128" />
+            </div>
+            <div>
+              <label class="cd-label">Accent colour</label>
+              <pp-color-field [(value)]="setting.accentColor" label="Accent colour"></pp-color-field>
+            </div>
+            <div>
+              <label class="cd-label" for="cd-cur">Currency symbol</label>
+              <input id="cd-cur" nz-input [(ngModel)]="setting.currencySymbol" maxlength="8" />
+            </div>
+            <div>
+              <label class="cd-label" for="cd-soon">“Due soon” means within (days)</label>
+              <nz-input-number id="cd-soon" [(ngModel)]="setting.dueSoonDays" [nzMin]="0" [nzMax]="60" class="cd-full"></nz-input-number>
+            </div>
+          </div>
+
+          <div class="cd-group">Tabs</div>
+          <div class="cd-grid">
+            <div><label class="cd-label" for="cd-t1">Board tab</label><input id="cd-t1" nz-input [(ngModel)]="setting.boardTabLabel" maxlength="128" /></div>
+            <div><label class="cd-label" for="cd-t2">Week tab</label><input id="cd-t2" nz-input [(ngModel)]="setting.weekTabLabel" maxlength="128" /></div>
+            <div><label class="cd-label" for="cd-t3">Attention tab</label><input id="cd-t3" nz-input [(ngModel)]="setting.attentionTabLabel" maxlength="128" /></div>
+            <div><label class="cd-label" for="cd-t4">Stages tab</label><input id="cd-t4" nz-input [(ngModel)]="setting.stagesTabLabel" maxlength="128" /></div>
+            <div class="cd-span2">
+              <label class="cd-label" for="cd-intro">Stages tab intro</label>
+              <textarea id="cd-intro" nz-input rows="2" [(ngModel)]="setting.stagesIntro" maxlength="2000"></textarea>
+            </div>
+          </div>
+
+          <div class="cd-group">Section headings</div>
+          <div class="cd-grid">
+            <div><label class="cd-label" for="cd-h1">Needs-attention table</label><input id="cd-h1" nz-input [(ngModel)]="setting.attentionTitle" maxlength="256" /></div>
+            <div><label class="cd-label" for="cd-h2">Crew schedule</label><input id="cd-h2" nz-input [(ngModel)]="setting.scheduleTitle" maxlength="256" /></div>
+            <div><label class="cd-label" for="cd-h3">Time per stage</label><input id="cd-h3" nz-input [(ngModel)]="setting.timeTitle" maxlength="256" /></div>
+            <div><label class="cd-label" for="cd-h4">Season plan</label><input id="cd-h4" nz-input [(ngModel)]="setting.seasonTitle" maxlength="256" /></div>
+            <div class="cd-span2"><label class="cd-label" for="cd-h5">Season plan subtitle</label><input id="cd-h5" nz-input [(ngModel)]="setting.seasonSubtitle" maxlength="2000" /></div>
+            <div class="cd-span2"><label class="cd-label" for="cd-h6">Note under the time chart</label><textarea id="cd-h6" nz-input rows="2" [(ngModel)]="setting.timeFootnote" maxlength="2000"></textarea></div>
+          </div>
+
+          <div class="cd-actions">
+            <button type="button" nz-button (click)="closed.emit()">Close</button>
+            <button type="button" nz-button nzType="primary" [nzLoading]="savingSetting" (click)="saveSetting()">Save page settings</button>
+          </div>
+        </div>
+      }
+    </nz-tab>
+
+    <!-- ② Stages ───────────────────────────────────────────────────────── -->
+    <nz-tab nzTitle="Stages">
+      <div class="cd-body">
+        <p class="cd-help">The steps a job goes through, left to right on the board. Each stage has its own colour, checklist and “produces” note.</p>
+
+        @for (r of stages; track $index; let i = $index; let first = $first; let last = $last) {
+          <div class="cd-item" [class.is-open]="r.open" [class.is-off]="!r.data.isActive">
+            <div class="cd-item__head">
+              <span class="cd-swatch" [style.background]="r.data.color"></span>
+              <button type="button" class="cd-item__title" (click)="r.open = !r.open" [attr.aria-expanded]="r.open">
+                {{ r.data.name || 'New stage' }}
+                @if (!r.data.isActive) { <span class="cd-tag">off</span> }
+                @if (r.data.isFinal) { <span class="cd-tag">final</span> }
+              </button>
+              <button type="button" class="cd-icon" [disabled]="first" (click)="moveStage(i, -1)" aria-label="Move up"><i class="bi bi-arrow-up"></i></button>
+              <button type="button" class="cd-icon" [disabled]="last" (click)="moveStage(i, 1)" aria-label="Move down"><i class="bi bi-arrow-down"></i></button>
+              <button type="button" class="cd-icon" (click)="r.open = !r.open" aria-label="Edit"><i class="bi" [ngClass]="r.open ? 'bi-chevron-up' : 'bi-pencil'"></i></button>
+            </div>
+
+            @if (r.open) {
+              <div class="cd-item__body">
+                <div class="cd-grid">
+                  <div>
+                    <label class="cd-label">Name</label>
+                    <input nz-input [(ngModel)]="r.data.name" maxlength="128" />
+                  </div>
+                  <div>
+                    <label class="cd-label">Colour</label>
+                    <pp-color-field [(value)]="r.data.color" label="Stage colour"></pp-color-field>
+                  </div>
+                  <div>
+                    <label class="cd-label">Who is responsible</label>
+                    <input nz-input [(ngModel)]="r.data.responsible" maxlength="256" placeholder="e.g. Engineer" />
+                  </div>
+                  <div>
+                    <label class="cd-label">Duration shown on the card</label>
+                    <input nz-input [(ngModel)]="r.data.durationText" maxlength="128" placeholder="e.g. 1–3 days" />
+                  </div>
+                  <div>
+                    <label class="cd-label">Target days (bars turn amber above it)</label>
+                    <nz-input-number [(ngModel)]="r.data.targetDays" [nzMin]="0" [nzMax]="3650" class="cd-full"></nz-input-number>
+                  </div>
+                  <div>
+                    <label class="cd-label">Produces</label>
+                    <input nz-input [(ngModel)]="r.data.producesText" maxlength="256" placeholder="e.g. Survey report with photos" />
+                  </div>
+                  <div class="cd-span2">
+                    <label class="cd-label">Checklist (one step per line)</label>
+                    <textarea nz-input rows="5" [(ngModel)]="r.data.checklistText"></textarea>
+                  </div>
+                </div>
+                <div class="cd-switches">
+                  <label><nz-switch [(ngModel)]="r.data.isActive" nzSize="small"></nz-switch> Shown on the board</label>
+                  <label><nz-switch [(ngModel)]="r.data.requiresScheduling" nzSize="small"></nz-switch> Needs a crew booked</label>
+                  <label><nz-switch [(ngModel)]="r.data.isFinal" nzSize="small"></nz-switch> Final stage (job is finished)</label>
+                </div>
+                <div class="cd-row-actions">
+                  <button type="button" nz-button nzDanger nzSize="small" [disabled]="r.saving" nz-popconfirm nzPopconfirmTitle="Delete this stage?" (nzOnConfirm)="deleteStage(r)">Delete</button>
+                  <span class="cd-spacer"></span>
+                  <button type="button" nz-button nzType="primary" nzSize="small" [nzLoading]="r.saving" (click)="saveStage(r)">Save stage</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <button type="button" nz-button nzType="dashed" class="cd-add" (click)="addStage()">+ Add stage</button>
+      </div>
+    </nz-tab>
+
+    <!-- ③ Teams ────────────────────────────────────────────────────────── -->
+    <nz-tab nzTitle="Teams">
+      <div class="cd-body">
+        <p class="cd-help">Rows of the crew schedule: install teams, contractors, surveyors.</p>
+
+        @for (r of teams; track $index; let i = $index; let first = $first; let last = $last) {
+          <div class="cd-item" [class.is-open]="r.open" [class.is-off]="!r.data.isActive">
+            <div class="cd-item__head">
+              <span class="cd-swatch" [style.background]="r.data.color"></span>
+              <button type="button" class="cd-item__title" (click)="r.open = !r.open" [attr.aria-expanded]="r.open">
+                {{ r.data.name || 'New team' }}
+                @if (!r.data.isActive) { <span class="cd-tag">off</span> }
+              </button>
+              <button type="button" class="cd-icon" [disabled]="first" (click)="moveTeam(i, -1)" aria-label="Move up"><i class="bi bi-arrow-up"></i></button>
+              <button type="button" class="cd-icon" [disabled]="last" (click)="moveTeam(i, 1)" aria-label="Move down"><i class="bi bi-arrow-down"></i></button>
+              <button type="button" class="cd-icon" (click)="r.open = !r.open" aria-label="Edit"><i class="bi" [ngClass]="r.open ? 'bi-chevron-up' : 'bi-pencil'"></i></button>
+            </div>
+            @if (r.open) {
+              <div class="cd-item__body">
+                <div class="cd-grid">
+                  <div>
+                    <label class="cd-label">Name</label>
+                    <input nz-input [(ngModel)]="r.data.name" maxlength="128" />
+                  </div>
+                  <div>
+                    <label class="cd-label">Colour</label>
+                    <pp-color-field [(value)]="r.data.color" label="Team colour"></pp-color-field>
+                  </div>
+                  <div class="cd-span2">
+                    <label class="cd-label">Description</label>
+                    <input nz-input [(ngModel)]="r.data.description" maxlength="256" placeholder="e.g. 2 technicians · Chattogram" />
+                  </div>
+                </div>
+                <div class="cd-switches">
+                  <label><nz-switch [(ngModel)]="r.data.isActive" nzSize="small"></nz-switch> Shown on the schedule</label>
+                </div>
+                <div class="cd-row-actions">
+                  <button type="button" nz-button nzDanger nzSize="small" [disabled]="r.saving" nz-popconfirm nzPopconfirmTitle="Delete this team?" (nzOnConfirm)="deleteTeam(r)">Delete</button>
+                  <span class="cd-spacer"></span>
+                  <button type="button" nz-button nzType="primary" nzSize="small" [nzLoading]="r.saving" (click)="saveTeam(r)">Save team</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <button type="button" nz-button nzType="dashed" class="cd-add" (click)="addTeam()">+ Add team</button>
+      </div>
+    </nz-tab>
+
+    <!-- ④ Season plan ──────────────────────────────────────────────────── -->
+    <nz-tab nzTitle="Season plan">
+      <div class="cd-body">
+        <p class="cd-help">Notes shown on the Needs-attention tab to plan around weather, festivals and farming seasons.</p>
+
+        @for (r of notes; track $index; let i = $index; let first = $first; let last = $last) {
+          <div class="cd-item" [class.is-open]="r.open">
+            <div class="cd-item__head">
+              <span class="cd-swatch" [style.background]="r.data.color"></span>
+              <button type="button" class="cd-item__title" (click)="r.open = !r.open" [attr.aria-expanded]="r.open">
+                {{ r.data.period }}{{ r.data.period && r.data.title ? ' · ' : '' }}{{ r.data.title || 'New note' }}
+              </button>
+              <button type="button" class="cd-icon" [disabled]="first" (click)="moveNote(i, -1)" aria-label="Move up"><i class="bi bi-arrow-up"></i></button>
+              <button type="button" class="cd-icon" [disabled]="last" (click)="moveNote(i, 1)" aria-label="Move down"><i class="bi bi-arrow-down"></i></button>
+              <button type="button" class="cd-icon" (click)="r.open = !r.open" aria-label="Edit"><i class="bi" [ngClass]="r.open ? 'bi-chevron-up' : 'bi-pencil'"></i></button>
+            </div>
+            @if (r.open) {
+              <div class="cd-item__body">
+                <div class="cd-grid">
+                  <div>
+                    <label class="cd-label">Title</label>
+                    <input nz-input [(ngModel)]="r.data.title" maxlength="256" />
+                  </div>
+                  <div>
+                    <label class="cd-label">Period</label>
+                    <input nz-input [(ngModel)]="r.data.period" maxlength="128" placeholder="e.g. Apr – Jun" />
+                  </div>
+                  <div class="cd-span2">
+                    <label class="cd-label">Advice</label>
+                    <textarea nz-input rows="2" [(ngModel)]="r.data.description" maxlength="2000"></textarea>
+                  </div>
+                  <div>
+                    <label class="cd-label">Colour</label>
+                    <pp-color-field [(value)]="r.data.color" label="Note colour"></pp-color-field>
+                  </div>
+                </div>
+                <div class="cd-row-actions">
+                  <button type="button" nz-button nzDanger nzSize="small" [disabled]="r.saving" nz-popconfirm nzPopconfirmTitle="Delete this note?" (nzOnConfirm)="deleteNote(r)">Delete</button>
+                  <span class="cd-spacer"></span>
+                  <button type="button" nz-button nzType="primary" nzSize="small" [nzLoading]="r.saving" (click)="saveNote(r)">Save note</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <button type="button" nz-button nzType="dashed" class="cd-add" (click)="addNote()">+ Add note</button>
+      </div>
+    </nz-tab>
+
+  </nz-tabset>
+</nz-spin>
