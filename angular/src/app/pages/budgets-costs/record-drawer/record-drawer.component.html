@@ -1,0 +1,229 @@
+<div class="rd">
+
+  @if (input.mode === 'menu') {
+    <nz-tabset [(nzSelectedIndex)]="menuIndex" (nzSelectedIndexChange)="onMenuChange()" nzSize="small">
+      @for (m of menu; track m.key) { <nz-tab [nzTitle]="m.label"></nz-tab> }
+    </nz-tabset>
+  } @else {
+    <h3 class="rd-title">{{ title }}</h3>
+  }
+
+  @switch (mode) {
+
+    <!-- Customer payment ───────────────────────────────────────────────── -->
+    @case ('customer') {
+      <p class="rd-help">Money a customer paid against an invoice. It is saved on the invoice itself and shows up here automatically.</p>
+      <label class="rd-label" for="rd-inv">Invoice</label>
+      <nz-select id="rd-inv" class="rd-full" nzShowSearch nzPlaceHolder="Choose an unpaid invoice" [ngModel]="invoiceId" (ngModelChange)="pickInvoice($event)">
+        @for (i of openInvoices; track i.invoiceId) {
+          <nz-option [nzValue]="i.invoiceId" [nzLabel]="i.customerName + ' · ' + i.invoiceNumber + ' · ' + money(i.balance) + ' due'"></nz-option>
+        }
+      </nz-select>
+      <div class="rd-grid">
+        <div><label class="rd-label" for="rd-amt">Amount received</label><nz-input-number id="rd-amt" class="rd-full" [(ngModel)]="amount" [nzMin]="0" [nzStep]="100"></nz-input-number></div>
+        <div><label class="rd-label" for="rd-date">Date</label><nz-date-picker id="rd-date" class="rd-full" [(ngModel)]="date"></nz-date-picker></div>
+        <div>
+          <label class="rd-label" for="rd-method">How they paid</label>
+          <nz-select id="rd-method" class="rd-full" [(ngModel)]="methodValue">
+            @for (m of methods; track m.value) { <nz-option [nzValue]="m.value" [nzLabel]="m.label"></nz-option> }
+          </nz-select>
+        </div>
+        <div><label class="rd-label" for="rd-ref">Reference (TrxID, cheque no.)</label><input id="rd-ref" nz-input [(ngModel)]="reference" maxlength="128" /></div>
+      </div>
+      @if (methodAccount) { <p class="rd-note is-ok">Goes into: <strong>{{ methodAccount.name }}</strong></p> }
+      @else { <p class="rd-note is-warn">No account receives this payment method yet, so the money will not show in any account. Assign it under Customise → Accounts.</p> }
+      <label class="rd-label" for="rd-note">Note</label>
+      <input id="rd-note" nz-input [(ngModel)]="note" maxlength="512" />
+      <div class="rd-actions"><span class="rd-spacer"></span>
+        <button type="button" nz-button (click)="closed.emit()">Cancel</button>
+        <button type="button" nz-button nzType="primary" [nzLoading]="saving" (click)="saveCustomer()">Record payment</button></div>
+    }
+
+    <!-- Supplier payment ───────────────────────────────────────────────── -->
+    @case ('supplier') {
+      <p class="rd-help">Pay a supplier bill (or part of it) from one of your accounts.</p>
+      <label class="rd-label" for="rd-bill">Bill</label>
+      <nz-select id="rd-bill" class="rd-full" nzShowSearch nzPlaceHolder="Choose a bill" [ngModel]="billId" (ngModelChange)="pickBill($event)">
+        @for (b of openBills; track b.id) { <nz-option [nzValue]="b.id" [nzLabel]="b.supplier + (b.billNumber ? ' · ' + b.billNumber : '') + ' · ' + money(b.remaining) + ' owed'"></nz-option> }
+      </nz-select>
+      @if (selectedBill; as b) { <p class="rd-note">Bill {{ money(b.amount) }} · paid {{ money(b.paid) }} · <strong>{{ money(b.remaining) }} still owed</strong></p> }
+      <div class="rd-grid">
+        <div><label class="rd-label" for="rd-samt">Amount paying now</label><nz-input-number id="rd-samt" class="rd-full" [(ngModel)]="amount" [nzMin]="0" [nzStep]="100"></nz-input-number></div>
+        <div><label class="rd-label" for="rd-sdate">Date</label><nz-date-picker id="rd-sdate" class="rd-full" [(ngModel)]="date"></nz-date-picker></div>
+        <div>
+          <label class="rd-label" for="rd-sacc">Paid from</label>
+          <nz-select id="rd-sacc" class="rd-full" [(ngModel)]="accountId">
+            @for (a of accounts; track a.id) { <nz-option [nzValue]="a.id" [nzLabel]="accountLabel(a)"></nz-option> }
+          </nz-select>
+        </div>
+        <div><label class="rd-label" for="rd-sref">Reference</label><input id="rd-sref" nz-input [(ngModel)]="reference" maxlength="256" /></div>
+      </div>
+      <div class="rd-actions"><span class="rd-spacer"></span>
+        <button type="button" nz-button (click)="closed.emit()">Cancel</button>
+        <button type="button" nz-button nzType="primary" [nzLoading]="saving" (click)="saveSupplierPayment()">Record payment</button></div>
+    }
+
+    <!-- Bill ───────────────────────────────────────────────────────────── -->
+    @case ('bill') {
+      <label class="rd-label" for="rd-sup">Supplier</label>
+      <input id="rd-sup" nz-input [(ngModel)]="supplier" maxlength="256" />
+      <label class="rd-label" for="rd-desc">What it is for</label>
+      <input id="rd-desc" nz-input [(ngModel)]="description" maxlength="256" placeholder="e.g. 200 × Panel 550W" />
+      <div class="rd-grid">
+        <div><label class="rd-label" for="rd-bn">Bill number</label><input id="rd-bn" nz-input [(ngModel)]="billNumber" maxlength="128" /></div>
+        <div><label class="rd-label" for="rd-bamt">Amount</label><nz-input-number id="rd-bamt" class="rd-full" [(ngModel)]="amount" [nzMin]="0" [nzStep]="100"></nz-input-number></div>
+        <div><label class="rd-label" for="rd-bd">Bill date</label><nz-date-picker id="rd-bd" class="rd-full" [(ngModel)]="billDate"></nz-date-picker></div>
+        <div><label class="rd-label" for="rd-dd">Due date</label><nz-date-picker id="rd-dd" class="rd-full" [(ngModel)]="dueDate"></nz-date-picker></div>
+      </div>
+      <label class="rd-label" for="rd-bcat">Counts as (for profit & loss)</label>
+      <nz-select id="rd-bcat" class="rd-full" [(ngModel)]="categoryId">
+        @for (c of categories; track c.id) { <nz-option [nzValue]="c.id" [nzLabel]="c.name + ' → ' + c.plLine"></nz-option> }
+      </nz-select>
+      <label class="rd-label">Bill copy</label>
+      <div class="rd-upload">
+        @if (receiptUrl) { <a [href]="receiptUrl" target="_blank" rel="noopener">View file</a> }
+        <label nz-button [class.is-busy]="uploading"><i class="bi bi-upload"></i> {{ uploading ? 'Uploading…' : receiptUrl ? 'Replace' : 'Attach' }}
+          <input type="file" hidden accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.xls,.xlsx" (change)="uploadReceipt($event)" /></label>
+      </div>
+      <label class="rd-label" for="rd-bnote">Note</label>
+      <input id="rd-bnote" nz-input [(ngModel)]="note" maxlength="2000" />
+
+      @if (editingBill; as b) {
+        <div class="rd-section">Payments on this bill</div>
+        @for (p of b.payments; track p.id) {
+          <div class="rd-pay"><span>{{ p.date.slice(0, 10) }} · {{ p.accountName }}{{ p.reference ? ' · ' + p.reference : '' }}</span><strong>{{ money(p.amount) }}</strong>
+            <button type="button" class="rd-x" nz-popconfirm nzPopconfirmTitle="Remove this payment? The money goes back to the account." (nzOnConfirm)="deleteBillPayment(p.id)" aria-label="Remove payment"><i class="bi bi-x-lg"></i></button></div>
+        } @empty { <p class="rd-help">Nothing paid yet.</p> }
+        <p class="rd-note">Paid {{ money(b.paid) }} of {{ money(b.amount) }} · <strong>{{ money(b.remaining) }} still owed</strong></p>
+      }
+      <div class="rd-actions">
+        @if (editingBill) { <button type="button" nz-button nzDanger [disabled]="saving" nz-popconfirm nzPopconfirmTitle="Delete this bill?" (nzOnConfirm)="deleteBill()">Delete</button> }
+        <span class="rd-spacer"></span>
+        <button type="button" nz-button (click)="closed.emit()">Cancel</button>
+        <button type="button" nz-button nzType="primary" [nzLoading]="saving" (click)="saveBill()">Save bill</button></div>
+    }
+
+    <!-- Expense ────────────────────────────────────────────────────────── -->
+    @case ('expense') {
+      <div class="rd-grid">
+        <div><label class="rd-label" for="rd-ed">Date</label><nz-date-picker id="rd-ed" class="rd-full" [(ngModel)]="date"></nz-date-picker></div>
+        <div><label class="rd-label" for="rd-eamt">Amount</label><nz-input-number id="rd-eamt" class="rd-full" [(ngModel)]="amount" [nzMin]="0" [nzStep]="100"></nz-input-number></div>
+      </div>
+      <label class="rd-label" for="rd-ecat">Category</label>
+      <nz-select id="rd-ecat" class="rd-full" [(ngModel)]="categoryId">
+        @for (c of categories; track c.id) { <nz-option [nzValue]="c.id" [nzLabel]="c.name"></nz-option> }
+      </nz-select>
+      <label class="rd-label" for="rd-edesc">What for</label>
+      <input id="rd-edesc" nz-input [(ngModel)]="description" maxlength="256" placeholder="e.g. Van fuel · Gazipur delivery" />
+      <label class="rd-label" for="rd-eacc">Paid from</label>
+      <nz-select id="rd-eacc" class="rd-full" [(ngModel)]="accountId" nzAllowClear nzPlaceHolder="Paid some other way (no account)">
+        @for (a of accounts; track a.id) { <nz-option [nzValue]="a.id" [nzLabel]="accountLabel(a)"></nz-option> }
+      </nz-select>
+      <label class="rd-label" for="rd-epb">Paid by (person or note)</label>
+      <input id="rd-epb" nz-input [(ngModel)]="paidByNote" maxlength="256" placeholder="e.g. Admin" />
+      <label class="rd-label">Receipt</label>
+      <div class="rd-upload">
+        @if (receiptUrl) { <a [href]="receiptUrl" target="_blank" rel="noopener">View file</a> }
+        <label nz-button [class.is-busy]="uploading"><i class="bi bi-upload"></i> {{ uploading ? 'Uploading…' : receiptUrl ? 'Replace' : 'Attach' }}
+          <input type="file" hidden accept=".pdf,.png,.jpg,.jpeg,.webp" (change)="uploadReceipt($event)" /></label>
+      </div>
+      <div class="rd-actions">
+        @if (editingExpense) { <button type="button" nz-button nzDanger [disabled]="saving" nz-popconfirm nzPopconfirmTitle="Delete this expense?" (nzOnConfirm)="deleteExpense()">Delete</button> }
+        <span class="rd-spacer"></span>
+        <button type="button" nz-button (click)="closed.emit()">Cancel</button>
+        <button type="button" nz-button nzType="primary" [nzLoading]="saving" (click)="saveExpense()">Save expense</button></div>
+    }
+
+    <!-- Other money in / out ───────────────────────────────────────────── -->
+    @case ('move') {
+      <p class="rd-help">Money that is not a customer payment, a supplier bill or an expense — a loan, an owner top-up, a refund. Use Transfer for moving money between your own accounts.</p>
+      <div class="rd-seg" role="group" aria-label="Direction">
+        <button type="button" [class.is-on]="direction === Direction.In" (click)="direction = Direction.In">Money in</button>
+        <button type="button" [class.is-on]="direction === Direction.Out" (click)="direction = Direction.Out">Money out</button>
+      </div>
+      <div class="rd-grid">
+        <div>
+          <label class="rd-label" for="rd-macc">Account</label>
+          <nz-select id="rd-macc" class="rd-full" [(ngModel)]="accountId">
+            @for (a of accounts; track a.id) { <nz-option [nzValue]="a.id" [nzLabel]="accountLabel(a)"></nz-option> }
+          </nz-select>
+        </div>
+        <div><label class="rd-label" for="rd-mamt">Amount</label><nz-input-number id="rd-mamt" class="rd-full" [(ngModel)]="amount" [nzMin]="0" [nzStep]="100"></nz-input-number></div>
+        <div><label class="rd-label" for="rd-mdate">Date</label><nz-date-picker id="rd-mdate" class="rd-full" [(ngModel)]="date"></nz-date-picker></div>
+        <div><label class="rd-label" for="rd-mcat">Category</label><input id="rd-mcat" nz-input [(ngModel)]="categoryText" maxlength="256" placeholder="e.g. Loan disbursement" /></div>
+      </div>
+      <label class="rd-label" for="rd-mdesc">What it was</label>
+      <input id="rd-mdesc" nz-input [(ngModel)]="description" maxlength="2000" />
+      <label class="rd-label" for="rd-mref">Reference</label>
+      <input id="rd-mref" nz-input [(ngModel)]="reference" maxlength="256" />
+      <div class="rd-actions"><span class="rd-spacer"></span>
+        <button type="button" nz-button (click)="closed.emit()">Cancel</button>
+        <button type="button" nz-button nzType="primary" [nzLoading]="saving" (click)="saveMove()">Record</button></div>
+    }
+
+    <!-- Transfer ───────────────────────────────────────────────────────── -->
+    @case ('transfer') {
+      <p class="rd-help">For example cash banked, or a withdrawal. It changes the balances but is not counted as income or a cost.</p>
+      <div class="rd-grid">
+        <div>
+          <label class="rd-label" for="rd-from">From</label>
+          <nz-select id="rd-from" class="rd-full" [(ngModel)]="accountId">
+            @for (a of accounts; track a.id) { <nz-option [nzValue]="a.id" [nzLabel]="accountLabel(a)"></nz-option> }
+          </nz-select>
+        </div>
+        <div>
+          <label class="rd-label" for="rd-to">To</label>
+          <nz-select id="rd-to" class="rd-full" [(ngModel)]="toAccountId">
+            @for (a of accounts; track a.id) { <nz-option [nzValue]="a.id" [nzLabel]="accountLabel(a)"></nz-option> }
+          </nz-select>
+        </div>
+        <div><label class="rd-label" for="rd-tamt">Amount</label><nz-input-number id="rd-tamt" class="rd-full" [(ngModel)]="amount" [nzMin]="0" [nzStep]="100"></nz-input-number></div>
+        <div><label class="rd-label" for="rd-tdate">Date</label><nz-date-picker id="rd-tdate" class="rd-full" [(ngModel)]="date"></nz-date-picker></div>
+      </div>
+      <label class="rd-label" for="rd-tnote">Note</label>
+      <input id="rd-tnote" nz-input [(ngModel)]="note" maxlength="2000" placeholder="e.g. Counter cash banked · Chattogram" />
+      <div class="rd-actions"><span class="rd-spacer"></span>
+        <button type="button" nz-button (click)="closed.emit()">Cancel</button>
+        <button type="button" nz-button nzType="primary" [nzLoading]="saving" (click)="saveTransfer()">Move money</button></div>
+    }
+
+    <!-- Money on the way arrived ───────────────────────────────────────── -->
+    @case ('receive') {
+      @if (input.item; as it) {
+        <p class="rd-note"><strong>{{ it.title }}</strong> · {{ money(it.amount) }}</p>
+        <div class="rd-grid">
+          <div>
+            <label class="rd-label" for="rd-racc">Arrived in</label>
+            <nz-select id="rd-racc" class="rd-full" [(ngModel)]="accountId">
+              @for (a of accounts; track a.id) { <nz-option [nzValue]="a.id" [nzLabel]="accountLabel(a)"></nz-option> }
+            </nz-select>
+          </div>
+          <div><label class="rd-label" for="rd-rdate">Date</label><nz-date-picker id="rd-rdate" class="rd-full" [(ngModel)]="date"></nz-date-picker></div>
+        </div>
+        <p class="rd-help">It is added to the account and taken off the “money on the way” list.</p>
+      }
+      <div class="rd-actions"><span class="rd-spacer"></span>
+        <button type="button" nz-button (click)="closed.emit()">Cancel</button>
+        <button type="button" nz-button nzType="primary" [nzLoading]="saving" (click)="saveReceive()">Mark as received</button></div>
+    }
+
+    <!-- Monthly cost ───────────────────────────────────────────────────── -->
+    @case ('recurring') {
+      @if (input.recurring; as r) {
+        <p class="rd-note"><strong>{{ r.name }}</strong> · usual amount {{ money(r.amount) }}</p>
+        <div class="rd-grid">
+          <div><label class="rd-label" for="rd-ramt">Amount this month</label><nz-input-number id="rd-ramt" class="rd-full" [(ngModel)]="amount" [nzMin]="0" [nzStep]="100"></nz-input-number></div>
+          <div><label class="rd-label" for="rd-rrd">Date paid</label><nz-date-picker id="rd-rrd" class="rd-full" [(ngModel)]="date"></nz-date-picker></div>
+        </div>
+        <label class="rd-label" for="rd-rracc">Paid from</label>
+        <nz-select id="rd-rracc" class="rd-full" [(ngModel)]="accountId" nzAllowClear nzPlaceHolder="Paid some other way (no account)">
+          @for (a of accounts; track a.id) { <nz-option [nzValue]="a.id" [nzLabel]="accountLabel(a)"></nz-option> }
+        </nz-select>
+        <p class="rd-help">This adds an expense for this month and, if you pick an account, takes the money out of it.</p>
+      }
+      <div class="rd-actions"><span class="rd-spacer"></span>
+        <button type="button" nz-button (click)="closed.emit()">Cancel</button>
+        <button type="button" nz-button nzType="primary" [nzLoading]="saving" (click)="saveRecurring()">Record payment</button></div>
+    }
+  }
+</div>

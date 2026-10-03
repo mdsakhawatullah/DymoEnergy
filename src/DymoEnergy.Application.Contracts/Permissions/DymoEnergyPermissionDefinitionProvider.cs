@@ -55,6 +55,11 @@ public class DymoEnergyPermissionDefinitionProvider : PermissionDefinitionProvid
         compliancePermission.AddChild(DymoEnergyPermissions.Compliance.Edit,   L("Permission:Compliance.Edit"));
         compliancePermission.AddChild(DymoEnergyPermissions.Compliance.Delete, L("Permission:Compliance.Delete"));
 
+        var financePermission = myGroup.AddPermission(DymoEnergyPermissions.Finance.Default, L("Permission:Finance"));
+        financePermission.AddChild(DymoEnergyPermissions.Finance.Create, L("Permission:Finance.Create"));
+        financePermission.AddChild(DymoEnergyPermissions.Finance.Edit,   L("Permission:Finance.Edit"));
+        financePermission.AddChild(DymoEnergyPermissions.Finance.Delete, L("Permission:Finance.Delete"));
+
         var companiesPermission = myGroup.AddPermission(DymoEnergyPermissions.Companies.Default, L("Permission:Companies"));
         companiesPermission.AddChild(DymoEnergyPermissions.Companies.Create, L("Permission:Companies.Create"));
         companiesPermission.AddChild(DymoEnergyPermissions.Companies.Edit,   L("Permission:Companies.Edit"));

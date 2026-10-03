@@ -10,6 +10,7 @@ using DymoEnergy.Companies;
 using DymoEnergy.QuoteRequests;
 using DymoEnergy.ProjectPlanning;
 using DymoEnergy.Compliance;
+using DymoEnergy.Finance;
 using DymoEnergy.UserSiteSettings;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
@@ -64,6 +65,15 @@ public class DymoEnergyDbContext :
     public DbSet<ComplianceListItem>        ComplianceListItems        { get; set; }
     public DbSet<ComplianceProjectDocument> ComplianceProjectDocuments { get; set; }
     public DbSet<ComplianceFile>            ComplianceFiles            { get; set; }
+
+    public DbSet<FinanceSetting>         FinanceSettings          { get; set; }
+    public DbSet<FinanceAccount>         FinanceAccounts          { get; set; }
+    public DbSet<FinanceTransaction>     FinanceTransactions      { get; set; }
+    public DbSet<FinanceExpenseCategory> FinanceExpenseCategories { get; set; }
+    public DbSet<FinanceExpense>         FinanceExpenses          { get; set; }
+    public DbSet<FinanceSupplierBill>    FinanceSupplierBills     { get; set; }
+    public DbSet<FinanceRecurringCost>   FinanceRecurringCosts    { get; set; }
+    public DbSet<FinanceListItem>        FinanceListItems         { get; set; }
     public DbSet<UserSiteSetting>      UserSiteSettings      { get; set; }
     public DbSet<UserSiteSettingImage> UserSiteSettingImages { get; set; }
 
@@ -395,6 +405,105 @@ public class DymoEnergyDbContext :
             b.Property(x => x.FileName).IsRequired().HasMaxLength(ComplianceConsts.MaxName);
             b.Property(x => x.Url).IsRequired().HasMaxLength(ComplianceConsts.MaxUrl);
             b.HasIndex(x => new { x.OwnerKind, x.OwnerId });
+        });
+
+        /* ── Finance ────────────────────────────────────────────────────── */
+        builder.Entity<FinanceSetting>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "FinanceSettings", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.AccentColor).IsRequired().HasMaxLength(FinanceConsts.MaxColor);
+            b.Property(x => x.CurrencySymbol).IsRequired().HasMaxLength(8);
+            b.Property(x => x.ReminderTemplate).HasMaxLength(FinanceConsts.MaxText);
+        });
+
+        builder.Entity<FinanceAccount>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "FinanceAccounts", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(FinanceConsts.MaxName);
+            b.Property(x => x.ShortCode).IsRequired().HasMaxLength(8);
+            b.Property(x => x.Color).IsRequired().HasMaxLength(FinanceConsts.MaxColor);
+            b.Property(x => x.OpeningBalance).HasPrecision(18, 2);
+            b.Property(x => x.PaymentMethods).HasMaxLength(FinanceConsts.MaxShort);
+            b.HasIndex(x => x.Order);
+        });
+
+        builder.Entity<FinanceTransaction>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "FinanceTransactions", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Amount).HasPrecision(18, 2);
+            b.Property(x => x.Category).HasMaxLength(FinanceConsts.MaxName);
+            b.Property(x => x.Description).HasMaxLength(FinanceConsts.MaxText);
+            b.Property(x => x.Reference).HasMaxLength(FinanceConsts.MaxName);
+            b.HasIndex(x => x.Date);
+            b.HasIndex(x => x.AccountId);
+            b.HasIndex(x => new { x.Source, x.SourceId });
+        });
+
+        builder.Entity<FinanceExpenseCategory>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "FinanceExpenseCategories", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(FinanceConsts.MaxName);
+            b.Property(x => x.Color).IsRequired().HasMaxLength(FinanceConsts.MaxColor);
+            b.Property(x => x.PlLine).IsRequired().HasMaxLength(FinanceConsts.MaxName);
+            b.HasIndex(x => x.Order);
+        });
+
+        builder.Entity<FinanceExpense>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "FinanceExpenses", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Description).IsRequired().HasMaxLength(FinanceConsts.MaxName);
+            b.Property(x => x.Amount).HasPrecision(18, 2);
+            b.Property(x => x.PaidByNote).HasMaxLength(FinanceConsts.MaxName);
+            b.Property(x => x.ReceiptUrl).HasMaxLength(FinanceConsts.MaxUrl);
+            b.HasIndex(x => x.Date);
+            b.HasIndex(x => x.CategoryId);
+        });
+
+        builder.Entity<FinanceSupplierBill>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "FinanceSupplierBills", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Supplier).IsRequired().HasMaxLength(FinanceConsts.MaxName);
+            b.Property(x => x.Description).HasMaxLength(FinanceConsts.MaxName);
+            b.Property(x => x.BillNumber).HasMaxLength(FinanceConsts.MaxShort);
+            b.Property(x => x.Amount).HasPrecision(18, 2);
+            b.Property(x => x.ReceiptUrl).HasMaxLength(FinanceConsts.MaxUrl);
+            b.Property(x => x.Note).HasMaxLength(FinanceConsts.MaxText);
+            b.HasIndex(x => x.DueDate);
+        });
+
+        builder.Entity<FinanceRecurringCost>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "FinanceRecurringCosts", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(FinanceConsts.MaxName);
+            b.Property(x => x.Detail).HasMaxLength(FinanceConsts.MaxName);
+            b.Property(x => x.Amount).HasPrecision(18, 2);
+        });
+
+        builder.Entity<FinanceListItem>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "FinanceListItems", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Title).IsRequired().HasMaxLength(FinanceConsts.MaxName);
+            b.Property(x => x.Detail).HasMaxLength(FinanceConsts.MaxText);
+            b.Property(x => x.Extra).HasMaxLength(FinanceConsts.MaxName);
+            b.Property(x => x.Color).HasMaxLength(FinanceConsts.MaxColor);
+            b.Property(x => x.Amount).HasPrecision(18, 2);
+            b.HasIndex(x => new { x.Kind, x.Order });
         });
 
         /* ── Quote Requests ─────────────────────────────────────────────── */

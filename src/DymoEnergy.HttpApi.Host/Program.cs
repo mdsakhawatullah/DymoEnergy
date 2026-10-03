@@ -14,7 +14,7 @@ public class Program
     {
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         Log.Logger = new LoggerConfiguration()
-            .WriteTo.Async(c => c.File("Logs/logs.txt"))
+            .WriteTo.Async(c => c.File("Logs/logs-.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7))
             .WriteTo.Async(c => c.Console())
             .CreateBootstrapLogger();
 

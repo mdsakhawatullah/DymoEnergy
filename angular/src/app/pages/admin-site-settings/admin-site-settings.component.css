@@ -139,3 +139,14 @@
   background-color: #0a4a25 !important;
   border-color:     #0a4a25 !important;
 }
+
+/* ── Left menu + right form layout ──────────────────────────────────────── */
+.settings-layout { display: flex; gap: 24px; align-items: flex-start; background: #fff; border: 1px solid var(--de-border, #E3E6E0); border-radius: 16px; padding: 8px; }
+.settings-nav { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; position: sticky; top: 8px; }
+.settings-nav__item { text-align: left; border: 0; background: transparent; padding: 14px 20px; border-radius: 12px; font: inherit; font-size: 15px; color: var(--de-text-2, #2E3A33); cursor: pointer; }
+.settings-nav__item:hover { background: var(--de-surface-muted, #F7F8F5); }
+.settings-nav__item.is-active { background: var(--de-leaf, #E6F2EA); color: var(--de-primary-text, #0B5A34); font-weight: 600; }
+.settings-nav__item:focus-visible { outline: 2px solid var(--de-primary, #0E6B3F); outline-offset: 2px; }
+.settings-content { flex: 1; min-width: 0; padding: 16px 16px 8px 0; }
+.settings-content .settings-card { border: 0; padding: 0; margin-bottom: 0; }
+@media (max-width: 991px) { .settings-layout { flex-direction: column; } .settings-nav { width: 100%; flex-direction: row; flex-wrap: wrap; position: static; } .settings-content { padding: 8px; } }

@@ -26,7 +26,7 @@ public class DymoEnergyDatabaseCheck : IHealthCheck, ITransientDependency
         }
         catch (Exception e)
         {
-            return HealthCheckResult.Unhealthy($"Error when trying to get database record. ", e);
+            return HealthCheckResult.Unhealthy($"Error when trying to get database record: {e.GetType().Name}: {e.Message}", e);
         }
     }
 }

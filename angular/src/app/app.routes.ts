@@ -270,7 +270,7 @@ export const APP_ROUTES: Routes = [
   // ── Financials & Billing ───────────────────────────────────────────────────
   {
     path: 'budgets-costs',
-    loadComponent: comingSoonComponent,
+    loadComponent: () => import('./pages/budgets-costs/budgets-costs.component').then(c => c.BudgetsCostsComponent),
     canActivate: [authGuard],
   },
   {

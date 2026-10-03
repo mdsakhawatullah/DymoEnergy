@@ -1,212 +1,189 @@
-<!-- ── Page header ─────────────────────────────────────────────────────── -->
-<div class="d-flex align-items-start justify-content-between mb-3">
+<!-- ── Page header ───────────────────────────────────────────────────────────── -->
+<div class="pg-head">
   <div>
-    <h4 class="mb-1 fw-bold">Companies</h4>
-    <span class="text-muted small">Manage partner and client company accounts</span>
+    <h1 class="pg-title">Companies</h1>
+    <p class="pg-sub">
+      {{ stats.total | number }} companies · {{ stats.active | number }} active
+      · {{ stats.parent | number }} parent {{ stats.parent === 1 ? 'company' : 'companies' }}
+    </p>
   </div>
-  <div class="d-flex gap-2">
-    <button nz-button nzType="primary" class="btn-new-company" (click)="openDrawerForCreate()">
-      <span nz-icon nzType="plus" nzTheme="outline"></span> New Company
+  <div class="pg-actions">
+    <button type="button" class="btn-solid" (click)="openDrawerForCreate()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      New company
     </button>
   </div>
 </div>
 
-<!-- ── Stats row ───────────────────────────────────────────────────────── -->
-<div class="stats-row mb-4">
-  <div class="stats-row__item">
-    <div class="stats-row__icon stats-row__icon--green">
-      <span nz-icon nzType="unordered-list" nzTheme="outline"></span>
+<!-- ── KPI cards ─────────────────────────────────────────────────────────────── -->
+<section class="kpi-grid" aria-label="Company summary">
+  <div class="kpi">
+    <div class="kpi__top">
+      <span class="kpi__chip kpi__chip--green">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5l8-2v18M12 9h8v12M8 8h.01M8 12h.01M8 16h.01M16 13h.01M16 17h.01"/></svg>
+      </span>
+      <span class="kpi__label">Total companies</span>
     </div>
-    <div>
-      <div class="stats-row__value">{{ stats.total }}</div>
-      <div class="stats-row__label">Total Companies</div>
-    </div>
+    <div class="kpi__value">{{ stats.total | number }}</div>
+    <div class="kpi__note">Partners, dealers and clients</div>
   </div>
 
-  <div class="stats-row__divider"></div>
-
-  <div class="stats-row__item">
-    <div class="stats-row__icon stats-row__icon--mint">
-      <span nz-icon nzType="check" nzTheme="outline"></span>
+  <div class="kpi">
+    <div class="kpi__top">
+      <span class="kpi__chip kpi__chip--blue">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>
+      </span>
+      <span class="kpi__label">Active</span>
     </div>
-    <div>
-      <div class="stats-row__value">{{ stats.active }}</div>
-      <div class="stats-row__label">Active</div>
-    </div>
+    <div class="kpi__value">{{ stats.active | number }}</div>
+    <div class="kpi__note">{{ stats.total ? (stats.active / stats.total * 100 | number:'1.0-0') : 0 }}% of all companies</div>
   </div>
 
-  <div class="stats-row__divider"></div>
-
-  <div class="stats-row__item">
-    <div class="stats-row__icon stats-row__icon--rose">
-      <span nz-icon nzType="stop" nzTheme="outline"></span>
+  <div class="kpi">
+    <div class="kpi__top">
+      <span class="kpi__chip kpi__chip--amber">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v6M5 20v-4a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v4M12 10v3"/><circle cx="12" cy="4" r="1.5"/></svg>
+      </span>
+      <span class="kpi__label">Parent companies</span>
     </div>
-    <div>
-      <div class="stats-row__value">{{ stats.inactive }}</div>
-      <div class="stats-row__label">Inactive</div>
-    </div>
+    <div class="kpi__value">{{ stats.parent | number }}</div>
+    <div class="kpi__note">{{ stats.child | number }} child {{ stats.child === 1 ? 'company' : 'companies' }}</div>
   </div>
-</div>
 
-<!-- ── Main card ───────────────────────────────────────────────────────── -->
-<div class="card">
+  <div class="kpi">
+    <div class="kpi__top">
+      <span class="kpi__chip kpi__chip--danger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>
+      </span>
+      <span class="kpi__label">Inactive</span>
+    </div>
+    <div class="kpi__value" [class.kpi__value--danger]="stats.inactive > 0">{{ stats.inactive | number }}</div>
+    <div class="kpi__note">{{ stats.inactive ? 'Switched off' : 'None switched off' }}</div>
+  </div>
+</section>
 
-  <!-- Tab strip -->
-  <div class="tab-strip">
+<!-- ── Main card ─────────────────────────────────────────────────────────────── -->
+<div class="panel">
+
+  <!-- Tabs -->
+  <div class="tabs" role="tablist">
     @for (tab of tabs; track tab.key) {
-      <button
-        class="tab-strip__item"
-        [class.tab-strip__item--active]="activeTab === tab.key"
-        (click)="selectTab(tab.key)"
-      >
+      <button type="button" role="tab" class="tabs__btn"
+              [class.tabs__btn--on]="activeTab === tab.key"
+              [attr.aria-selected]="activeTab === tab.key"
+              (click)="selectTab(tab.key)">
         {{ tab.label }}
-        <span class="tab-strip__badge" [class.tab-strip__badge--active]="activeTab === tab.key">
-          {{ stats[tab.countKey] }}
-        </span>
+        <span class="tabs__count" [class.tabs__count--on]="activeTab === tab.key">{{ stats[tab.countKey] | number }}</span>
       </button>
     }
   </div>
 
-  <!-- Filter row -->
-  <div class="px-3 py-2 d-flex gap-2 align-items-center border-bottom">
-    <nz-input-group [nzPrefix]="searchPfx" style="max-width: 260px;">
-      <input
-        nz-input
-        placeholder="Search name, code, email..."
-        [(ngModel)]="filter"
-        (keyup.enter)="onSearch()"
-      />
-    </nz-input-group>
-    <ng-template #searchPfx>
-      <span nz-icon nzType="search" style="color:#bbb;"></span>
-    </ng-template>
-    <button nz-button (click)="resetFilters()" [disabled]="!filter && activeTab === 'all'">
-      Reset Filters
-    </button>
+  <!-- Filters -->
+  <div class="filters">
+    <label class="fld fld--search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+      <input type="search" placeholder="Name, code, email or phone" [(ngModel)]="filter" (keyup.enter)="onSearch()" />
+    </label>
+    <button type="button" class="reset" [disabled]="!hasFilters" (click)="resetFilters()">Reset filters</button>
   </div>
 
-  <!-- Table -->
-  <nz-table
-    [nzData]="companies"
-    [nzTotal]="totalCount"
-    [nzPageIndex]="pageIndex"
-    [nzPageSize]="pageSize"
-    [nzLoading]="loading"
-    [nzFrontPagination]="false"
-    [nzShowSizeChanger]="true"
-    [nzPageSizeOptions]="[10, 20, 50]"
-    (nzPageIndexChange)="onPageIndexChange($event)"
-    (nzPageSizeChange)="onPageSizeChange($event)"
-    nzShowPaginationBottom
-    nzSize="small"
-  >
-    <thead>
-      <tr>
-        <th nzWidth="60px" nzAlign="center">ID</th>
-        <th>COMPANY</th>
-        <th>CONTACT</th>
-        <th>SEND STATEMENTS TO</th>
-        <th nzWidth="130px" nzAlign="center">RELATION</th>
-        <th nzWidth="110px" nzAlign="center">STATUS</th>
-        <th nzWidth="100px" nzAlign="center">ACTION</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (item of companies; track item.id) {
-        <tr>
-          <td nzAlign="center" class="text-muted" style="font-size:12px;">{{ item.id }}</td>
+  <!-- Table head -->
+  <div class="thead">
+    <span>Company</span>
+    <span>Contact</span>
+    <span>Send statements to</span>
+    <span>Relation</span>
+    <span>Status</span>
+    <span class="ta-right">Action</span>
+  </div>
 
-          <!-- Company name -->
-          <td>
-            <div class="d-flex align-items-center gap-2">
-              <div class="thumb-placeholder">
-                <span nz-icon nzType="bank" nzTheme="outline"></span>
-              </div>
-              <div>
-                <div class="fw-semibold" style="font-size:13px;">{{ item.companyName || '—' }}</div>
-                @if (item.companyCode) {
-                  <div style="font-size:11px; color:#888;">{{ item.companyCode }}</div>
-                }
-              </div>
-            </div>
-          </td>
+  <!-- Rows -->
+  @if (loading) {
+    @for (i of [1,2,3,4,5]; track i) {
+      <div class="trow trow--skeleton"><span class="sk"></span></div>
+    }
+  } @else if (!companies.length) {
+    <div class="empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A3ACA5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5l8-2v18M12 9h8v12"/></svg>
+      <p>No companies match these filters.</p>
+    </div>
+  } @else {
+    @for (item of companies; track item.id) {
+      <div class="trow">
+        <!-- Company -->
+        <span class="co">
+          <span class="avatar">{{ initials(item.companyName) }}</span>
+          <span class="cell-stack">
+            <a class="cell-name co__link" (click)="openDrawerForEdit(item)" tabindex="0" (keydown.enter)="openDrawerForEdit(item)">{{ item.companyName || '—' }}</a>
+            <span class="cell-sub">{{ item.companyCode || '—' }}</span>
+          </span>
+        </span>
 
-          <!-- Contact -->
-          <td>
-            <div style="font-size:12px;">{{ item.contactPersonName || item.email || '—' }}</div>
-            @if (item.phone) {
-              <div style="font-size:11px; color:#888;">{{ item.phone }}</div>
-            }
-          </td>
+        <!-- Contact -->
+        <span class="cell-stack">
+          <span class="cell-name">{{ item.contactPersonName || item.email || '—' }}</span>
+          <span class="cell-sub">{{ item.phone || '—' }}</span>
+        </span>
 
-          <!-- Send Statements To -->
-          <td>
-            <span style="font-size:12px; color:#555;">{{ item.sendStatementTo || '—' }}</span>
-          </td>
+        <!-- Statements -->
+        <span class="stmt">{{ item.sendStatementTo || '—' }}</span>
 
-          <!-- Relation -->
-          <td nzAlign="center">
-            @if (item.isParentCompany) {
-              <nz-tag nzColor="orange">Parent</nz-tag>
-            }
-            @if (item.parentCompanyId) {
-              <nz-tag nzColor="purple">Child</nz-tag>
-            }
-            @if (!item.isParentCompany && !item.parentCompanyId) {
-              <span class="text-muted" style="font-size:12px;">—</span>
-            }
-          </td>
+        <!-- Relation -->
+        <span class="rel">
+          @if (item.isParentCompany) { <span class="spill spill--pending"><span class="spill__dot"></span>Parent</span> }
+          @if (item.parentCompanyId) { <span class="spill spill--processing"><span class="spill__dot"></span>Child</span> }
+          @if (!item.isParentCompany && !item.parentCompanyId) { <span class="cell-sub">—</span> }
+        </span>
 
-          <!-- Status -->
-          <td nzAlign="center">
-            <nz-tag [nzColor]="statusColors[item.status]">{{ statusLabels[item.status] }}</nz-tag>
-          </td>
+        <!-- Status -->
+        <span class="spill" [class]="'spill spill--' + (item.status === 1 ? 'success' : 'neutral')">
+          <span class="spill__dot"></span>{{ statusLabels[item.status] }}
+        </span>
 
-          <!-- Actions -->
-          <td nzAlign="center">
-            <div class="d-flex align-items-center justify-content-center gap-1">
-              <button
-                nz-button nzType="text" nzSize="small"
-                class="btn-edit"
-                nz-tooltip nzTooltipTitle="Edit"
-                (click)="openDrawerForEdit(item)"
-              >
-                <span nz-icon nzType="edit" nzTheme="outline"></span>
-              </button>
+        <!-- Actions -->
+        <span class="acts">
+          <button type="button" class="ib" aria-label="Edit company" (click)="openDrawerForEdit(item)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></svg>
+          </button>
+          <button type="button" class="ib" aria-label="Delete company"
+                  nz-popconfirm nzPopconfirmTitle="Delete this company?" nzOkText="Yes, delete" nzOkDanger nzCancelText="Cancel"
+                  [disabled]="deletingIds.has(item.id)" (nzOnConfirm)="deleteCompany(item.id)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+          </button>
+        </span>
+      </div>
+    }
+  }
 
-              <button
-                nz-button nzType="text" nzSize="small"
-                nzDanger
-                nz-tooltip nzTooltipTitle="Delete"
-                nz-popconfirm
-                nzPopconfirmTitle="Delete this company?"
-                nzOkText="Yes, delete"
-                nzOkDanger
-                nzCancelText="Cancel"
-                [nzLoading]="deletingIds.has(item.id)"
-                (nzOnConfirm)="deleteCompany(item.id)"
-              >
-                <span nz-icon nzType="delete" nzTheme="outline"></span>
-              </button>
-            </div>
-          </td>
-        </tr>
-      }
-    </tbody>
-  </nz-table>
+  <!-- Footer -->
+  <div class="tfoot">
+    <span class="ds-page-label">{{ showingLabel }}</span>
+    <div class="tfoot__pager">
+      <nz-pagination
+        [nzPageIndex]="pageIndex"
+        [nzTotal]="totalCount"
+        [nzPageSize]="pageSize"
+        [nzPageSizeOptions]="[10, 20, 50]"
+        nzShowSizeChanger
+        (nzPageIndexChange)="onPageIndexChange($event)"
+        (nzPageSizeChange)="onPageSizeChange($event)"
+      ></nz-pagination>
+    </div>
+  </div>
 </div>
 
 <!-- ── Create / Update Drawer ──────────────────────────────────────────── -->
 <nz-drawer
   *ngIf="isDrawerOpen"
   [nzVisible]="isDrawerOpen"
-  [nzBodyStyle]="{ overflow: 'auto' }"
+  [nzBodyStyle]="{ padding: '0', overflow: 'hidden', height: '100%' }"
   [nzMaskClosable]="false"
-  [nzWidth]="880"
-  nzTitle="{{ selectedCompany?.id ? 'Update' : 'Create' }} Company"
+  [nzClosable]="false"
+  nzWidth="min(980px, 100vw)"
   (nzOnClose)="onDrawerClosed()"
 >
-  <div *nzDrawerContent>
+  <div *nzDrawerContent style="height:100%">
     <company-entry-drawer
       [input]="selectedCompany"
       (onCompanyEntryDrawerClosed)="onDrawerClosed()"

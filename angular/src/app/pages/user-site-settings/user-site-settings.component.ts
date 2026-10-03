@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
+import { timeout } from 'rxjs';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModule } from '../../shared/shared.module';
 import { UserSiteSettingService } from '../../proxy/user-site-settings/user-site-setting.service';
@@ -12,9 +13,16 @@ import { UserSiteSettingDto } from '../../proxy/user-site-settings/models';
   imports: [SharedModule],
 })
 export class UserSiteSettingsComponent implements OnInit {
+  /** Index of the settings section shown on the right. */
+  tab = 0;
+
 
   form!: FormGroup;
   loading = false;
+  /** True when the list call failed, so we do not offer to create a duplicate record. */
+  loadFailed = false;
+  /** Shown under the spinner so a slow load says what it is waiting for. */
+  loadStep = '';
   saving  = false;
 
   /** null = no record yet; number = existing record id */
@@ -86,18 +94,46 @@ export class UserSiteSettingsComponent implements OnInit {
 
   loadSetting(): void {
     this.loading = true;
-    this.svc.getList({ maxResultCount: 1, skipCount: 0 }).subscribe({
-      next: result => {
-        this.loading = false;
-        if (result.totalCount > 0) {
-          this.existingId = result.items[0].id;
-          this.svc.get(result.items[0].id).subscribe({
-            next: full => this.patchForm(full),
-          });
+    this.loadStep = 'Asking the server for the active settings…';
+    // The active record comes from a lightweight endpoint that returns the full setting in one call.
+    this.svc.getActive().pipe(timeout(15000)).subscribe({
+      next: active => {
+        if (active?.id) {
+          this.existingId = active.id;
+          this.patchForm(active);
+          this.loading = false;
+        } else {
+          this.loadFromList();
         }
       },
-      error: () => { this.loading = false; },
+      error: () => this.loadFromList(),
     });
+  }
+
+  /** Fallback when there is no active record: take the first saved one. */
+  private loadFromList(): void {
+    this.loadStep = 'No active record — looking through saved settings…';
+    this.svc.getList({ maxResultCount: 1, skipCount: 0 }).pipe(timeout(15000)).subscribe({
+      next: result => {
+        if (result.totalCount > 0) {
+          this.existingId = result.items[0].id;
+          this.loadStep = 'Loading the saved record…';
+          this.svc.get(result.items[0].id).subscribe({
+            next: full => { this.patchForm(full); this.loading = false; },
+            error: () => this.failLoad(undefined),
+          });
+        } else {
+          this.loading = false;
+        }
+      },
+      error: err => this.failLoad(err),
+    });
+  }
+
+  private failLoad(err: any): void {
+    this.loading = false;
+    this.loadFailed = true;
+    this.message.error(`Could not load the settings (${err?.status ?? 'no response'}). Check you are signed in and have the User Site Settings permission.`, { nzDuration: 8000 });
   }
 
   patchForm(dto: UserSiteSettingDto): void {

@@ -1,0 +1,94 @@
+<nz-tabset [(nzSelectedIndex)]="tabIndex" nzSize="small">
+
+  <!-- Page text, colours and thresholds -->
+  <nz-tab nzTitle="Page">
+    <div class="fc-body">
+      <p class="fc-help">Change any wording on the page, its accent colour, how money is shown, and the thresholds. Clear a text box to go back to the original wording.</p>
+
+      <div class="fc-grid">
+        <div><label class="fc-label">Accent colour</label><pp-color-field [(value)]="accent" label="Accent colour"></pp-color-field></div>
+        <div><label class="fc-label" for="fc-sym">Currency symbol</label><input id="fc-sym" nz-input [(ngModel)]="symbol" maxlength="8" /></div>
+        <div class="fc-span2 fc-switch"><nz-switch [(ngModel)]="compact"></nz-switch><span>Show big amounts in lakh (৳4.7L) on the cards. Tables always show the full amount.</span></div>
+        <div><label class="fc-label" for="fc-due">“Due soon” for bills means within (days)</label><nz-input-number id="fc-due" class="fc-full" [(ngModel)]="dueSoon" [nzMin]="1" [nzMax]="60"></nz-input-number></div>
+        <div><label class="fc-label" for="fc-cm">Months on the profit chart</label><nz-input-number id="fc-cm" class="fc-full" [(ngModel)]="chartMonths" [nzMin]="3" [nzMax]="24"></nz-input-number></div>
+        <div><label class="fc-label" for="fc-s1">First late bucket ends at (days)</label><nz-input-number id="fc-s1" class="fc-full" [(ngModel)]="step1" [nzMin]="1" [nzMax]="365"></nz-input-number></div>
+        <div><label class="fc-label" for="fc-s2">Second late bucket ends at (days)</label><nz-input-number id="fc-s2" class="fc-full" [(ngModel)]="step2" [nzMin]="2" [nzMax]="730"></nz-input-number></div>
+        <div class="fc-span2">
+          <label class="fc-label" for="fc-rem">Reminder message (use {{ '{name} {invoice} {amount} {days}' }})</label>
+          <textarea id="fc-rem" nz-input rows="3" [(ngModel)]="reminder" maxlength="2000"></textarea>
+        </div>
+      </div>
+
+      @for (g of groups; track g.name) {
+        <div class="fc-group">{{ g.name }}</div>
+        <div class="fc-grid">
+          @for (l of g.labels; track l.key) {
+            <div class="fc-span2">
+              <label class="fc-label" [attr.for]="'fc-' + l.key">{{ l.caption }}</label>
+              <input [id]="'fc-' + l.key" nz-input [(ngModel)]="labelValues[l.key]" maxlength="2000" />
+            </div>
+          }
+        </div>
+      }
+
+      <div class="fc-actions">
+        <button type="button" nz-button (click)="closed.emit()">Close</button>
+        <button type="button" nz-button nzType="primary" [nzLoading]="savingSetting" (click)="saveSetting()">Save page settings</button>
+      </div>
+    </div>
+  </nz-tab>
+
+  <!-- One tab per editable list -->
+  @for (cfg of lists; track cfg.tab) {
+    <nz-tab [nzTitle]="cfg.label">
+      <div class="fc-body">
+        <p class="fc-help">{{ cfg.help }}</p>
+
+        @for (r of rows[cfg.tab]; track $index; let i = $index; let first = $first; let last = $last) {
+          <div class="fc-item" [class.is-off]="r.data.isActive === false">
+            <div class="fc-item__head">
+              @if (r.data.color && cfg.tab !== 'recurring') { <span class="fc-swatch" [style.background]="r.data.color"></span> }
+              <button type="button" class="fc-item__title" (click)="r.open = !r.open" [attr.aria-expanded]="r.open">
+                {{ titleOf(cfg, r) }}
+                @if (cfg.summary) { <span class="fc-tag">{{ cfg.summary(r.data) }}</span> }
+                @if (r.data.isActive === false) { <span class="fc-tag">off</span> }
+              </button>
+              <button type="button" class="fc-icon" [disabled]="first" (click)="move(cfg, i, -1)" aria-label="Move up"><i class="bi bi-arrow-up"></i></button>
+              <button type="button" class="fc-icon" [disabled]="last" (click)="move(cfg, i, 1)" aria-label="Move down"><i class="bi bi-arrow-down"></i></button>
+              <button type="button" class="fc-icon" (click)="r.open = !r.open" aria-label="Edit"><i class="bi" [ngClass]="r.open ? 'bi-chevron-up' : 'bi-pencil'"></i></button>
+            </div>
+
+            @if (r.open) {
+              <div class="fc-item__body">
+                @for (f of cfg.fields; track f.key) {
+                  @switch (f.type) {
+                    @case ('text') { <label class="fc-label">{{ f.label }}</label><input nz-input [(ngModel)]="r.data[f.key]" [attr.maxlength]="f.max ?? 256" [placeholder]="f.placeholder ?? ''" /> }
+                    @case ('textarea') { <label class="fc-label">{{ f.label }}</label><textarea nz-input rows="2" [(ngModel)]="r.data[f.key]" maxlength="2000"></textarea> }
+                    @case ('money') { <label class="fc-label">{{ f.label }}</label><nz-input-number class="fc-full" [(ngModel)]="r.data[f.key]" [nzStep]="100"></nz-input-number> }
+                    @case ('int') { <label class="fc-label">{{ f.label }}</label><nz-input-number class="fc-full" [(ngModel)]="r.data[f.key]" [nzMin]="0" [nzMax]="100000"></nz-input-number> }
+                    @case ('date') { <label class="fc-label">{{ f.label }}</label><nz-date-picker class="fc-full" [(ngModel)]="r.data[f.key]"></nz-date-picker> }
+                    @case ('color') { <label class="fc-label">{{ f.label }}</label><pp-color-field [(value)]="r.data[f.key]" [label]="f.label"></pp-color-field> }
+                    @case ('select') {
+                      <label class="fc-label">{{ f.label }}</label>
+                      <nz-select class="fc-full" [(ngModel)]="r.data[f.key]">
+                        @for (o of options(f); track o.value) { <nz-option [nzValue]="o.value" [nzLabel]="o.label"></nz-option> }
+                      </nz-select>
+                    }
+                    @case ('switch') { <label class="fc-switch fc-switch--row"><nz-switch [(ngModel)]="r.data[f.key]" nzSize="small"></nz-switch> {{ f.label }}</label> }
+                  }
+                }
+                <div class="fc-row-actions">
+                  <button type="button" nz-button nzDanger nzSize="small" [disabled]="r.saving" nz-popconfirm nzPopconfirmTitle="Delete this entry?" (nzOnConfirm)="remove(cfg, r)">Delete</button>
+                  <span class="fc-spacer"></span>
+                  <button type="button" nz-button nzType="primary" nzSize="small" [nzLoading]="r.saving" (click)="save(cfg, r)">Save</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <button type="button" nz-button nzType="dashed" class="fc-add" (click)="add(cfg)">+ Add</button>
+      </div>
+    </nz-tab>
+  }
+</nz-tabset>

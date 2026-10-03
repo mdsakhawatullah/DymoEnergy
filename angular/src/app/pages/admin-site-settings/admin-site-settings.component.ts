@@ -12,6 +12,9 @@ import { AdminSiteSettingDto } from '../../proxy/admin-site-settings/models';
   imports: [SharedModule],
 })
 export class AdminSiteSettingsComponent implements OnInit {
+  /** Index of the settings section shown on the right. */
+  tab = 0;
+
 
   form!: FormGroup;
   loading = false;

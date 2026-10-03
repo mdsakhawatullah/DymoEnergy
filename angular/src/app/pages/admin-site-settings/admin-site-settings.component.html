@@ -21,9 +21,22 @@
 } @else {
 
 <form nz-form [formGroup]="form" nzLayout="vertical" class="settings-form">
+<div class="settings-layout">
+  <nav class="settings-nav" aria-label="Settings sections">
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 0" (click)="tab = 0">General</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 1" (click)="tab = 1">Brand Colours</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 2" (click)="tab = 2">Text Colours</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 3" (click)="tab = 3">Backgrounds</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 4" (click)="tab = 4">Navbar</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 5" (click)="tab = 5">User Site Settings</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 6" (click)="tab = 6">Primary Button</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 7" (click)="tab = 7">Typography</button>
+  </nav>
+  <div class="settings-content">
+
 
   <!-- ① General ──────────────────────────────────────────────────────── -->
-  <div class="settings-card">
+  <div class="settings-card" [hidden]="tab !== 0">
     <div class="section-header">
       <span class="section-badge">1</span>
       <span class="section-title">General</span>
@@ -97,7 +110,7 @@
   </div>
 
   <!-- ② Brand Colours ─────────────────────────────────────────────── -->
-  <div class="settings-card">
+  <div class="settings-card" [hidden]="tab !== 1">
     <div class="section-header">
       <span class="section-badge">2</span>
       <span class="section-title">Brand Colours</span>
@@ -144,7 +157,7 @@
   </div>
 
   <!-- ③ Text Colours ──────────────────────────────────────────────── -->
-  <div class="settings-card">
+  <div class="settings-card" [hidden]="tab !== 2">
     <div class="section-header">
       <span class="section-badge">3</span>
       <span class="section-title">Text Colours</span>
@@ -182,7 +195,7 @@
   </div>
 
   <!-- ④ Backgrounds ───────────────────────────────────────────────── -->
-  <div class="settings-card">
+  <div class="settings-card" [hidden]="tab !== 3">
     <div class="section-header">
       <span class="section-badge">4</span>
       <span class="section-title">Backgrounds</span>
@@ -211,7 +224,7 @@
   </div>
 
   <!-- ⑤ Navbar ────────────────────────────────────────────────────── -->
-  <div class="settings-card">
+  <div class="settings-card" [hidden]="tab !== 4">
     <div class="section-header">
       <span class="section-badge">5</span>
       <span class="section-title">Navbar</span>
@@ -240,7 +253,7 @@
   </div>
 
   <!-- ⑥ Sidebar ───────────────────────────────────────────────────── -->
-  <div class="settings-card">
+  <div class="settings-card" [hidden]="tab !== 5">
     <div class="section-header">
       <span class="section-badge">6</span>
       <span class="section-title">User Site Settings</span>
@@ -278,7 +291,7 @@
   </div>
 
   <!-- ⑦ Buttons ───────────────────────────────────────────────────── -->
-  <div class="settings-card">
+  <div class="settings-card" [hidden]="tab !== 6">
     <div class="section-header">
       <span class="section-badge">7</span>
       <span class="section-title">Primary Button</span>
@@ -307,7 +320,7 @@
   </div>
 
   <!-- ⑧ Typography ────────────────────────────────────────────────── -->
-  <div class="settings-card">
+  <div class="settings-card" [hidden]="tab !== 7">
     <div class="section-header">
       <span class="section-badge">8</span>
       <span class="section-title">Typography</span>
@@ -337,6 +350,8 @@
     </button>
   </div>
 
+  </div>
+</div>
 </form>
 
 } <!-- end @else -->

@@ -1,0 +1,470 @@
+<div class="fb" [style.--fb-accent]="accent" [style.--fb-accent-soft]="tint(accent, 0.08)">
+@if (overview) {
+
+  <!-- ── Header ───────────────────────────────────────────────────────── -->
+  <div class="fb-head">
+    <div>
+      <h1 class="fb-title">{{ t('page.title') }}</h1>
+      <div class="fb-subtitle">{{ t('page.subtitle') }}</div>
+    </div>
+    <div class="fb-head__actions">
+      <select class="fb-select" [(ngModel)]="period" (ngModelChange)="onPeriodChange()" aria-label="Period">
+        @for (p of overview.periods; track p.key) { <option [ngValue]="p.key">{{ p.label }}</option> }
+      </select>
+      <button type="button" class="fb-btn" (click)="openCustomize()" title="Customise this page" aria-label="Customise this page"><i class="bi bi-sliders"></i></button>
+      <button type="button" class="fb-btn" [disabled]="exporting" (click)="exportForAccountant()">{{ t('btn.export') }}</button>
+      <button type="button" class="fb-btn fb-btn--primary" (click)="openRecord()">+ {{ t('btn.record') }}</button>
+    </div>
+  </div>
+
+  <!-- ── Summary ──────────────────────────────────────────────────────── -->
+  <div class="fb-card fb-kpis">
+    <div class="fb-kpis__main">
+      <div class="fb-kpis__label">{{ t('kpi.cash') }}</div>
+      <div class="fb-kpis__big" [class.is-red]="overview.moneyToUse < 0">{{ k(overview.moneyToUse) }}</div>
+      <div class="fb-kpis__note">{{ t('kpi.cashNote', { n: overview.accountCount, amount: k(overview.onTheWayTotal) }) }}</div>
+    </div>
+    <div class="fb-kpis__cards">
+      @for (c of cards; track c.key) {
+        <button type="button" class="fb-mini" [class.is-active]="tab === c.key" (click)="setTab(c.key)">
+          <span class="fb-mini__label"><span class="fb-dot" [style.background]="c.dot"></span>{{ c.label }}</span>
+          <span class="fb-mini__value" [ngClass]="c.valueClass">{{ c.value }}</span>
+          <span class="fb-mini__note">{{ c.note }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (notMatchedWarning) {
+    <div class="fb-alert" role="alert">
+      <i class="bi bi-exclamation-triangle"></i>
+      <span class="fb-alert__text">{{ notMatchedWarning }}</span>
+      <button type="button" class="fb-btn fb-btn--sm" (click)="openCustomize('accounts')">Fix accounts</button>
+    </div>
+  }
+
+  <!-- ── Tabs ─────────────────────────────────────────────────────────── -->
+  <div class="fb-tabs" role="tablist">
+    @for (x of tabs; track x.key) {
+      <button type="button" role="tab" class="fb-tab" [class.is-active]="tab === x.key" [attr.aria-selected]="tab === x.key" (click)="setTab(x.key)">
+        <i class="bi" [ngClass]="x.icon"></i>{{ x.label }}
+        @if (x.badge) { <span class="fb-count" [ngClass]="'is-' + x.tone">{{ x.badge }}</span> }
+      </button>
+    }
+  </div>
+
+  <!-- ═════════ CASH & BANK ═════════ -->
+  @if (tab === 'cash' && cash) {
+    <div class="fb-accounts">
+      @for (a of cash.accounts; track a.id) {
+        <div class="fb-card fb-account">
+          <div class="fb-account__top">
+            <span class="fb-badge" [style.background]="accountBadge(a).bg" [style.color]="accountBadge(a).fg">{{ a.shortCode }}</span>
+            <span class="fb-account__name">{{ a.name }}</span>
+          </div>
+          <div class="fb-account__bal" [class.is-red]="a.balance < 0">{{ m(a.balance) }}</div>
+          <button type="button" class="fb-status" [ngClass]="'is-' + a.statusTone" (click)="markMatched(a)" [title]="'Click to mark as ' + (a.kind === 1 ? 'counted' : 'matched') + ' today'">
+            <span class="fb-dot" [style.background]="a.statusTone === 'green' ? '#0E6B3F' : '#D97706'"></span>{{ a.statusText }}
+          </button>
+        </div>
+      } @empty {
+        <div class="fb-card fb-empty">No accounts yet — add them from the customise button.</div>
+      }
+    </div>
+
+    <div class="fb-two">
+      <div class="fb-card">
+        <div class="fb-card__head"><h2>{{ t('cash.way') }}</h2><span class="fb-muted">{{ t('cash.waySub') }}</span></div>
+        @for (i of cash.onTheWay; track i.id) {
+          <div class="fb-row">
+            <span class="fb-code" [style.background]="tint(i.color || '#2563EB', 0.14)" [style.color]="i.color || '#2563EB'">{{ i.extra || '•' }}</span>
+            <div class="fb-row__main">
+              <div class="fb-strong">{{ i.title }}</div>
+              <div class="fb-sub">{{ i.detail }}</div>
+            </div>
+            <strong>{{ m(i.amount) }}</strong>
+            <button type="button" class="fb-chip fb-chip--btn is-blue" (click)="receive(i)" title="Mark as received">{{ whenText(i) }}</button>
+          </div>
+        } @empty {
+          <div class="fb-empty">Nothing on the way.</div>
+        }
+        <div class="fb-card__foot">
+          <span class="fb-sub">{{ t('cash.wayNote') }}</span>
+          <button type="button" class="fb-link" (click)="openCustomize('transit')">Edit list</button>
+        </div>
+      </div>
+
+      <div class="fb-card fb-pad">
+        <div class="fb-card__head fb-card__head--flush"><h2>{{ t('cash.inout') }} · {{ periodLabel }}</h2><span class="fb-muted">{{ t('cash.kept') }} {{ m(kept) }}</span></div>
+
+        <div class="fb-flow-head is-green"><span>{{ t('cash.in') }}</span><strong>{{ m(cash.moneyIn) }}</strong></div>
+        @for (l of cash.inLines; track l.label) {
+          <div class="fb-flow"><span>{{ l.label }}</span><span class="fb-track"><span class="fb-fill is-green" [style.width]="barWidth(l.amount, cash.inLines)"></span></span><span class="fb-flow__v">{{ m(l.amount) }}</span></div>
+        } @empty { <div class="fb-sub fb-pad-s">No money came in this period.</div> }
+
+        <div class="fb-flow-head is-red"><span>{{ t('cash.out') }}</span><strong>{{ m(cash.moneyOut) }}</strong></div>
+        @for (l of cash.outLines; track l.label) {
+          <div class="fb-flow"><span>{{ l.label }}</span><span class="fb-track"><span class="fb-fill is-red" [style.width]="barWidth(l.amount, cash.outLines)"></span></span><span class="fb-flow__v">{{ m(l.amount) }}</span></div>
+        } @empty { <div class="fb-sub fb-pad-s">No money went out this period.</div> }
+      </div>
+    </div>
+
+    <div class="fb-card fb-table-card fb-gap">
+      <div class="fb-card__head"><h2>{{ t('cash.latest') }}</h2><span class="fb-muted">{{ t('cash.latestSub') }}</span></div>
+      <div class="fb-table-wrap">
+        <table class="fb-table">
+          <thead><tr><th>Date</th><th>Type</th><th>What it was</th><th>Account</th><th class="is-right">Amount</th><th class="is-right">Balance</th></tr></thead>
+          <tbody>
+            @for (mv of cash.movements; track mv.source + mv.refId) {
+              <tr>
+                <td>{{ shortDate(mv.date) }}</td>
+                <td>
+                  @if (mv.isTransfer) { <span class="fb-chip is-grey">Transfer</span> }
+                  @else { <span class="fb-chip" [ngClass]="mv.direction === Direction.In ? 'is-green' : 'is-red'">{{ mv.direction === Direction.In ? t('cash.in') : t('cash.out') }}</span> }
+                </td>
+                <td>{{ mv.title }}</td>
+                <td class="fb-muted">{{ mv.accountName }}</td>
+                <td class="is-right fb-amount" [ngClass]="mv.isTransfer ? '' : mv.direction === Direction.In ? 'is-green' : 'is-red'">{{ mv.direction === Direction.In ? '+' : '−' }}{{ m(mv.amount) }}</td>
+                <td class="is-right fb-muted">{{ mv.balanceAfter == null ? '' : m(mv.balanceAfter) }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="fb-empty">No money has moved yet. Record a payment to start.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- ═════════ CUSTOMER DUES ═════════ -->
+  @if (tab === 'dues' && dues) {
+    <div class="fb-stats">
+      <div class="fb-card fb-stat"><div class="fb-sub">{{ t('dues.owe') }}</div><div class="fb-stat__v is-amber">{{ k(dues.total) }}</div><div class="fb-sub">{{ dues.count }} {{ dues.count === 1 ? 'invoice' : 'invoices' }}</div></div>
+      <div class="fb-card fb-stat"><div class="fb-sub">{{ t('dues.late') }}</div><div class="fb-stat__v is-red">{{ k(dues.lateAmount) }}</div><div class="fb-sub">{{ dues.lateCount }} {{ dues.lateCount === 1 ? 'invoice' : 'invoices' }}</div></div>
+      <div class="fb-card fb-stat"><div class="fb-sub">{{ t('dues.collected', { period: periodLabel }) }}</div><div class="fb-stat__v is-green">{{ k(dues.collected) }}</div><div class="fb-sub">{{ dues.collectedPercentOfSales == null ? 'no sales yet' : dues.collectedPercentOfSales + '% of sales' }}</div></div>
+      <div class="fb-card fb-stat">
+        <div class="fb-sub">{{ t('dues.avg') }}</div>
+        <div class="fb-stat__v">{{ dues.averageDaysToPay == null ? '—' : dues.averageDaysToPay + ' days' }}</div>
+        <div class="fb-sub">{{ dues.previousAverageDaysToPay == null ? 'nothing to compare' : 'was ' + dues.previousAverageDaysToPay + ' ' + (overview.period.prevLabel ? 'in ' + overview.period.prevLabel : 'before') }}</div>
+      </div>
+    </div>
+
+    <div class="fb-two">
+      <div class="fb-card fb-pad">
+        <h2>{{ t('dues.aging') }}</h2>
+        <div class="fb-aging">
+          @for (a of dues.aging; track a.key) {
+            <div class="fb-flow fb-flow--aging">
+              <span>{{ a.label }}</span>
+              <span class="fb-track"><span class="fb-fill" [style.width.%]="a.amount / agingMax() * 100" [style.background]="agingColor(a.key)"></span></span>
+              <span class="fb-flow__v">{{ m(a.amount) }}</span>
+              <span class="fb-muted">{{ a.count }} inv.</span>
+            </div>
+          }
+        </div>
+        <button type="button" class="fb-btn fb-btn--sm" (click)="remindAll()">{{ t('dues.remindAll') }}</button>
+      </div>
+
+      <div class="fb-card fb-pad">
+        <div class="fb-card__head fb-card__head--flush"><h2>{{ t('dues.advances') }}</h2><button type="button" class="fb-link" (click)="openCustomize('advances')">Edit</button></div>
+        <p class="fb-muted fb-tight">{{ t('dues.advancesSub') }}</p>
+        @for (a of dues.advances; track a.id) {
+          <div class="fb-line">
+            <div><div class="fb-strong">{{ a.title }}</div><div class="fb-sub">{{ a.detail }}</div></div>
+            <strong>{{ m(a.amount) }}</strong>
+            <span class="fb-chip" [ngClass]="advanceTone(a)">{{ a.extra || 'Held' }}</span>
+          </div>
+        } @empty { <div class="fb-sub fb-pad-s">No advances are being held.</div> }
+        <div class="fb-line fb-line--total"><strong>Total held</strong><strong>{{ m(dues.advancesTotal) }}</strong></div>
+      </div>
+    </div>
+
+    <div class="fb-card fb-table-card fb-gap">
+      <div class="fb-card__head"><h2>{{ t('dues.table') }}</h2><span class="fb-muted">{{ t('dues.tableSub') }}</span></div>
+      <div class="fb-table-wrap">
+        <table class="fb-table">
+          <thead><tr><th>Customer</th><th>{{ t('dues.typeCol') }}</th><th>Invoice</th><th>Due date</th><th class="is-right">Amount</th><th class="is-right">Late by</th><th class="is-right">Action</th></tr></thead>
+          <tbody>
+            @for (d of dues.dues; track d.invoiceId) {
+              <tr>
+                <td class="fb-strong-cell">{{ d.customerName }}</td>
+                <td>@if (d.channel) { <span class="fb-chip is-grey">{{ d.channel }}</span> }</td>
+                <td class="fb-mono">{{ d.invoiceNumber }}</td>
+                <td>{{ d.dueDate ? shortDate(d.dueDate) : 'on delivery' }}</td>
+                <td class="is-right fb-amount">{{ m(d.balance) }}</td>
+                <td class="is-right">@if (d.daysLate) { <strong [class.is-red]="d.daysLate > setting.agingStep1" [class.is-amber]="d.daysLate <= setting.agingStep1">{{ d.daysLate }} {{ d.daysLate === 1 ? 'day' : 'days' }}</strong> } @else { <span class="fb-muted">—</span> }</td>
+                <td class="is-right fb-nowrap">
+                  <button type="button" class="fb-btn fb-btn--sm" (click)="runDueAction(d)">{{ dueAction(d) }}</button>
+                  <button type="button" class="fb-btn fb-btn--sm fb-btn--icon" (click)="openRecord({ mode: 'customer', invoiceId: d.invoiceId })" title="Record a payment" aria-label="Record a payment"><i class="bi bi-cash-coin"></i></button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="fb-empty">Nobody owes you anything. 🎉</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="fb-card fb-gap">
+      <div class="fb-card__head"><h2>{{ t('dues.dealers') }}</h2><span class="fb-muted">{{ t('dues.dealersSub') }} · <button type="button" class="fb-link" (click)="openCustomize('dealers')">Edit</button></span></div>
+      @for (d of dues.dealers; track d.id) {
+        <div class="fb-row fb-dealer">
+          <div class="fb-row__main fb-dealer__name"><div class="fb-strong">{{ d.name }}</div><div class="fb-sub">{{ d.detail }}</div></div>
+          <span class="fb-track fb-dealer__bar"><span class="fb-fill" [style.width.%]="dealerPercent(d)" [style.background]="dealerColor(d)"></span></span>
+          <span class="fb-dealer__of">{{ m(d.used) }} of {{ m(d.limit) }}</span>
+          <strong class="fb-dealer__left" [style.color]="d.left < 0 ? '#B42318' : '#0B5A34'">{{ d.left < 0 ? m(-d.left) + ' over' : m(d.left) + ' left' }}</strong>
+          <button type="button" class="fb-btn fb-btn--sm" (click)="statementDealer = d">Statement</button>
+        </div>
+      } @empty {
+        <div class="fb-empty">No dealers on credit yet. Add one with the exact name used on their invoices.</div>
+      }
+    </div>
+  }
+
+  <!-- ═════════ SUPPLIER BILLS ═════════ -->
+  @if (tab === 'bills' && bills) {
+    <div class="fb-stats">
+      <div class="fb-card fb-stat"><div class="fb-sub">{{ t('bills.owe') }}</div><div class="fb-stat__v is-red">{{ k(bills.owe) }}</div><div class="fb-sub">{{ bills.openCount }} open {{ bills.openCount === 1 ? 'bill' : 'bills' }}</div></div>
+      <div class="fb-card fb-stat"><div class="fb-sub">{{ t('bills.week') }}</div><div class="fb-stat__v is-amber">{{ k(bills.dueSoonAmount) }}</div><div class="fb-sub">{{ bills.dueSoonCount }} {{ bills.dueSoonCount === 1 ? 'bill' : 'bills' }}</div></div>
+      <div class="fb-card fb-stat"><div class="fb-sub">{{ t('bills.overdue') }}</div><div class="fb-stat__v is-red">{{ k(bills.overdueAmount) }}</div><div class="fb-sub">{{ bills.overdueCount }} {{ bills.overdueCount === 1 ? 'bill' : 'bills' }}{{ bills.overdueCount ? ' · ' + bills.overdueMaxDays + ' days' : '' }}</div></div>
+      <div class="fb-card fb-stat"><div class="fb-sub">{{ t('bills.paid', { period: periodLabel }) }}</div><div class="fb-stat__v is-green">{{ k(bills.paidInPeriod) }}</div><div class="fb-sub">{{ bills.paidCount }} {{ bills.paidCount === 1 ? 'bill' : 'bills' }}</div></div>
+    </div>
+
+    <div class="fb-card fb-table-card">
+      <div class="fb-card__head"><h2>{{ t('bills.table') }}</h2><span class="fb-muted">{{ t('bills.tableSub') }} · <button type="button" class="fb-link" (click)="openBill(null)">+ Add bill</button></span></div>
+      <div class="fb-table-wrap">
+        <table class="fb-table">
+          <thead><tr><th>Supplier · what for</th><th>Bill</th><th>Due</th><th class="is-right">Amount</th><th>Paid so far</th><th>Status</th><th class="is-right">Action</th></tr></thead>
+          <tbody>
+            @for (b of bills.bills; track b.id) {
+              <tr>
+                <td>
+                  <button type="button" class="fb-linkrow" (click)="openBill(b)" [attr.aria-label]="'Open ' + b.supplier">
+                    <span><span class="fb-strong">{{ b.supplier }}</span><span class="fb-sub">{{ b.description }}</span></span>
+                  </button>
+                </td>
+                <td class="fb-mono">{{ b.billNumber }}</td>
+                <td><strong [ngClass]="billDue(b).cls">{{ billDue(b).text }}</strong></td>
+                <td class="is-right fb-amount">{{ m(b.amount) }}</td>
+                <td class="fb-paid">
+                  <span class="fb-track"><span class="fb-fill" [style.width.%]="billPaidPercent(b)" [style.background]="b.status === 'paid' ? '#0E6B3F' : '#9A5B00'"></span></span>
+                  <span class="fb-sub">{{ b.paid > 0 ? m(b.paid) + ' paid' : 'nothing paid' }}</span>
+                </td>
+                <td><span class="fb-chip" [ngClass]="billChip(b).cls">{{ billChip(b).text }}</span></td>
+                <td class="is-right"><button type="button" class="fb-btn fb-btn--sm" (click)="billAction(b)">{{ b.status === 'paid' ? 'Receipt' : 'Pay' }}</button></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="fb-empty">No supplier bills. Add one to track what you owe.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="fb-two">
+      <div class="fb-card fb-pad">
+        <h2>{{ t('bills.plan') }}</h2>
+        <p class="fb-muted fb-tight">{{ t('bills.planSub') }}</p>
+        @for (w of bills.plan; track w.label) {
+          <div class="fb-plan">
+            <span class="fb-strong">{{ w.label }}</span>
+            <span class="fb-track"><span class="fb-fill is-red" [style.width.%]="w.toPay / planMax() * 100"></span></span>
+            <span class="fb-plan__v is-red">{{ m(w.toPay) }}</span>
+            <span class="fb-track"><span class="fb-fill is-green" [style.width.%]="w.expected / planMax() * 100"></span></span>
+            <span class="fb-plan__v is-green">{{ m(w.expected) }}</span>
+          </div>
+        }
+        <div class="fb-legend"><span><span class="fb-dot" style="background:#B42318"></span> to pay</span><span><span class="fb-dot" style="background:#0E6B3F"></span> expected in</span></div>
+        <p class="fb-advice" [class.is-ok]="!bills.tightWeek">{{ tightSentence }}</p>
+      </div>
+
+      <div class="fb-card fb-pad">
+        <div class="fb-card__head fb-card__head--flush"><h2>{{ t('bills.lc') }}</h2><button type="button" class="fb-link" (click)="openCustomize('lcs')">Edit</button></div>
+        <p class="fb-muted fb-tight">{{ t('bills.lcSub') }}</p>
+        @for (i of bills.lettersOfCredit; track i.id) {
+          <div class="fb-lc">
+            <div class="fb-lc__head"><strong>{{ i.title }}</strong>
+              @if (i.extra) { <span class="fb-chip" [style.background]="lcTone(i).bg" [style.color]="lcTone(i).fg">{{ i.extra }}</span> }
+              <strong class="fb-lc__amt">{{ m(i.amount) }}</strong>
+            </div>
+            <div class="fb-sub">{{ i.detail }}</div>
+            <span class="fb-track fb-track--thick"><span class="fb-fill" [style.width.%]="i.percent ?? 0" [style.background]="lcTone(i).bar"></span></span>
+          </div>
+        } @empty { <div class="fb-sub fb-pad-s">No letters of credit.</div> }
+      </div>
+    </div>
+  }
+
+  <!-- ═════════ EXPENSES ═════════ -->
+  @if (tab === 'expenses' && expenses) {
+    <div class="fb-stats">
+      <div class="fb-card fb-stat"><div class="fb-sub">{{ t('exp.running', { period: periodLabel }) }}</div><div class="fb-stat__v">{{ k(expenses.running) }}</div><div class="fb-sub">{{ expenses.runningPercentOfSales == null ? 'no sales to compare' : expenses.runningPercentOfSales + '% of sales' }}</div></div>
+      <div class="fb-card fb-stat"><div class="fb-sub">{{ t('exp.biggest') }}</div><div class="fb-stat__v fb-stat__v--text">{{ expenses.biggestName || '—' }}</div><div class="fb-sub">{{ expenses.biggestName ? k(expenses.biggestAmount) + ' · ' + expenses.biggestCount + (expenses.biggestCount === 1 ? ' entry' : ' entries') : 'no expenses yet' }}</div></div>
+      <div class="fb-card fb-stat"><div class="fb-sub">{{ t('exp.upMost') }}</div><div class="fb-stat__v fb-stat__v--text is-amber">{{ expenses.upMostName || '—' }}</div><div class="fb-sub">{{ expenses.upMostName ? '▲' + expenses.upMostPercent + '% vs ' + overview.period.prevLabel : 'nothing rose' }}</div></div>
+      <div class="fb-card fb-stat"><div class="fb-sub">{{ t('exp.perOrder') }}</div><div class="fb-stat__v is-green">{{ expenses.costPerOrder == null ? '—' : m(expenses.costPerOrder) }}</div><div class="fb-sub">{{ t('exp.orders', { n: expenses.orderCount }) }}</div></div>
+    </div>
+
+    <div class="fb-two">
+      <div class="fb-card fb-pad">
+        <div class="fb-card__head fb-card__head--flush"><h2>{{ t('exp.where') }} · {{ periodLabel }}</h2><span class="fb-muted">{{ m(expenses.totalSpent) }}</span></div>
+        @for (l of expenses.categories; track l.categoryId) {
+          <div class="fb-flow fb-flow--cat">
+            <span class="fb-strong-s">{{ l.name }}</span>
+            <span class="fb-track"><span class="fb-fill" [style.width.%]="l.amount / expenses.categories[0].amount * 100" [style.background]="l.color"></span></span>
+            <span class="fb-flow__v">{{ m(l.amount) }}</span>
+            <span class="fb-change" [ngClass]="changeClass(l.changePercent)">{{ changeArrow(l.changePercent) }}</span>
+          </div>
+        } @empty { <div class="fb-sub fb-pad-s">No expenses recorded in this period.</div> }
+      </div>
+
+      <div class="fb-card">
+        <div class="fb-card__head"><h2>{{ t('exp.monthly') }}</h2><span class="fb-muted">{{ t('exp.monthlySub') }} · <button type="button" class="fb-link" (click)="openCustomize('recurring')">Edit</button></span></div>
+        @for (r of expenses.recurring; track r.id) {
+          <div class="fb-row">
+            <span class="fb-dot fb-dot--lg" [style.background]="r.status === 'paid' ? '#0E6B3F' : r.status === 'due' ? '#D97706' : '#9AA39C'"></span>
+            <div class="fb-row__main"><div class="fb-strong">{{ r.name }}</div><div class="fb-sub">{{ r.detail || 'Paid on the ' + ordinal(r.dayOfMonth) }}</div></div>
+            <strong>{{ m(r.amount) }}</strong>
+            @if (r.status === 'paid') { <span class="fb-chip is-green">Paid</span> }
+            @else { <button type="button" class="fb-chip fb-chip--btn" [ngClass]="recurringChip(r).cls" (click)="payRecurring(r)" title="Record this month's payment">{{ recurringChip(r).text }}</button> }
+          </div>
+        } @empty { <div class="fb-empty">No monthly costs set up.</div> }
+        <div class="fb-line fb-line--total fb-line--pad"><strong>{{ t('exp.monthlyTotal') }}</strong><strong>{{ m(expenses.recurringTotal) }}</strong></div>
+      </div>
+    </div>
+
+    <div class="fb-card fb-table-card fb-gap">
+      <div class="fb-card__head">
+        <h2>{{ t('exp.latest') }}</h2>
+        <span class="fb-head-right"><span class="fb-muted">{{ expenses.latest.length }} of {{ expenses.periodExpenseCount }} this period</span>
+          <button type="button" class="fb-btn fb-btn--primary fb-btn--sm" (click)="openExpense(null)">+ Add expense</button></span>
+      </div>
+      <div class="fb-table-wrap">
+        <table class="fb-table">
+          <thead><tr><th>Date</th><th>Category</th><th>What for</th><th>Paid by</th><th class="is-right">Amount</th><th class="is-right">Receipt</th></tr></thead>
+          <tbody>
+            @for (e of expenses.latest; track e.id) {
+              <tr class="fb-clickrow" tabindex="0" (click)="openExpense(e)" (keydown.enter)="openExpense(e)">
+                <td>{{ shortDate(e.date) }}</td>
+                <td><span class="fb-chip" [style.background]="tint(e.categoryColor, 0.14)" [style.color]="e.categoryColor">{{ e.categoryName }}</span></td>
+                <td>{{ e.description }}</td>
+                <td class="fb-muted">{{ e.paidBy }}</td>
+                <td class="is-right fb-amount">{{ m(e.amount) }}</td>
+                <td class="is-right">@if (e.receiptUrl) { <a class="fb-ok" [href]="e.receiptUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">Attached</a> } @else { <span class="is-red">Missing</span> }</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="fb-empty">No expenses recorded in this period.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- ═════════ PROFIT & LOSS ═════════ -->
+  @if (tab === 'pnl' && pnl) {
+    <div class="fb-pnl">
+      <div class="fb-card fb-pad">
+        <div class="fb-card__head fb-card__head--flush"><h2>{{ t('pl.title') }} · {{ periodLabel }}</h2><span class="fb-muted">{{ t('pl.vs', { prev: overview.period.prevLabel }) }}</span></div>
+
+        <table class="fb-stmt">
+          <tbody>
+            <tr class="fb-stmt__sec"><td colspan="4">{{ t('pl.secSales') }}</td></tr>
+            @for (l of lines('sales'); track l.key) {
+              <tr [class.is-total]="l.isTotal"><td>{{ lineLabel(l) }}</td><td class="is-right" [class.is-red]="l.current < 0">{{ m(l.current) }}</td><td class="is-right fb-muted">{{ m(l.previous) }}</td><td class="is-right" [ngClass]="changeTone(l)">{{ change(l.changePercent) }}</td></tr>
+            }
+            <tr class="fb-stmt__sec"><td colspan="4">{{ t('pl.secCost') }}</td></tr>
+            @for (l of lines('cost'); track l.key) {
+              <tr [class.is-total]="l.isTotal"><td>{{ lineLabel(l) }}</td><td class="is-right" [class.is-red]="l.current < 0 && !l.isTotal">{{ m(l.current) }}</td><td class="is-right fb-muted">{{ m(l.previous) }}</td><td class="is-right" [ngClass]="changeTone(l)">{{ change(l.changePercent) }}</td></tr>
+            }
+            <tr class="fb-stmt__sec"><td colspan="4">{{ t('pl.secRunning') }}</td></tr>
+            @for (l of lines('running'); track l.key) {
+              <tr [class.is-total]="l.isTotal"><td>{{ lineLabel(l) }}</td><td class="is-right" [class.is-red]="l.current < 0 && !l.isTotal">{{ m(l.current) }}</td><td class="is-right fb-muted">{{ m(l.previous) }}</td><td class="is-right" [ngClass]="changeTone(l)">{{ change(l.changePercent) }}</td></tr>
+            }
+          </tbody>
+        </table>
+        <p class="fb-sub fb-foot">{{ t('pl.note') }}</p>
+      </div>
+
+      <div class="fb-pnl__side">
+        <div class="fb-card fb-pad">
+          <h2>{{ t('pl.chart', { n: pnl.bars.length }) }}</h2>
+          <div class="fb-chart" role="img" [attr.aria-label]="t('pl.chart', { n: pnl.bars.length })">
+            @for (b of pnl.bars; track b.label) {
+              <div class="fb-chart__col" [title]="b.label + ': ' + m(b.profit)">
+                <div class="fb-chart__plot"><span class="fb-chart__bar" [class.is-current]="b.isCurrent" [class.is-neg]="b.profit < 0" [style.height]="barHeight(b)"></span></div>
+                <span class="fb-chart__lbl">{{ b.label }}</span>
+              </div>
+            }
+          </div>
+          <p class="fb-sub fb-foot">{{ t('pl.chartNote') }}</p>
+        </div>
+
+        <div class="fb-card fb-pad">
+          <div class="fb-card__head fb-card__head--flush"><h2>{{ t('pl.notes') }}</h2><button type="button" class="fb-link" (click)="openCustomize('notes')">Add a note</button></div>
+          @for (i of pnl.insights; track i.kind) {
+            <div class="fb-insight"><span class="fb-dot" [style.background]="i.kind === 'best' ? '#0E6B3F' : '#9A5B00'"></span><div><div class="fb-strong">{{ insightTitle(i) }}</div><div class="fb-sub">{{ insightText(i) }}</div></div></div>
+          }
+          @for (n of pnl.notes; track n.id) {
+            <div class="fb-insight"><span class="fb-dot" [style.background]="noteColor(n)"></span><div><div class="fb-strong">{{ n.title }}</div><div class="fb-sub">{{ n.detail }}</div></div></div>
+          }
+          @if (!pnl.insights.length && !pnl.notes.length) { <div class="fb-sub fb-pad-s">Insights appear once there are a few months of figures.</div> }
+        </div>
+
+        <div class="fb-disclaimer">{{ t('pl.disclaimer') }}</div>
+      </div>
+    </div>
+  }
+
+} @else {
+  <nz-spin nzSimple class="fb-loading"></nz-spin>
+}
+</div>
+
+<!-- ── Drawers ───────────────────────────────────────────────────────── -->
+@if (recordOpen && overview) {
+  <nz-drawer [nzVisible]="recordOpen" [nzMaskClosable]="false" [nzWidth]="520" [nzTitle]="t('btn.record')" (nzOnClose)="recordOpen = false">
+    <div *nzDrawerContent>
+      <finance-record-drawer
+        [input]="recordInput"
+        [overview]="overview"
+
+        (closed)="recordOpen = false"
+        (saved)="onRecorded()"
+      ></finance-record-drawer>
+    </div>
+  </nz-drawer>
+}
+
+@if (customizeOpen && overview) {
+  <nz-drawer [nzVisible]="customizeOpen" [nzMaskClosable]="false" [nzWidth]="780" nzTitle="Customise this page" (nzOnClose)="closeCustomize()">
+    <div *nzDrawerContent>
+      <finance-customize-drawer
+        [overview]="overview"
+        [initialTab]="customizeTab"
+        (changed)="customizeChanged = true"
+        (closed)="closeCustomize()"
+      ></finance-customize-drawer>
+    </div>
+  </nz-drawer>
+}
+
+@if (statementDealer) {
+  <nz-drawer [nzVisible]="true" [nzWidth]="460" [nzTitle]="'Statement · ' + statementDealer.name" (nzOnClose)="statementDealer = null">
+    <div *nzDrawerContent>
+      <div class="fb-statement">
+        <div class="fb-line"><span>Credit limit</span><strong>{{ m(statementDealer.limit) }}</strong></div>
+        <div class="fb-line"><span>Owed now</span><strong>{{ m(statementDealer.used) }}</strong></div>
+        <div class="fb-line"><span>{{ statementDealer.left < 0 ? 'Over the limit by' : 'Credit left' }}</span><strong [style.color]="statementDealer.left < 0 ? '#B42318' : '#0B5A34'">{{ m(statementDealer.left < 0 ? -statementDealer.left : statementDealer.left) }}</strong></div>
+        <h3 class="fb-statement__h">Open invoices</h3>
+        @for (i of statementDealer.openInvoices; track i.invoiceId) {
+          <div class="fb-line"><div><div class="fb-mono">{{ i.invoiceNumber }}</div><div class="fb-sub">due {{ i.dueDate ? shortDate(i.dueDate) : 'on delivery' }}{{ i.daysLate ? ' · ' + i.daysLate + ' days late' : '' }}</div></div><strong>{{ m(i.balance) }}</strong></div>
+        } @empty { <p class="fb-sub">No open invoices.</p> }
+        <div class="fb-statement__actions">
+          <button type="button" class="fb-btn" (click)="statementDealer = null">Close</button>
+          <button type="button" class="fb-btn fb-btn--primary" (click)="copyStatement(statementDealer)">Copy statement</button>
+        </div>
+      </div>
+    </div>
+  </nz-drawer>
+}

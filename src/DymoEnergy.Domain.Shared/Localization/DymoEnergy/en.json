@@ -125,6 +125,10 @@
     "Permission:Compliance.Create": "Add compliance records and upload documents",
     "Permission:Compliance.Edit": "Edit compliance records and page settings",
     "Permission:Compliance.Delete": "Delete compliance records",
+    "Permission:Finance": "Financials & Billing",
+    "Permission:Finance.Create": "Record payments, bills, expenses and transfers",
+    "Permission:Finance.Edit": "Edit finance records, accounts and page settings",
+    "Permission:Finance.Delete": "Delete finance records",
 
     "Enum:CompanyStatus.1": "Active",
     "Enum:CompanyStatus.2": "Inactive",

@@ -14,6 +14,7 @@ import { SelectListDto } from '../../../proxy/categories/models';
 })
 export class CompanyEntryDrawerComponent implements OnChanges, OnInit {
 
+
   @Input()  input: CompanyDto | null = null;
 
   @Output() onCompanyEntryDrawerClosed = new EventEmitter<void>();

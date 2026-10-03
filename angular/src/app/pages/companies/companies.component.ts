@@ -62,6 +62,23 @@ export class CompaniesComponent implements OnInit {
     this.loadData();
   }
 
+  get hasFilters(): boolean {
+    return !!this.filter || this.activeTab !== 'all';
+  }
+
+  get showingLabel(): string {
+    if (!this.totalCount) return 'No companies';
+    const from = (this.pageIndex - 1) * this.pageSize + 1;
+    const to = Math.min(this.pageIndex * this.pageSize, this.totalCount);
+    return `Showing ${from}–${to} of ${this.totalCount}`;
+  }
+
+  initials(name?: string | null): string {
+    const words = (name ?? '').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return '·';
+    return (words.length > 1 ? words[0][0] + words[1][0] : words[0].slice(0, 2)).toUpperCase();
+  }
+
   // ── Drawer open / close ───────────────────────────────────────────────────
   openDrawerForCreate(): void {
     this.selectedCompany = null;

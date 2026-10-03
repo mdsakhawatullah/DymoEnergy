@@ -6,7 +6,7 @@
       {{ hasRecord ? 'Update your user-facing sidebar appearance.' : 'No settings found. Create your sidebar configuration below.' }}
     </span>
   </div>
-  @if (!hasRecord && !loading) {
+  @if (!hasRecord && !loading && !loadFailed) {
     <button nz-button nzType="primary" class="btn-create" (click)="save()" [nzLoading]="saving">
       <span nz-icon nzType="plus" nzTheme="outline"></span> Create Settings
     </button>
@@ -17,12 +17,30 @@
 @if (loading) {
   <div class="text-center py-5">
     <nz-spin nzSize="large"></nz-spin>
+    <p class="text-muted small mt-3">{{ loadStep }}</p>
   </div>
 } @else {
 
 <form nz-form [formGroup]="form" nzLayout="vertical" class="settings-form">
+<div class="settings-layout">
+  <nav class="settings-nav" aria-label="Settings sections">
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 0" (click)="tab = 0">General</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 1" (click)="tab = 1">Brand Colours</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 2" (click)="tab = 2">Backgrounds</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 3" (click)="tab = 3">Navbar</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 4" (click)="tab = 4">Sidebar</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 5" (click)="tab = 5">Primary Button</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 6" (click)="tab = 6">Typography</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 7" (click)="tab = 7">About Section</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 8" (click)="tab = 8">Categories Section</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 9" (click)="tab = 9">Social Media</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 10" (click)="tab = 10">Images</button>
+  </nav>
+  <div class="settings-content">
+
 
   <!-- ① General ──────────────────────────────────────────────────────── -->
+  @if (tab === 0) {
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">1</span>
@@ -49,7 +67,10 @@
     </div>
   </div>
 
+  }
+
   <!-- ② Brand Colours ─────────────────────────────────────────────── -->
+  @if (tab === 1) {
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">2</span>
@@ -87,7 +108,10 @@
     </div>
   </div>
 
+  }
+
   <!-- ③ Backgrounds ───────────────────────────────────────────────── -->
+  @if (tab === 2) {
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">3</span>
@@ -116,7 +140,10 @@
     </div>
   </div>
 
+  }
+
   <!-- ④ Navbar ────────────────────────────────────────────────────── -->
+  @if (tab === 3) {
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">4</span>
@@ -145,7 +172,10 @@
     </div>
   </div>
 
+  }
+
   <!-- ⑤ Sidebar ───────────────────────────────────────────────────── -->
+  @if (tab === 4) {
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">5</span>
@@ -183,7 +213,10 @@
     </div>
   </div>
 
+  }
+
   <!-- ⑥ Primary Button ────────────────────────────────────────────── -->
+  @if (tab === 5) {
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">6</span>
@@ -212,7 +245,10 @@
     </div>
   </div>
 
+  }
+
   <!-- ⑦ Typography ────────────────────────────────────────────────── -->
+  @if (tab === 6) {
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">7</span>
@@ -231,7 +267,10 @@
     </div>
   </div>
 
+  }
+
   <!-- ⑧ About Section ────────────────────────────────────────────────── -->
+  @if (tab === 7) {
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">8</span>
@@ -253,7 +292,10 @@
     </div>
   </div>
 
+  }
+
   <!-- ⑨ Categories Section ───────────────────────────────────────────── -->
+  @if (tab === 8) {
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">9</span>
@@ -275,7 +317,10 @@
     </div>
   </div>
 
+  }
+
   <!-- ⑩ Social Media ─────────────────────────────────────────────────── -->
+  @if (tab === 9) {
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">10</span>
@@ -306,7 +351,10 @@
     </div>
   </div>
 
+  }
+
   <!-- ⑪ Images ─────────────────────────────────────────────────────── -->
+  @if (tab === 10) {
   <div class="settings-card">
     <div class="section-header">
       <span class="section-badge">11</span>
@@ -364,6 +412,8 @@
     </div>
   </div>
 
+  }
+
   <!-- ── Status + Save row ─────────────────────────────────────────── -->
   <div class="action-bar">
     <label class="active-toggle">
@@ -376,6 +426,8 @@
     </button>
   </div>
 
+  </div>
+</div>
 </form>
 
 } <!-- end @else -->

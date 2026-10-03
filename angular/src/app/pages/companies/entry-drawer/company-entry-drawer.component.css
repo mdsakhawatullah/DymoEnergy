@@ -1,72 +1,36 @@
-.entry-form {
-  padding: 4px 0 16px;
-}
+:host { display: flex; flex-direction: column; height: 100%; font-family: var(--de-font); color: var(--de-text); background: var(--de-bg); }
 
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
-}
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.od-head { display: flex; align-items: center; gap: 12px; padding: 16px 20px 14px; background: var(--de-surface); border-bottom: 1px solid var(--de-border); flex-shrink: 0; }
+.od-head__text { flex: 1; min-width: 0; }
+.od-title { font-size: 18px; font-weight: 700; margin: 0; line-height: 1.2; }
+.od-sub { font-size: 12.5px; color: var(--de-text-muted); }
+.od-mono { font-family: var(--de-font-mono); font-size: 12px; color: var(--de-text-2); }
+.od-status { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 7px; background: var(--de-neutral-bg); color: var(--de-neutral-fg); }
+.od-close { width: 32px; height: 32px; border: none; background: none; border-radius: 8px; color: var(--de-text-2); cursor: pointer; font-size: 15px; }
+.od-close:hover { background: var(--de-surface-muted); }
 
-.section-badge {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #0D5C2E;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
+/* ── Body ────────────────────────────────────────────────────────────────── */
+.od-body { flex: 1; overflow-y: auto; padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.od-card { background: var(--de-surface); border: 1px solid var(--de-border); border-radius: 14px; padding: 16px 18px 18px; }
+.od-card__head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.od-card__head h3 { font-size: 16px; font-weight: 600; margin: 0; }
+.od-card__meta { margin-left: auto; font-size: 12.5px; color: var(--de-text-muted); }
+.od-num { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; background: var(--de-primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; }
+.od-num--muted { background: var(--de-neutral-bg); color: var(--de-text-2); }
 
-.section-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1a1a1a;
-}
+.od-body label { display: grid; gap: 5px; font-size: 12.5px; font-weight: 500; color: var(--de-text-2); margin: 0; }
+.od-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.od-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.od-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.od-mt { margin-top: 12px; }
+.od-hint { font-size: 13px; color: var(--de-text-muted); align-self: end; padding-bottom: 6px; }
+.od-body label.od-switch { display: inline-flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 500; }
+.od-switches { display: grid; gap: 10px; align-content: end; padding-bottom: 4px; }
 
-.field-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #888;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.od-foot { flex-shrink: 0; background: var(--de-surface); border-top: 1px solid var(--de-border); padding: 12px 20px 14px; }
+.od-foot__actions { display: flex; align-items: center; gap: 10px; }
+.od-spacer { flex: 1; }
 
-.tab-body {
-  padding: 16px 4px 4px;
-}
-
-.drawer-footer {
-  position: sticky;
-  bottom: -24px;
-  margin: 0 -24px -24px;
-  padding: 14px 24px;
-  background: #fff;
-  border-top: 1px solid #f0f0f0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.btn-save {
-  background-color: #0D5C2E !important;
-  border-color: #0D5C2E !important;
-  color: #fff !important;
-  font-weight: 600;
-  border-radius: 6px !important;
-}
-
-.btn-save:hover,
-.btn-save:focus {
-  background-color: #0a4a25 !important;
-  border-color: #0a4a25 !important;
-  color: #fff !important;
-}
+@media (max-width: 760px) { .od-grid-2, .od-grid-3, .od-grid-4 { grid-template-columns: 1fr; } }
