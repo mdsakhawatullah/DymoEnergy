@@ -25,3 +25,12 @@ public enum CourierEnvironment
     Live    = 1,
     Sandbox = 2,
 }
+
+/// <summary>Which editable list a ShippingListItem belongs to.</summary>
+public enum ShippingItemKind
+{
+    BigItem         = 1,
+    ReturnPolicy    = 2,
+    PackingRule     = 3,
+    CustomerMessage = 4,
+}

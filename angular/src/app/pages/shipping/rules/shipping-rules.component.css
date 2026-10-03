@@ -1,0 +1,32 @@
+:host { display: block; }
+.ru-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.ru-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ru-side { position: sticky; top: 8px; }
+.ru-rule { display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-top: 1px solid var(--sh-soft, #F1F3EE); }
+.ru-rule.is-off { opacity: 0.55; }
+.ru-num { width: 28px; height: 28px; border-radius: 50%; background: #E6F2EA; color: #0B5A34; font-weight: 800; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ru-rule.is-off .ru-num { background: var(--sh-soft, #F1F3EE); color: var(--sh-muted, #5F6B63); }
+.ru-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.ru-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ru-kw { font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--sh-muted, #5F6B63); width: 34px; flex-shrink: 0; }
+.ru-chip { margin-left: 0; }
+.ru-count { display: flex; flex-direction: column; align-items: flex-end; min-width: 52px; }
+.ru-count strong { font-size: 18px; }
+.ru-acts { display: inline-flex; align-items: center; gap: 2px; }
+.ru-acts nz-switch { margin-right: 6px; }
+.ru-acts .sh-icon[disabled] { opacity: 0.3; cursor: default; }
+.ru-perf { display: flex; align-items: center; gap: 10px; padding-top: 12px; }
+.ru-perf__text { flex: 1; min-width: 0; font-size: 13px; }
+.ru-bar { height: 6px; border-radius: 6px; background: var(--sh-soft, #F1F3EE); margin: 6px 0 4px 18px; overflow: hidden; }
+.ru-bar span { display: block; height: 100%; border-radius: 6px; }
+.ru-empty { padding-left: 0; }
+.ru-h3 { font-size: 14px; font-weight: 700; margin: 6px 0 8px; }
+.ru-h3 + .sh-switch, .ru-seg { margin-bottom: 4px; }
+.ru-full { width: 100%; }
+
+
+@media (max-width: 1100px) {
+  .ru-grid { grid-template-columns: 1fr; }
+  .ru-side { position: static; }
+  .ru-rule { flex-wrap: wrap; }
+}

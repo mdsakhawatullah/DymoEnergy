@@ -65,6 +65,8 @@ public class CourierDetailDto : CourierSummaryDto
     public int       DefaultDeliveryType { get; set; }
     public int       DefaultItemType   { get; set; }
     public decimal   DefaultWeightKg   { get; set; }
+    public decimal   CodFeePercent     { get; set; }
+    public string?   PayoutSchedule    { get; set; }
     public DateTime? TokenIssuedAt     { get; set; }
     public DateTime? TokenExpiresAt    { get; set; }
     /// <summary>Path to give the courier for status updates, relative to the API host.</summary>
@@ -94,6 +96,8 @@ public class UpdateCourierSettingsDto
     public int DefaultDeliveryType { get; set; } = 48;
     public int DefaultItemType     { get; set; } = 2;
     [Range(0.5, 10)] public decimal DefaultWeightKg { get; set; } = 1;
+    [Range(0, 20)]   public decimal CodFeePercent   { get; set; }
+    [MaxLength(128)] public string? PayoutSchedule  { get; set; }
 }
 
 public class UpdateCourierCredentialDto
@@ -206,6 +210,10 @@ public class ReadyOrderDto
     public string? SuggestedCourierName { get; set; }
     /// <summary>Things that would make the courier reject the parcel.</summary>
     public List<string> Problems { get; set; } = new();
+    /// <summary>Which courier rule (1-based, enabled rules only) chose the suggestion; null when none matched.</summary>
+    public int?    RuleNumber   { get; set; }
+    /// <summary>The matching rule says this order gets no courier parcel (for example installation jobs).</summary>
+    public bool    NoParcel     { get; set; }
 }
 
 public class SendParcelsDto

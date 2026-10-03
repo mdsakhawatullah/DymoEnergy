@@ -3,6 +3,7 @@ using System;
 using DymoEnergy.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Volo.Abp.EntityFrameworkCore;
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace DymoEnergy.Migrations
 {
     [DbContext(typeof(DymoEnergyDbContext))]
-    partial class DymoEnergyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261003174414_Added_Shipping_Config")]
+    partial class Added_Shipping_Config
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

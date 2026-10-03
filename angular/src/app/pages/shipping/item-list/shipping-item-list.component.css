@@ -1,0 +1,10 @@
+:host { display: block; }
+.il-row { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-top: 1px solid var(--sh-soft, #F1F3EE); }
+.il-bar { width: 4px; align-self: stretch; border-radius: 4px; flex-shrink: 0; }
+.il-text { flex: 1; min-width: 0; font-size: 13px; }
+.il-acts { display: inline-flex; gap: 2px; }
+.il-acts .sh-icon[disabled] { opacity: 0.3; cursor: default; }
+.il-swatches { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.il-swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #D8DDD5; cursor: pointer; }
+.il-swatch.is-on { box-shadow: 0 0 0 2px #16201A; }
+.il-picker { width: 36px; height: 28px; border: 1px solid #D8DDD5; border-radius: 6px; padding: 1px; }

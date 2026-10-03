@@ -80,6 +80,11 @@ public class DymoEnergyDbContext :
     public DbSet<CourierCredential> CourierCredentials { get; set; }
     public DbSet<CourierApiLog>     CourierApiLogs     { get; set; }
     public DbSet<Shipment>          Shipments          { get; set; }
+    public DbSet<ShippingSetting>   ShippingSettings   { get; set; }
+    public DbSet<ShippingZone>      ShippingZones      { get; set; }
+    public DbSet<ShippingListItem>  ShippingListItems  { get; set; }
+    public DbSet<CourierRule>       CourierRules       { get; set; }
+    public DbSet<CourierPayout>     CourierPayouts     { get; set; }
     public DbSet<UserSiteSetting>      UserSiteSettings      { get; set; }
     public DbSet<UserSiteSettingImage> UserSiteSettingImages { get; set; }
 
@@ -525,6 +530,8 @@ public class DymoEnergyDbContext :
             b.Property(x => x.PickupStoreName).HasMaxLength(ShippingConsts.MaxName);
             b.Property(x => x.DefaultWeightKg).HasPrecision(9, 2);
             b.Property(x => x.LastWebhookNote).HasMaxLength(ShippingConsts.MaxName);
+            b.Property(x => x.CodFeePercent).HasPrecision(6, 3);
+            b.Property(x => x.PayoutSchedule).HasMaxLength(ShippingConsts.MaxShort);
         });
 
         builder.Entity<CourierCredential>(b =>
@@ -567,6 +574,69 @@ public class DymoEnergyDbContext :
             b.Property(x => x.Note).HasMaxLength(ShippingConsts.MaxText);
             b.HasIndex(x => x.OrderId);
             b.HasIndex(x => x.ConsignmentId);
+            b.HasIndex(x => x.PayoutId);
+        });
+
+        builder.Entity<ShippingSetting>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ShippingSettings", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.FreeDeliveryOver).HasPrecision(18, 2);
+            b.Property(x => x.WeightIncludedKg).HasPrecision(9, 2);
+            b.Property(x => x.CodFeePercent).HasPrecision(6, 3);
+            b.Property(x => x.OwnTruckPerKm).HasPrecision(18, 2);
+            b.Property(x => x.MinTripCharge).HasPrecision(18, 2);
+        });
+
+        builder.Entity<ShippingZone>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ShippingZones", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ShippingConsts.MaxName);
+            b.Property(x => x.Note).HasMaxLength(ShippingConsts.MaxName);
+            b.Property(x => x.Days).HasMaxLength(64);
+            b.Property(x => x.Charge).HasPrecision(18, 2);
+            b.Property(x => x.PerExtraKg).HasPrecision(18, 2);
+            b.Property(x => x.CourierCost).HasPrecision(18, 2);
+        });
+
+        builder.Entity<ShippingListItem>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ShippingListItems", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Title).IsRequired().HasMaxLength(ShippingConsts.MaxName);
+            b.Property(x => x.Detail).HasMaxLength(ShippingConsts.MaxText);
+            b.Property(x => x.Extra).HasMaxLength(ShippingConsts.MaxShort);
+            b.Property(x => x.Color).HasMaxLength(16);
+            b.HasIndex(x => new { x.Kind, x.Order });
+        });
+
+        builder.Entity<CourierRule>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "CourierRules", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.ProductKeyword).HasMaxLength(ShippingConsts.MaxShort);
+            b.Property(x => x.AddressContains).HasMaxLength(ShippingConsts.MaxShort);
+            b.Property(x => x.AnyItemOverKg).HasPrecision(9, 2);
+            b.Property(x => x.TotalWeightUnderKg).HasPrecision(9, 2);
+            b.Property(x => x.CodOver).HasPrecision(18, 2);
+            b.Property(x => x.ThenNote).HasMaxLength(ShippingConsts.MaxName);
+        });
+
+        builder.Entity<CourierPayout>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "CourierPayouts", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Amount).HasPrecision(18, 2);
+            b.Property(x => x.Expected).HasPrecision(18, 2);
+            b.Property(x => x.Reference).HasMaxLength(ShippingConsts.MaxShort);
+            b.Property(x => x.Note).HasMaxLength(ShippingConsts.MaxText);
+            b.HasIndex(x => x.CourierAccountId);
         });
 
         /* ── Quote Requests ─────────────────────────────────────────────── */

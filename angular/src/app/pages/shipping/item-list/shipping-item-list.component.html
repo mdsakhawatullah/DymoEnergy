@@ -1,0 +1,47 @@
+<div class="sh-card">
+  <div class="sh-card__head">
+    <div><h2>{{ heading }}</h2>@if (sub) { <span class="sh-small">{{ sub }}</span> }</div>
+    @if (canEdit) { <button type="button" class="sh-btn sh-btn--sm" (click)="start()">{{ addLabel }}</button> }
+  </div>
+  @for (i of items; track i.id; let idx = $index, first = $first, last = $last) {
+    <div class="il-row">
+      <span class="il-bar" [style.background]="i.color || '#5F6B63'"></span>
+      <div class="il-text">
+        <strong>{{ i.title }}</strong>
+        @if (i.detail) { <span class="sh-small sh-block">{{ i.detail }}</span> }
+      </div>
+      @if (i.extra) { <span class="sh-chip" [style.background]="tint(i.color || '#5F6B63', 0.12)" [style.color]="i.color || '#5F6B63'">{{ i.extra }}</span> }
+      @if (canEdit) {
+        <span class="il-acts">
+          <button type="button" class="sh-icon" [disabled]="first" (click)="move(idx, -1)" aria-label="Move up" title="Move up"><i class="bi bi-arrow-up"></i></button>
+          <button type="button" class="sh-icon" [disabled]="last" (click)="move(idx, 1)" aria-label="Move down" title="Move down"><i class="bi bi-arrow-down"></i></button>
+          <button type="button" class="sh-icon" (click)="start(i)" [attr.aria-label]="'Edit ' + i.title" title="Edit"><i class="bi bi-pencil"></i></button>
+          <button type="button" class="sh-icon" nz-popconfirm [nzPopconfirmTitle]="'Remove “' + i.title + '”?'" (nzOnConfirm)="remove(i)" [attr.aria-label]="'Remove ' + i.title" title="Remove"><i class="bi bi-trash"></i></button>
+        </span>
+      }
+    </div>
+  } @empty {
+    <div class="sh-empty">Nothing here yet.</div>
+  }
+</div>
+
+@if (open) {
+  <nz-drawer [nzVisible]="open" [nzWidth]="440" [nzTitle]="(editId ? 'Edit' : 'Add') + ' — ' + heading" (nzOnClose)="open = false">
+    <div *nzDrawerContent>
+      <label class="sh-label" for="il-t">{{ titleLabel }}</label>
+      <input id="il-t" nz-input [(ngModel)]="model.title" maxlength="256" />
+      <label class="sh-label" for="il-d">{{ detailLabel }}</label>
+      <textarea id="il-d" nz-input rows="4" [(ngModel)]="model.detail" maxlength="2000"></textarea>
+      <label class="sh-label" for="il-e">{{ extraLabel }}</label>
+      <input id="il-e" nz-input [(ngModel)]="model.extra" maxlength="128" />
+      <span class="sh-label">Colour</span>
+      <div class="il-swatches">
+        @for (c of palette; track c) {
+          <button type="button" class="il-swatch" [class.is-on]="model.color === c" [style.background]="c" (click)="model.color = c" [attr.aria-label]="'Colour ' + c"></button>
+        }
+        <input type="color" class="il-picker" [(ngModel)]="model.color" aria-label="Custom colour" />
+      </div>
+      <div class="sh-mt"><button type="button" class="sh-btn sh-btn--primary" [disabled]="saving" (click)="save()">{{ saving ? 'Saving…' : 'Save' }}</button></div>
+    </div>
+  </nz-drawer>
+}

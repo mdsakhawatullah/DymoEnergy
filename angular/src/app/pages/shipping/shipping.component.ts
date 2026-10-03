@@ -20,6 +20,9 @@ import {
 import { environment } from '../../../environments/environment';
 import { tint } from '../project-planning/project-planning.utils';
 import { fmtCompact, fmtFull } from '../budgets-costs/finance.utils';
+import { ShippingChargesComponent } from './charges/shipping-charges.component';
+import { ShippingCodComponent } from './cod/shipping-cod.component';
+import { ShippingRulesComponent } from './rules/shipping-rules.component';
 
 type TabKey = 'couriers' | 'shipments' | 'charges' | 'cod' | 'rules';
 
@@ -33,7 +36,7 @@ const PERM = {
   selector: 'app-shipping',
   templateUrl: './shipping.component.html',
   styleUrl: './shipping.component.css',
-  imports: [SharedModule],
+  imports: [SharedModule, ShippingChargesComponent, ShippingCodComponent, ShippingRulesComponent],
 })
 export class ShippingComponent implements OnInit {
   readonly Env = CourierEnvironment;
@@ -56,7 +59,7 @@ export class ShippingComponent implements OnInit {
 
   stores: PathaoStoreDto[] = [];
   storesLoading = false;
-  settings = { pickupStoreId: null as string | null, deliveryType: 48, itemType: 2, weight: 1, displayName: '', shortCode: '', color: '', isEnabled: true };
+  settings = { pickupStoreId: null as string | null, deliveryType: 48, itemType: 2, weight: 1, displayName: '', shortCode: '', color: '', isEnabled: true, codFeePercent: 0, payoutSchedule: '' };
 
   addOpen = false;
   addModel = { provider: CourierProvider.Steadfast, displayName: '', shortCode: '', color: '#2563EB' };
@@ -134,6 +137,7 @@ export class ShippingComponent implements OnInit {
     this.settings = {
       pickupStoreId: d.pickupStoreId ?? null, deliveryType: d.defaultDeliveryType, itemType: d.defaultItemType, weight: d.defaultWeightKg,
       displayName: d.displayName, shortCode: d.shortCode, color: d.color, isEnabled: d.isEnabled,
+      codFeePercent: d.codFeePercent ?? 0, payoutSchedule: d.payoutSchedule ?? '',
     };
     if (d.pickupStoreId && !this.stores.length) this.stores = [{ storeId: d.pickupStoreId, storeName: d.pickupStoreName ?? d.pickupStoreId, isActive: true, isDefault: false }];
   }
@@ -263,6 +267,7 @@ export class ShippingComponent implements OnInit {
       displayName: this.settings.displayName, shortCode: this.settings.shortCode, color: this.settings.color, isEnabled: this.settings.isEnabled,
       pickupStoreId: this.settings.pickupStoreId, pickupStoreName: store?.storeName ?? this.detail.pickupStoreName ?? null,
       defaultDeliveryType: this.settings.deliveryType, defaultItemType: this.settings.itemType, defaultWeightKg: this.settings.weight,
+      codFeePercent: this.settings.codFeePercent || 0, payoutSchedule: this.settings.payoutSchedule.trim() || null,
     }).subscribe({
       next: d => { this.busy = false; this.applyDetail(d); this.loadOverview(); this.message.success('Saved.'); },
       error: () => (this.busy = false),

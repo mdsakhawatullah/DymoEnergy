@@ -29,14 +29,16 @@ public class ShippingAppService : ApplicationService, IShippingAppService
     private readonly CourierVault     _vault;
     private readonly CourierLogWriter _log;
     private readonly PathaoClient     _pathao;
+    private readonly OrderFactsBuilder _facts;
+    private readonly IRepository<CourierRule, int> _rules;
 
     public ShippingAppService(
         IRepository<CourierAccount, int> accounts, IRepository<CourierApiLog, int> logs, IRepository<Shipment, int> shipments,
         IRepository<Order, int> orders, IRepository<OrderItem, int> orderItems, IRepository<Product, int> products,
-        CourierVault vault, CourierLogWriter log, PathaoClient pathao)
+        CourierVault vault, CourierLogWriter log, PathaoClient pathao, OrderFactsBuilder facts, IRepository<CourierRule, int> rules)
     {
         _accounts = accounts; _logs = logs; _shipments = shipments; _orders = orders; _orderItems = orderItems;
-        _products = products; _vault = vault; _log = log; _pathao = pathao;
+        _products = products; _vault = vault; _log = log; _pathao = pathao; _facts = facts; _rules = rules;
     }
 
     // ══ OVERVIEW ═════════════════════════════════════════════════════════════
@@ -99,6 +101,7 @@ public class ShippingAppService : ApplicationService, IShippingAppService
         a.DisplayName = input.DisplayName.Trim(); a.ShortCode = input.ShortCode.Trim().ToUpperInvariant(); a.Color = input.Color;
         a.IsEnabled = input.IsEnabled; a.PickupStoreId = Clean(input.PickupStoreId); a.PickupStoreName = Clean(input.PickupStoreName);
         a.DefaultDeliveryType = input.DefaultDeliveryType; a.DefaultItemType = input.DefaultItemType; a.DefaultWeightKg = input.DefaultWeightKg;
+        a.CodFeePercent = input.CodFeePercent; a.PayoutSchedule = Clean(input.PayoutSchedule);
         await _accounts.UpdateAsync(a, autoSave: true);
         return await DetailAsync(a);
     }
@@ -536,6 +539,7 @@ public class ShippingAppService : ApplicationService, IShippingAppService
 
         dto.PickupStoreId = a.PickupStoreId; dto.PickupStoreName = a.PickupStoreName;
         dto.DefaultDeliveryType = a.DefaultDeliveryType; dto.DefaultItemType = a.DefaultItemType; dto.DefaultWeightKg = a.DefaultWeightKg;
+        dto.CodFeePercent = a.CodFeePercent; dto.PayoutSchedule = a.PayoutSchedule;
         dto.TokenIssuedAt = Parse(CourierCatalog.TokenIssuedAt); dto.TokenExpiresAt = Parse(CourierCatalog.TokenExpiresAt);
         dto.WebhookPath = CourierCatalog.HasApi(a.Provider) ? $"/api/shipping/webhook/{a.Id}" : null;
         dto.LastWebhookAt = a.LastWebhookAt; dto.LastWebhookNote = a.LastWebhookNote;
@@ -561,46 +565,36 @@ public class ShippingAppService : ApplicationService, IShippingAppService
             .OrderBy(o => o.OrderDate).ThenBy(o => o.Id).Take(200).ToList();
         if (orders.Count == 0) return new List<ReadyOrderDto>();
 
-        var ids = orders.Select(o => o.Id).ToList();
-        var items = await _orderItems.GetListAsync(i => ids.Contains(i.OrderId));
-        var productIds = items.Where(i => i.ProductId.HasValue).Select(i => i.ProductId!.Value).Distinct().ToList();
-        var weights = (await _products.GetListAsync(p => productIds.Contains(p.Id))).ToDictionary(p => p.Id, p => CourierCatalog.ParseWeightKg(p.Weight));
-
         var pathao = accounts.Where(a => a.IsEnabled && a.Provider == CourierProvider.Pathao).OrderBy(a => a.Order).FirstOrDefault();
-        var own = accounts.Where(a => a.IsEnabled && a.Provider == CourierProvider.OwnDelivery).OrderBy(a => a.Order).FirstOrDefault();
-        var defaultWeight = pathao?.DefaultWeightKg ?? 1m;
+        var facts = await _facts.BuildAsync(orders, pathao?.DefaultWeightKg ?? 1m);
+        var rules = (await _rules.GetListAsync()).OrderBy(r => r.Order).ThenBy(r => r.Id).ToList();
+        var byId = accounts.ToDictionary(a => a.Id);
 
-        return orders.Select(o =>
+        return facts.Select(f =>
         {
-            var lines = items.Where(i => i.OrderId == o.Id).OrderBy(i => i.DisplayOrder).ToList();
-            decimal known = 0; var guessed = false;
-            foreach (var l in lines)
-            {
-                var w = l.ProductId.HasValue && weights.TryGetValue(l.ProductId.Value, out var kg) ? kg : null;
-                if (w.HasValue) known += w.Value * (decimal)l.Quantity; else guessed = true;
-            }
-            var weight = known > 0 ? known + (guessed ? defaultWeight : 0) : defaultWeight;
-            guessed |= known == 0;
-
-            var name = (o.DeliveryContact ?? o.CustomerName ?? "").Trim();
-            var phone = o.DeliveryPhone ?? o.CustomerPhone;
-            var address = (o.DeliveryAddress ?? o.BillingAddress ?? "").Trim();
             var problems = new List<string>();
-            if (name.Length is < 3 or > 100) problems.Add("Recipient name must be 3–100 characters.");
-            if (CourierCatalog.NormalizePhone(phone) == null) problems.Add("Phone must be an 11-digit mobile number.");
-            if (address.Length is < 10 or > 220) problems.Add("Address must be 10–220 characters.");
-            if (weight > 10) problems.Add($"{weight:0.#} kg is over Pathao's 10 kg limit.");
+            if (f.CustomerName.Length is < 3 or > 100) problems.Add("Recipient name must be 3–100 characters.");
+            if (CourierCatalog.NormalizePhone(f.Phone) == null) problems.Add("Phone must be an 11-digit mobile number.");
+            if (f.Address.Length is < 10 or > 220) problems.Add("Address must be 10–220 characters.");
+            if (f.TotalWeightKg > 10) problems.Add($"{f.TotalWeightKg:0.#} kg is over Pathao’s 10 kg limit.");
 
-            var bigOrInstall = weight > 10 || o.ShipmentType == OrderShipmentType.DeliveryAndInstall;
-            var suggested = bigOrInstall ? own ?? pathao : pathao ?? own;
+            var rule = CourierRuleEngine.FirstMatch(rules, f);
+            CourierAccount? suggested = null;
+            if (rule?.CourierAccountId is int cid && byId.TryGetValue(cid, out var ca) && ca.IsEnabled) suggested = ca;
+            else if (rules.Count == 0)
+            {
+                // No rules set up yet: Pathao for parcels it accepts, the own team for the rest.
+                var own = accounts.Where(a => a.IsEnabled && a.Provider == CourierProvider.OwnDelivery).OrderBy(a => a.Order).FirstOrDefault();
+                suggested = f.TotalWeightKg > 10 || f.NeedsInstallation ? own ?? pathao : pathao ?? own;
+            }
 
             return new ReadyOrderDto
             {
-                OrderId = o.Id, OrderNumber = o.OrderNumber ?? $"#{o.Id}", CustomerName = name, Phone = phone, Address = address,
-                Items = string.Join(", ", lines.Select(l => $"{l.Quantity:0.##} × {l.ProductName}")),
-                WeightKg = Math.Round(weight, 2), WeightGuessed = guessed,
-                Collect = Math.Max(0, Math.Round((decimal)o.BalanceDue, 2)),
+                OrderId = f.OrderId, OrderNumber = f.OrderNumber, CustomerName = f.CustomerName, Phone = f.Phone, Address = f.Address,
+                Items = f.ItemsText, WeightKg = f.TotalWeightKg, WeightGuessed = f.WeightGuessed, Collect = f.Cod,
                 SuggestedCourierId = suggested?.Id, SuggestedCourierName = suggested?.DisplayName, Problems = problems,
+                RuleNumber = rule == null ? null : rules.Where(r => r.IsEnabled).ToList().IndexOf(rule) + 1,
+                NoParcel = rule?.NoParcel == true,
             };
         }).ToList();
     }

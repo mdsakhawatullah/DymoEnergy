@@ -1,0 +1,171 @@
+@if (page; as p) {
+  <!-- ── Summary ───────────────────────────────────────────────────────── -->
+  <div class="cod-kpis">
+    <div class="sh-card sh-stat">
+      <span class="sh-small">Couriers are holding</span>
+      <strong class="is-amber">{{ money(p.holding) }}</strong>
+      <span class="sh-small">{{ p.holdingParcels }} delivered {{ p.holdingParcels === 1 ? 'parcel' : 'parcels' }} not paid out@if (p.oldestUnpaidDays != null) { · oldest {{ p.oldestUnpaidDays }} {{ p.oldestUnpaidDays === 1 ? 'day' : 'days' }} }</span>
+    </div>
+    <div class="sh-card sh-stat">
+      <span class="sh-small">Received this month</span>
+      <strong class="is-green">{{ money(p.receivedThisMonth) }}</strong>
+      <span class="sh-small">{{ p.receivedCount }} {{ p.receivedCount === 1 ? 'payout' : 'payouts' }} · {{ p.matchedCount }} matched exactly</span>
+    </div>
+    <div class="sh-card sh-stat">
+      <span class="sh-small">Short payouts</span>
+      <strong [class.is-red]="p.shortCount > 0">{{ p.shortCount ? money(p.shortTotal) : 'None' }}</strong>
+      <span class="sh-small">{{ p.shortCount ? p.shortCount + ' ' + (p.shortCount === 1 ? 'payout' : 'payouts') + ' paid less than expected' : 'every payout matched or was over' }}</span>
+    </div>
+  </div>
+
+  <div class="cod-grid">
+    <div class="cod-main">
+      <!-- ── By courier ──────────────────────────────────────────────── -->
+      <div class="sh-card sh-table-card">
+        <div class="sh-card__head">
+          <div><h2>Cash each courier is holding</h2><span class="sh-small">Delivered parcels with cash to collect that no payout covers yet.</span></div>
+          @if (canEdit && p.couriers.length) { <button type="button" class="sh-btn sh-btn--sm sh-btn--primary" (click)="startPayout()">Record a payout</button> }
+        </div>
+        <div class="sh-table-wrap">
+          <table class="sh-table cod-table">
+            <thead><tr><th>Courier</th><th class="is-right">Parcels</th><th class="is-right">Cash collected</th><th class="is-right">Their fees</th><th class="is-right">Should pay you</th><th>Pays</th>@if (canEdit) { <th></th> }</tr></thead>
+            <tbody>
+              @for (c of p.couriers; track c.courierAccountId) {
+                <tr>
+                  <td><span class="sh-code cod-code" [style.background]="tint(c.color, 0.12)" [style.color]="c.color">{{ c.shortCode }}</span><strong>{{ c.name }}</strong></td>
+                  <td class="is-right">{{ c.parcels }}</td>
+                  <td class="is-right">{{ money(c.collected) }}</td>
+                  <td class="is-right sh-muted" [title]="'Delivery charges plus ' + c.codFeePercent + '% cash fee'">−{{ money(c.fee) }}</td>
+                  <td class="is-right"><strong class="is-amber">{{ money(c.shouldReceive) }}</strong></td>
+                  <td class="sh-small">{{ c.schedule || 'not set' }}</td>
+                  @if (canEdit) { <td class="is-right"><button type="button" class="sh-btn sh-btn--sm" (click)="startPayout(c.courierAccountId)">Record payout</button></td> }
+                </tr>
+              } @empty {
+                <tr><td [attr.colspan]="canEdit ? 7 : 6" class="sh-empty">No courier is holding cash. Delivered cash-on-delivery parcels appear here until a payout covers them.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="sh-card__foot"><span class="sh-small">Fees use each courier's cash fee % and payout schedule from Couriers &amp; keys → Settings.</span></div>
+      </div>
+
+      <!-- ── Payouts ─────────────────────────────────────────────────── -->
+      <div class="sh-card sh-table-card">
+        <div class="sh-card__head"><h2>Payouts received</h2><span class="sh-small">each one checked against the parcels it covers</span></div>
+        <div class="sh-table-wrap">
+          <table class="sh-table cod-table">
+            <thead><tr><th>Date</th><th>Courier</th><th class="is-right">Parcels</th><th class="is-right">Expected</th><th class="is-right">Received</th><th class="is-right">Difference</th><th>Check</th><th>Reference</th>@if (canEdit) { <th></th> }</tr></thead>
+            <tbody>
+              @for (x of p.payouts; track x.id) {
+                <tr [id]="'cod-payout-' + x.id" [class.is-hl]="highlightPayoutId === x.id">
+                  <td>{{ x.date | date: 'd MMM y' }}</td>
+                  <td><span class="sh-dot" [style.background]="courierColor(x.courierAccountId)"></span> {{ x.courierName }}</td>
+                  <td class="is-right">{{ x.parcels }}</td>
+                  <td class="is-right">{{ money(x.expected) }}</td>
+                  <td class="is-right"><strong>{{ money(x.amount) }}</strong></td>
+                  <td class="is-right" [class.is-red]="x.status === 'short'" [class.is-amber]="x.status === 'over'">{{ diffText(x.difference) }}</td>
+                  <td><span class="sh-chip" [ngClass]="statusClass(x)">{{ x.status === 'matched' ? 'Matched' : x.status === 'short' ? 'Short' : 'Over' }}</span>
+                    @if (x.banked) { <span class="sh-chip is-blue" title="Also recorded as money in on Financials">In Financials</span> }</td>
+                  <td class="sh-small"><span class="sh-mono">{{ x.reference }}</span>@if (x.note) { <span class="sh-block">{{ x.note }}</span> }</td>
+                  @if (canEdit) {
+                    <td class="is-right">
+                      <button type="button" class="sh-icon" nz-popconfirm
+                        [nzPopconfirmTitle]="'Remove this payout? Its parcels go back to “courier is holding”' + (x.banked ? ' and the Financials entry is deleted.' : '.')"
+                        (nzOnConfirm)="deletePayout(x)" aria-label="Remove payout" title="Remove"><i class="bi bi-trash"></i></button>
+                    </td>
+                  }
+                </tr>
+              } @empty {
+                <tr><td [attr.colspan]="canEdit ? 9 : 8" class="sh-empty">No payouts recorded yet.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Needs a look ──────────────────────────────────────────────── -->
+    <div class="sh-card sh-pad cod-side">
+      <h2>Needs a look</h2>
+      @for (i of p.issues; track $index) {
+        <div class="cod-issue" [ngClass]="'is-' + i.tone">
+          <strong>{{ i.title }}</strong>
+          <span class="sh-small sh-block">{{ i.text }}</span>
+          @if (canEdit || i.action === 'view-payout') { <button type="button" class="sh-link" (click)="act(i)">{{ i.actionLabel }}</button> }
+        </div>
+      } @empty {
+        <div class="sh-banner is-ok"><i class="bi bi-check-circle"></i>Nothing needs a look. Every payout matches and no cash is late.</div>
+      }
+    </div>
+  </div>
+} @else if (failed) {
+  <div class="sh-banner is-bad"><i class="bi bi-x-circle"></i>Could not load cash on delivery. <button type="button" class="sh-link" (click)="load()">Try again</button></div>
+} @else {
+  <nz-spin nzSimple class="sh-loading"></nz-spin>
+}
+
+<!-- ── Record payout ─────────────────────────────────────────────────── -->
+@if (payOpen && page; as p) {
+  <nz-drawer [nzVisible]="payOpen" [nzWidth]="560" nzTitle="Record a courier payout" (nzOnClose)="payOpen = false">
+    <div *nzDrawerContent>
+      <div class="sh-grid2">
+        <div>
+          <label class="sh-label" for="cp-c">Courier</label>
+          <select id="cp-c" class="sh-select" [(ngModel)]="pay.courierAccountId" (ngModelChange)="onCourierChange()">
+            @for (c of p.couriers; track c.courierAccountId) { <option [ngValue]="c.courierAccountId">{{ c.name }}</option> }
+          </select>
+        </div>
+        <div>
+          <label class="sh-label" for="cp-d">Received on</label>
+          <nz-date-picker id="cp-d" [(ngModel)]="pay.date" nzFormat="d MMM yyyy" [nzAllowClear]="false" class="cod-full"></nz-date-picker>
+        </div>
+      </div>
+
+      <div class="cod-parcels">
+        <div class="cod-parcels__head">
+          <label class="sh-switch"><input type="checkbox" [checked]="picked.size === courierParcels.length && courierParcels.length > 0" (change)="pickAll($any($event.target).checked)" /> <strong>Parcels this payout covers</strong></label>
+          <span class="sh-small">{{ picked.size }} of {{ courierParcels.length }}</span>
+        </div>
+        @for (u of courierParcels; track u.shipmentId) {
+          <label class="cod-parcel">
+            <input type="checkbox" [checked]="picked.has(u.shipmentId)" (change)="togglePick(u, $any($event.target).checked)" />
+            <span class="cod-parcel__id"><span class="sh-mono">{{ u.consignmentId || u.orderNumber }}</span><span class="sh-small sh-block">{{ u.orderNumber }} · delivered {{ u.deliveredAt | date: 'd MMM' }}</span></span>
+            <span class="is-right sh-small">{{ money(u.cod) }} − {{ money(u.fee) }}</span>
+            <strong class="is-right">{{ money(u.expected) }}</strong>
+          </label>
+        }
+      </div>
+
+      <div class="sh-grid2">
+        <div>
+          <span class="sh-label">They should pay</span>
+          <div class="cod-expected">{{ money(expected) }}</div>
+        </div>
+        <div>
+          <label class="sh-label" for="cp-a">They actually paid</label>
+          <nz-input-number id="cp-a" [(ngModel)]="pay.amount" [nzMin]="0" nzPrefix="৳" class="cod-full"></nz-input-number>
+        </div>
+      </div>
+      @if (picked.size) {
+        <div class="sh-banner sh-mt" [ngClass]="Math.abs(difference) < 0.5 ? 'is-ok' : difference < 0 ? 'is-bad' : 'is-warn'">
+          {{ Math.abs(difference) < 0.5 ? 'Matches the parcels exactly.' : difference < 0 ? 'Short by ' + money(-difference) + ' — it will be listed under “Needs a look”.' : 'Over by ' + money(difference) + '.' }}
+        </div>
+      }
+
+      <div class="sh-grid2">
+        <div><label class="sh-label" for="cp-r">Reference</label><input id="cp-r" nz-input [(ngModel)]="pay.reference" maxlength="128" placeholder="bank or bKash transaction ID" /></div>
+        <div>
+          <label class="sh-label" for="cp-f">Also add to Financials</label>
+          <select id="cp-f" class="sh-select" [(ngModel)]="pay.financeAccountId">
+            <option [ngValue]="null">No — record here only</option>
+            @for (a of p.financeAccounts; track a.id) { <option [ngValue]="a.id">Money in → {{ a.name }}</option> }
+          </select>
+        </div>
+      </div>
+      <label class="sh-label" for="cp-n">Note</label>
+      <textarea id="cp-n" nz-input rows="2" [(ngModel)]="pay.note" maxlength="2000"></textarea>
+
+      <div class="sh-mt"><button type="button" class="sh-btn sh-btn--primary" [disabled]="paying || !picked.size" (click)="savePayout()">{{ paying ? 'Saving…' : 'Record payout' }}</button></div>
+    </div>
+  </nz-drawer>
+}

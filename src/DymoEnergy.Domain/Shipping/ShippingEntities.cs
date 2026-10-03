@@ -28,6 +28,12 @@ public class CourierAccount : FullAuditedAggregateRoot<int>
     // ── Webhook ───────────────────────────────────────────────────────────
     public DateTime? LastWebhookAt   { get; set; }
     public string?   LastWebhookNote { get; set; }
+
+    // ── Cash on delivery ──────────────────────────────────────────────────
+    /// <summary>The courier’s cut of the cash it collects (Pathao: about 1%).</summary>
+    public decimal   CodFeePercent   { get; set; }
+    /// <summary>Free text, e.g. "Sun & Wed".</summary>
+    public string?   PayoutSchedule  { get; set; }
 }
 
 /// <summary>
@@ -78,4 +84,6 @@ public class Shipment : FullAuditedAggregateRoot<int>
     public string   RecipientPhone   { get; set; } = string.Empty;
     public string   RecipientAddress { get; set; } = string.Empty;
     public string?  Note             { get; set; }
+    /// <summary>Set once the courier has paid this parcel’s cash out.</summary>
+    public int?     PayoutId         { get; set; }
 }

@@ -51,6 +51,8 @@ export interface CourierDetailDto extends CourierSummaryDto {
   defaultDeliveryType: number;
   defaultItemType: number;
   defaultWeightKg: number;
+  codFeePercent: number;
+  payoutSchedule?: string | null;
   tokenIssuedAt?: string | null;
   tokenExpiresAt?: string | null;
   webhookPath?: string | null;
@@ -72,6 +74,8 @@ export interface UpdateCourierSettingsDto {
   defaultDeliveryType: number;
   defaultItemType: number;
   defaultWeightKg: number;
+  codFeePercent: number;
+  payoutSchedule?: string | null;
 }
 
 export interface CourierTestResultDto { ok: boolean; message: string; tokenExpiresAt?: string | null; }
@@ -104,6 +108,8 @@ export interface ReadyOrderDto {
   suggestedCourierId?: number | null;
   suggestedCourierName?: string | null;
   problems: string[];
+  ruleNumber?: number | null;
+  noParcel: boolean;
 }
 
 export interface SendParcelResultDto {

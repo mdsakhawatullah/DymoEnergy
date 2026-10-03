@@ -34,7 +34,7 @@
         </button>
         <button type="button" class="sh-mini" [class.is-active]="tab === 'cod'" (click)="setTab('cod')">
           <span class="sh-mini__label"><span class="sh-dot" style="background:#D97706"></span>Cash on delivered parcels</span>
-          <strong class="is-amber">{{ compact(o.codDelivered) }}</strong><span class="sh-small">payout matching comes next</span>
+          <strong class="is-amber">{{ compact(o.codDelivered) }}</strong><span class="sh-small">delivered, before payouts</span>
         </button>
         <button type="button" class="sh-mini" [class.is-active]="tab === 'couriers'" (click)="setTab('couriers')">
           <span class="sh-mini__label"><span class="sh-dot" style="background:#B42318"></span>Failed calls today</span>
@@ -200,6 +200,15 @@
                 <div><label class="sh-label" for="sh-name">Name</label><input id="sh-name" nz-input [(ngModel)]="settings.displayName" [disabled]="!canEdit" /></div>
                 <div><label class="sh-label" for="sh-code">Short code</label><input id="sh-code" nz-input [(ngModel)]="settings.shortCode" maxlength="8" [disabled]="!canEdit" /></div>
               </div>
+              @if (!d.isManual || d.provider === Provider.OwnDelivery) {
+                <div class="sh-grid2">
+                  <div><label class="sh-label" for="sh-cf">Cash-on-delivery fee</label>
+                    <nz-input-number id="sh-cf" [(ngModel)]="settings.codFeePercent" [nzMin]="0" [nzMax]="20" [nzStep]="0.5" nzSuffix="%" [nzDisabled]="!canEdit" class="sh-full"></nz-input-number></div>
+                  <div><label class="sh-label" for="sh-ps">Pays out</label>
+                    <input id="sh-ps" nz-input [(ngModel)]="settings.payoutSchedule" maxlength="128" placeholder="e.g. Every Tuesday" [disabled]="!canEdit" /></div>
+                </div>
+                <p class="sh-small">Used on the Cash on delivery tab to work out what {{ d.displayName }} should pay you.</p>
+              }
               <label class="sh-switch sh-mt"><nz-switch [(ngModel)]="settings.isEnabled" [nzDisabled]="!canEdit" nzSize="small"></nz-switch> Switched on (can be chosen for parcels)</label>
               @if (canEdit) { <div class="sh-mt"><button type="button" class="sh-btn sh-btn--primary sh-btn--sm" [disabled]="busy" (click)="saveSettings()">Save settings</button></div> }
             </div>
@@ -276,7 +285,11 @@
                   <td class="sh-ellipsis sh-items" [title]="r.items">{{ r.items }}</td>
                   <td>{{ r.weightKg }} kg@if (r.weightGuessed) { <span class="sh-small" title="Some products have no weight; the courier default was used"> (est.)</span> }</td>
                   <td class="is-right"><strong [class.is-amber]="r.collect > 0">{{ r.collect > 0 ? money(r.collect) : '—' }}</strong></td>
-                  <td>@if (r.suggestedCourierName) { <span class="sh-chip is-grey">{{ r.suggestedCourierName }}</span> }</td>
+                  <td>
+                    @if (r.noParcel) { <span class="sh-chip is-grey">No parcel</span> }
+                    @else if (r.suggestedCourierName) { <span class="sh-chip is-grey">{{ r.suggestedCourierName }}</span> }
+                    <span class="sh-small sh-block">{{ r.ruleNumber ? 'rule ' + r.ruleNumber : r.noParcel ? '' : 'default' }}</span>
+                  </td>
                 </tr>
               } @empty {
                 <tr><td colspan="7" class="sh-empty">Nothing is waiting. Confirmed orders show up here until they get a parcel.</td></tr>
@@ -340,20 +353,10 @@
     }
   }
 
-  <!-- ═════════ NEXT PHASE ═════════ -->
-  @if (tab === 'charges' || tab === 'cod' || tab === 'rules') {
-    <div class="sh-card sh-pad sh-next">
-      <h2>{{ tab === 'charges' ? 'Charges & zones' : tab === 'cod' ? 'Cash on delivery' : 'Rules & packaging' }} — coming in the next phase</h2>
-      <p class="sh-small">
-        @switch (tab) {
-          @case ('charges') { What you charge per zone vs. what the courier costs, checkout rules, big items couriers will not take, and who pays for returns. }
-          @case ('cod') { Cash each courier is holding, payouts matched against parcels, and the problems that need a look (short payouts, late cash, fee differences). }
-          @case ('rules') { Which courier gets each parcel (top-to-bottom rules), packing instructions per product, customer messages, and courier performance. }
-        }
-      </p>
-      <p class="sh-small">The Pathao connection, keys and parcels on the first two tabs are what these build on.</p>
-    </div>
-  }
+  <!-- ═════════ CHARGES, COD, RULES ═════════ -->
+  @if (tab === 'charges') { <app-shipping-charges [canEdit]="canEdit" /> }
+  @if (tab === 'cod') { <app-shipping-cod [canEdit]="canEdit" (changed)="loadOverview()" /> }
+  @if (tab === 'rules') { <app-shipping-rules [canEdit]="canEdit" /> }
 </div>
 
 <!-- ── Add courier ─────────────────────────────────────────────────────── -->

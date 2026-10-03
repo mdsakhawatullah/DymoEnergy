@@ -1,0 +1,152 @@
+@if (page; as p) {
+  <div class="ch-grid">
+    <div class="ch-main">
+      <!-- ── Zones ───────────────────────────────────────────────────── -->
+      <div class="sh-card sh-table-card">
+        <div class="sh-card__head">
+          <div><h2>Delivery charge by zone</h2><span class="sh-small">What the customer pays at checkout next to what the courier charges you.</span></div>
+          @if (canEdit) { <button type="button" class="sh-btn sh-btn--sm" (click)="startZone()">+ Add zone</button> }
+        </div>
+        <div class="sh-table-wrap">
+          <table class="sh-table ch-table">
+            <thead>
+              <tr>
+                <th>Zone</th><th class="is-right">Customer pays</th><th class="is-right">Per extra kg</th><th class="is-right">Courier costs you</th>
+                <th class="is-right">You keep</th><th>Arrives in</th>@if (canEdit) { <th></th> }
+              </tr>
+            </thead>
+            <tbody>
+              @for (z of p.zones; track z.id; let i = $index, first = $first, last = $last) {
+                <tr>
+                  <td><strong class="sh-block">{{ z.name }}</strong>@if (z.note) { <span class="sh-small">{{ z.note }}</span> }</td>
+                  <td class="is-right"><strong>{{ money(z.charge) }}</strong></td>
+                  <td class="is-right">{{ z.perExtraKg ? '+' + money(z.perExtraKg) : '—' }}</td>
+                  <td class="is-right">{{ money(z.courierCost) }}</td>
+                  <td class="is-right"><span class="sh-chip" [ngClass]="z.margin > 0 ? 'is-green' : z.margin < 0 ? 'is-red' : 'is-grey'">{{ marginText(z) }}</span></td>
+                  <td>{{ z.days || '—' }}</td>
+                  @if (canEdit) {
+                    <td class="is-right ch-acts">
+                      <button type="button" class="sh-icon" [disabled]="first" (click)="moveZone(i, -1)" aria-label="Move up" title="Move up"><i class="bi bi-arrow-up"></i></button>
+                      <button type="button" class="sh-icon" [disabled]="last" (click)="moveZone(i, 1)" aria-label="Move down" title="Move down"><i class="bi bi-arrow-down"></i></button>
+                      <button type="button" class="sh-icon" (click)="startZone(z)" [attr.aria-label]="'Edit ' + z.name" title="Edit"><i class="bi bi-pencil"></i></button>
+                      <button type="button" class="sh-icon" nz-popconfirm [nzPopconfirmTitle]="'Remove ' + z.name + '?'" (nzOnConfirm)="deleteZone(z)" [attr.aria-label]="'Remove ' + z.name" title="Remove"><i class="bi bi-trash"></i></button>
+                    </td>
+                  }
+                </tr>
+              } @empty {
+                <tr><td [attr.colspan]="canEdit ? 7 : 6" class="sh-empty">No zones yet. Add one for each delivery area you price differently.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (losingZones.length) {
+          <div class="sh-card__foot ch-warn">
+            <span><i class="bi bi-exclamation-triangle"></i> You lose money on every parcel to {{ losingNames }}. Raise the charge or accept it as a cost of selling there.</span>
+          </div>
+        }
+      </div>
+
+      <app-shipping-item-list
+        [kind]="Kind.BigItem" heading="Big items couriers will not take" sub="These go by your own truck or a freight service, never as a courier parcel."
+        [items]="p.bigItems" [canEdit]="canEdit" titleLabel="Product or group" detailLabel="Why" extraLabel="How it goes instead" addLabel="+ Add item"
+        (changed)="load()" />
+
+      <app-shipping-item-list
+        [kind]="Kind.ReturnPolicy" heading="Who pays when a parcel comes back" sub="Shown to staff when they handle a returned or refused parcel."
+        [items]="p.returnPolicies" [canEdit]="canEdit" titleLabel="Situation" detailLabel="What happens" extraLabel="Who pays" addLabel="+ Add case"
+        (changed)="load()" />
+    </div>
+
+    <!-- ── Checkout rules ────────────────────────────────────────────── -->
+    @if (setting; as s) {
+      <div class="sh-card sh-pad ch-side">
+        <h2>Checkout rules</h2>
+        <p class="sh-small">How the delivery charge is worked out on top of the zone price.</p>
+
+        <div class="ch-rule">
+          <label class="sh-switch"><nz-switch nzSize="small" [(ngModel)]="s.freeDeliveryEnabled" (ngModelChange)="touch()" [nzDisabled]="!canEdit"></nz-switch><strong>Free delivery on big orders</strong></label>
+          <div class="ch-inline" [class.is-off]="!s.freeDeliveryEnabled">
+            <span class="sh-small">when the order is over</span>
+            <nz-input-number [(ngModel)]="s.freeDeliveryOver" (ngModelChange)="touch()" [nzMin]="0" [nzStep]="1000" nzPrefix="৳" [nzDisabled]="!canEdit || !s.freeDeliveryEnabled"></nz-input-number>
+          </div>
+        </div>
+
+        <div class="ch-rule">
+          <label class="sh-switch"><nz-switch nzSize="small" [(ngModel)]="s.weightChargeEnabled" (ngModelChange)="touch()" [nzDisabled]="!canEdit"></nz-switch><strong>Charge for extra weight</strong></label>
+          <div class="ch-inline" [class.is-off]="!s.weightChargeEnabled">
+            <span class="sh-small">zone price covers the first</span>
+            <nz-input-number [(ngModel)]="s.weightIncludedKg" (ngModelChange)="touch()" [nzMin]="0" [nzMax]="100" [nzStep]="0.5" nzSuffix="kg" [nzDisabled]="!canEdit || !s.weightChargeEnabled"></nz-input-number>
+          </div>
+          <span class="sh-small">then the zone's “per extra kg” is added for each kg above it.</span>
+        </div>
+
+        <div class="ch-rule">
+          <label class="sh-switch"><nz-switch nzSize="small" [(ngModel)]="s.codFeePassed" (ngModelChange)="touch()" [nzDisabled]="!canEdit"></nz-switch><strong>Customer pays the cash-on-delivery fee</strong></label>
+          <div class="ch-inline" [class.is-off]="!s.codFeePassed">
+            <span class="sh-small">add</span>
+            <nz-input-number [(ngModel)]="s.codFeePercent" (ngModelChange)="touch()" [nzMin]="0" [nzMax]="20" [nzStep]="0.5" nzSuffix="%" [nzDisabled]="!canEdit || !s.codFeePassed"></nz-input-number>
+            <span class="sh-small">of the cash to collect</span>
+          </div>
+        </div>
+
+        <div class="ch-rule">
+          <label class="sh-switch"><nz-switch nzSize="small" [(ngModel)]="s.customerChoosesCourier" (ngModelChange)="touch()" [nzDisabled]="!canEdit"></nz-switch><strong>Let the customer choose the courier</strong></label>
+          <span class="sh-small">Off: the courier rules on the Rules &amp; packaging tab decide.</span>
+        </div>
+
+        <div class="ch-rule">
+          <strong class="sh-block">Own truck</strong>
+          <div class="sh-grid2">
+            <div><label class="sh-label" for="ch-km">Per km</label>
+              <nz-input-number id="ch-km" [(ngModel)]="s.ownTruckPerKm" (ngModelChange)="touch()" [nzMin]="0" nzPrefix="৳" [nzDisabled]="!canEdit"></nz-input-number></div>
+            <div><label class="sh-label" for="ch-min">Minimum trip</label>
+              <nz-input-number id="ch-min" [(ngModel)]="s.minTripCharge" (ngModelChange)="touch()" [nzMin]="0" [nzStep]="100" nzPrefix="৳" [nzDisabled]="!canEdit"></nz-input-number></div>
+          </div>
+        </div>
+
+        <div class="ch-rule">
+          <strong class="sh-block">Cash alert</strong>
+          <div class="ch-inline">
+            <span class="sh-small">warn when a courier still holds cash</span>
+            <nz-input-number [(ngModel)]="s.noCashAlertDays" (ngModelChange)="touch()" [nzMin]="1" [nzMax]="60" nzSuffix="days" [nzDisabled]="!canEdit"></nz-input-number>
+            <span class="sh-small">after delivery</span>
+          </div>
+        </div>
+
+        @if (canEdit) {
+          <div class="ch-save">
+            <button type="button" class="sh-btn sh-btn--primary sh-btn--sm" [disabled]="!settingDirty || savingSetting" (click)="saveSetting()">{{ savingSetting ? 'Saving…' : 'Save checkout rules' }}</button>
+            @if (settingDirty) { <button type="button" class="sh-btn sh-btn--sm" (click)="resetSetting()">Undo</button> }
+          </div>
+        }
+        <p class="sh-small sh-mt">These are read by the online shop's checkout. Orders already placed keep the charge they were placed with.</p>
+      </div>
+    }
+  </div>
+} @else if (failed) {
+  <div class="sh-banner is-bad"><i class="bi bi-x-circle"></i>Could not load the charges. <button type="button" class="sh-link" (click)="load()">Try again</button></div>
+} @else {
+  <nz-spin nzSimple class="sh-loading"></nz-spin>
+}
+
+<!-- ── Zone drawer ───────────────────────────────────────────────────── -->
+@if (zoneOpen) {
+  <nz-drawer [nzVisible]="zoneOpen" [nzWidth]="460" [nzTitle]="zoneId ? 'Edit zone' : 'Add a zone'" (nzOnClose)="zoneOpen = false">
+    <div *nzDrawerContent>
+      <label class="sh-label" for="z-n">Zone name</label>
+      <input id="z-n" nz-input [(ngModel)]="zone.name" maxlength="256" placeholder="e.g. Inside Dhaka" />
+      <label class="sh-label" for="z-note">Which areas (shown under the name)</label>
+      <input id="z-note" nz-input [(ngModel)]="zone.note" maxlength="256" placeholder="e.g. Savar, Keraniganj, Gazipur" />
+      <div class="sh-grid2">
+        <div><label class="sh-label" for="z-c">Customer pays</label><nz-input-number id="z-c" [(ngModel)]="zone.charge" [nzMin]="0" nzPrefix="৳"></nz-input-number></div>
+        <div><label class="sh-label" for="z-k">Per extra kg</label><nz-input-number id="z-k" [(ngModel)]="zone.perExtraKg" [nzMin]="0" nzPrefix="৳"></nz-input-number></div>
+        <div><label class="sh-label" for="z-cc">Courier costs you</label><nz-input-number id="z-cc" [(ngModel)]="zone.courierCost" [nzMin]="0" nzPrefix="৳"></nz-input-number></div>
+        <div><label class="sh-label" for="z-d">Arrives in</label><input id="z-d" nz-input [(ngModel)]="zone.days" maxlength="64" placeholder="e.g. 2–4 days" /></div>
+      </div>
+      <div class="sh-banner sh-mt" [ngClass]="zoneMargin > 0 ? 'is-ok' : zoneMargin < 0 ? 'is-bad' : 'is-grey'">
+        {{ zoneMargin >= 0 ? 'You keep ' + money(zoneMargin) : 'You lose ' + money(-zoneMargin) }} on each parcel at the base weight.
+      </div>
+      <div class="sh-mt"><button type="button" class="sh-btn sh-btn--primary" [disabled]="zoneSaving" (click)="saveZone()">{{ zoneSaving ? 'Saving…' : 'Save zone' }}</button></div>
+    </div>
+  </nz-drawer>
+}

@@ -1,0 +1,120 @@
+@if (page; as p) {
+  <div class="ru-grid">
+    <div class="ru-main">
+      <!-- ── Courier rules ───────────────────────────────────────────── -->
+      <div class="sh-card">
+        <div class="sh-card__head">
+          <div>
+            <h2>Which courier gets the parcel</h2>
+            <span class="sh-small">Checked top to bottom — the first rule that fits decides. Shipments → “Suggested” uses these.</span>
+          </div>
+          @if (canEdit) { <button type="button" class="sh-btn sh-btn--sm" (click)="start()">+ Add rule</button> }
+        </div>
+        @for (r of p.rules; track r.id; let i = $index, first = $first, last = $last) {
+          <div class="ru-rule" [class.is-off]="!r.isEnabled">
+            <span class="ru-num">{{ liveNumber(r) ?? '–' }}</span>
+            <div class="ru-body">
+              <div class="ru-line"><span class="ru-kw">If</span><span>{{ r.ifText }}</span></div>
+              <div class="ru-line"><span class="ru-kw">Then</span>
+                @if (r.noParcel) { <span class="sh-chip is-grey ru-chip">No courier parcel</span> }
+                @else { <span class="sh-chip ru-chip" [style.background]="tint(r.courierColor || '#5F6B63', 0.12)" [style.color]="r.courierColor || '#5F6B63'">{{ courierName(r.courierAccountId) }}</span> }
+                @if (r.thenNote) { <span class="sh-small">{{ r.thenNote }}</span> }
+              </div>
+            </div>
+            <span class="ru-count" [title]="'First match for ' + r.matchCount + ' of the last 90 days’ orders'">
+              <strong>{{ r.matchCount }}</strong><span class="sh-small">orders</span>
+            </span>
+            @if (canEdit) {
+              <span class="ru-acts">
+                <nz-switch nzSize="small" [ngModel]="r.isEnabled" (ngModelChange)="toggle(r, $event)" [attr.aria-label]="'Rule ' + (i + 1) + ' switched on'"></nz-switch>
+                <button type="button" class="sh-icon" [disabled]="first" (click)="move(i, -1)" aria-label="Move up" title="Move up"><i class="bi bi-arrow-up"></i></button>
+                <button type="button" class="sh-icon" [disabled]="last" (click)="move(i, 1)" aria-label="Move down" title="Move down"><i class="bi bi-arrow-down"></i></button>
+                <button type="button" class="sh-icon" (click)="start(r)" aria-label="Edit rule" title="Edit"><i class="bi bi-pencil"></i></button>
+                <button type="button" class="sh-icon" nz-popconfirm nzPopconfirmTitle="Remove this rule?" (nzOnConfirm)="remove(r)" aria-label="Remove rule" title="Remove"><i class="bi bi-trash"></i></button>
+              </span>
+            } @else if (!r.isEnabled) { <span class="sh-chip is-grey">Off</span> }
+          </div>
+        } @empty {
+          <div class="sh-empty">No rules. Until you add one, parcels up to 10 kg are suggested for Pathao and anything heavier for your own team.</div>
+        }
+        <div class="sh-card__foot">
+          <span class="sh-small">Tried on {{ p.ordersChecked }} orders from the last 90 days.
+            @if (p.unmatched) { <span class="is-amber">{{ p.unmatched }} fit no rule</span> — add a last rule with no conditions to catch everything else. }
+            @else if (p.ordersChecked) { Every order fits a rule. }
+          </span>
+        </div>
+      </div>
+
+      <app-shipping-item-list
+        [kind]="Kind.PackingRule" heading="How to pack" sub="Printed on the packing slip for each kind of product."
+        [items]="p.packingRules" [canEdit]="canEdit" titleLabel="Product" detailLabel="Packing instructions" extraLabel="Goes by" addLabel="+ Add packing rule"
+        (changed)="load()" />
+
+      <app-shipping-item-list
+        [kind]="Kind.CustomerMessage" heading="What the customer hears" sub="Messages at each step of the delivery."
+        [items]="p.customerMessages" [canEdit]="canEdit" titleLabel="When" detailLabel="Message" extraLabel="Channel" addLabel="+ Add message"
+        (changed)="load()" />
+    </div>
+
+    <!-- ── Performance ───────────────────────────────────────────────── -->
+    <div class="sh-card sh-pad ru-side">
+      <h2>How couriers are doing</h2>
+      <p class="sh-small">Parcels from the last 90 days. Success counts delivered against returned or failed.</p>
+      @for (c of p.performance; track c.courierAccountId) {
+        <div class="ru-perf">
+          <span class="sh-dot" [style.background]="c.color"></span>
+          <div class="ru-perf__text"><strong>{{ c.name }}</strong><span class="sh-small sh-block">{{ c.parcels }} {{ c.parcels === 1 ? 'parcel' : 'parcels' }}@if (c.averageDays != null) { · {{ c.averageDays }} days to deliver }</span></div>
+          <span class="sh-chip" [ngClass]="successClass(c.successPercent)">{{ c.successPercent != null ? c.successPercent + '%' : 'no finished parcels' }}</span>
+        </div>
+        @if (c.successPercent != null) { <div class="ru-bar"><span [style.width.%]="c.successPercent" [style.background]="c.color"></span></div> }
+      } @empty {
+        <div class="sh-empty ru-empty">No parcels in the last 90 days yet.</div>
+      }
+    </div>
+  </div>
+} @else if (failed) {
+  <div class="sh-banner is-bad"><i class="bi bi-x-circle"></i>Could not load the rules. <button type="button" class="sh-link" (click)="load()">Try again</button></div>
+} @else {
+  <nz-spin nzSimple class="sh-loading"></nz-spin>
+}
+
+<!-- ── Rule drawer ───────────────────────────────────────────────────── -->
+@if (open && page; as p) {
+  <nz-drawer [nzVisible]="open" [nzWidth]="520" [nzTitle]="editId ? 'Edit rule' : 'Add a rule'" (nzOnClose)="open = false">
+    <div *nzDrawerContent>
+      <h3 class="ru-h3">If the order…</h3>
+      <div class="sh-seg ru-seg" role="group" aria-label="How conditions combine">
+        <button type="button" [class.is-on]="!form.matchAny" (click)="form.matchAny = false">matches all of these</button>
+        <button type="button" [class.is-on]="form.matchAny" (click)="form.matchAny = true">matches any of these</button>
+      </div>
+
+      <label class="sh-label" for="rf-k">has a product named</label>
+      <input id="rf-k" nz-input [(ngModel)]="form.productKeyword" maxlength="128" placeholder="e.g. panel, battery (comma = either)" />
+      <div class="sh-grid2">
+        <div><label class="sh-label" for="rf-o">has an item heavier than</label><nz-input-number id="rf-o" [(ngModel)]="form.anyItemOverKg" [nzMin]="0" nzSuffix="kg" class="ru-full"></nz-input-number></div>
+        <div><label class="sh-label" for="rf-u">weighs less than (total)</label><nz-input-number id="rf-u" [(ngModel)]="form.totalWeightUnderKg" [nzMin]="0" nzSuffix="kg" class="ru-full"></nz-input-number></div>
+      </div>
+      <label class="sh-label" for="rf-a">goes to an address containing</label>
+      <input id="rf-a" nz-input [(ngModel)]="form.addressContains" maxlength="128" placeholder="e.g. Chattogram, Chittagong" />
+      <label class="sh-label" for="rf-c">has cash to collect over</label>
+      <nz-input-number id="rf-c" [(ngModel)]="form.codOver" [nzMin]="0" [nzStep]="1000" nzPrefix="৳" class="ru-full"></nz-input-number>
+      <label class="sh-switch sh-mt"><nz-switch nzSize="small" [(ngModel)]="form.needsInstallation"></nz-switch> needs installation</label>
+      <p class="sh-small">{{ conditionCount ? conditionCount + ' condition' + (conditionCount === 1 ? '' : 's') + ' set. Leave a box empty to ignore it.' : 'No conditions: this rule catches every order that reaches it — keep it last.' }}</p>
+
+      <h3 class="ru-h3">Then…</h3>
+      <label class="sh-switch"><nz-switch nzSize="small" [(ngModel)]="form.noParcel"></nz-switch> no courier parcel (handled elsewhere, e.g. installation jobs)</label>
+      @if (!form.noParcel) {
+        <label class="sh-label" for="rf-cr">send with</label>
+        <select id="rf-cr" class="sh-select" [(ngModel)]="form.courierAccountId">
+          <option [ngValue]="null">Choose a courier…</option>
+          @for (c of enabledCouriers; track c.id) { <option [ngValue]="c.id">{{ c.displayName }}{{ c.isEnabled ? '' : ' (switched off)' }}</option> }
+        </select>
+      }
+      <label class="sh-label" for="rf-n">Note for staff</label>
+      <input id="rf-n" nz-input [(ngModel)]="form.thenNote" maxlength="256" placeholder="e.g. call the customer to confirm before pickup" />
+
+      <label class="sh-switch sh-mt"><nz-switch nzSize="small" [(ngModel)]="form.isEnabled"></nz-switch> Rule switched on</label>
+      <div class="sh-mt"><button type="button" class="sh-btn sh-btn--primary" [disabled]="saving" (click)="save()">{{ saving ? 'Saving…' : 'Save rule' }}</button></div>
+    </div>
+  </nz-drawer>
+}
