@@ -85,6 +85,16 @@ public static class DymoEnergyPermissions
         public const string Delete  = Default + ".Delete";
     }
 
+    public static class Shipping
+    {
+        public const string Default    = GroupName + ".Shipping";
+        /// <summary>Send parcels to a courier (creates real consignments).</summary>
+        public const string Send       = Default + ".Send";
+        public const string Edit       = Default + ".Edit";
+        /// <summary>See, change and reveal courier API keys. Give this to as few people as possible.</summary>
+        public const string ManageKeys = Default + ".ManageKeys";
+    }
+
     public static class Companies
     {
         public const string Default = GroupName + ".Companies";

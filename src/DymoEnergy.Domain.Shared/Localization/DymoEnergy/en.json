@@ -129,6 +129,10 @@
     "Permission:Finance.Create": "Record payments, bills, expenses and transfers",
     "Permission:Finance.Edit": "Edit finance records, accounts and page settings",
     "Permission:Finance.Delete": "Delete finance records",
+    "Permission:Shipping": "Shipping & Couriers",
+    "Permission:Shipping.Send": "Send parcels to couriers",
+    "Permission:Shipping.Edit": "Edit courier settings",
+    "Permission:Shipping.ManageKeys": "Manage courier API keys",
 
     "Enum:CompanyStatus.1": "Active",
     "Enum:CompanyStatus.2": "Inactive",

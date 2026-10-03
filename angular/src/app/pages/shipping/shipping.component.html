@@ -1,0 +1,377 @@
+<div class="sh">
+
+  <!-- ── Header ───────────────────────────────────────────────────────── -->
+  <div class="sh-head">
+    <div>
+      <h1 class="sh-title">Shipping &amp; couriers</h1>
+      <div class="sh-sub">Connect a courier, keep its keys up to date, and track every parcel and the cash it collects.</div>
+    </div>
+    <div class="sh-head__actions">
+      <button type="button" class="sh-btn" (click)="testAll()">Test all connections</button>
+      @if (canKeys) { <button type="button" class="sh-btn sh-btn--primary" (click)="addOpen = true">+ Add courier</button> }
+    </div>
+  </div>
+
+  @if (overview; as o) {
+    <!-- ── Summary ────────────────────────────────────────────────────── -->
+    <div class="sh-card sh-kpis">
+      <div class="sh-kpis__main">
+        <div class="sh-muted">Courier connections</div>
+        <div class="sh-kpis__row">
+          <span class="sh-kpis__big">{{ o.connectedCount }} of {{ o.totalCount }}</span>
+          <span class="sh-chip" [ngClass]="o.anyLiveKeys ? 'is-green' : 'is-amber'">{{ o.anyLiveKeys ? 'Live keys in use' : 'No live keys yet' }}</span>
+        </div>
+        <div class="sh-small">{{ o.connectedNames || 'Nothing connected yet' }} {{ o.connectedCount === 1 ? 'is' : 'are' }} working</div>
+      </div>
+      <div class="sh-kpis__cards">
+        <button type="button" class="sh-mini" [class.is-active]="tab === 'shipments'" (click)="setTab('shipments')">
+          <span class="sh-mini__label"><span class="sh-dot" style="background:#2563EB"></span>Parcels moving</span>
+          <strong>{{ o.parcelsMoving }}</strong><span class="sh-small">with a courier right now</span>
+        </button>
+        <button type="button" class="sh-mini" [class.is-active]="tab === 'shipments'" (click)="setTab('shipments')">
+          <span class="sh-mini__label"><span class="sh-dot" style="background:#D97706"></span>Ready to send</span>
+          <strong class="is-amber">{{ o.readyToSend }}</strong><span class="sh-small">packed, no consignment yet</span>
+        </button>
+        <button type="button" class="sh-mini" [class.is-active]="tab === 'cod'" (click)="setTab('cod')">
+          <span class="sh-mini__label"><span class="sh-dot" style="background:#D97706"></span>Cash on delivered parcels</span>
+          <strong class="is-amber">{{ compact(o.codDelivered) }}</strong><span class="sh-small">payout matching comes next</span>
+        </button>
+        <button type="button" class="sh-mini" [class.is-active]="tab === 'couriers'" (click)="setTab('couriers')">
+          <span class="sh-mini__label"><span class="sh-dot" style="background:#B42318"></span>Failed calls today</span>
+          <strong [class.is-red]="o.failedCallsToday > 0">{{ o.failedCallsToday }}</strong>
+          <span class="sh-small sh-ellipsis" [title]="o.lastFailedCall || ''">{{ o.lastFailedCall || 'none' }}</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ── Tabs ─────────────────────────────────────────────────────────── -->
+  <div class="sh-tabs" role="tablist">
+    <button type="button" role="tab" class="sh-tab" [class.is-active]="tab === 'couriers'" (click)="setTab('couriers')"><i class="bi bi-shield-check"></i>Couriers &amp; keys</button>
+    <button type="button" role="tab" class="sh-tab" [class.is-active]="tab === 'shipments'" (click)="setTab('shipments')"><i class="bi bi-truck"></i>Shipments
+      @if (overview?.readyToSend) { <span class="sh-count">{{ overview?.readyToSend }}</span> }</button>
+    <button type="button" role="tab" class="sh-tab" [class.is-active]="tab === 'charges'" (click)="setTab('charges')"><i class="bi bi-list-ul"></i>Charges &amp; zones</button>
+    <button type="button" role="tab" class="sh-tab" [class.is-active]="tab === 'cod'" (click)="setTab('cod')"><i class="bi bi-cash-stack"></i>Cash on delivery</button>
+    <button type="button" role="tab" class="sh-tab" [class.is-active]="tab === 'rules'" (click)="setTab('rules')"><i class="bi bi-box-seam"></i>Rules &amp; packaging</button>
+  </div>
+
+  <!-- ═════════ COURIERS & KEYS ═════════ -->
+  @if (tab === 'couriers') {
+    <div class="sh-split">
+      <div class="sh-left">
+        <div class="sh-card sh-list">
+          @for (c of overview?.couriers ?? []; track c.id) {
+            <button type="button" class="sh-courier" [class.is-active]="selectedId === c.id" (click)="select(c)">
+              <span class="sh-code" [style.background]="tint(c.color, 0.12)" [style.color]="c.color">{{ c.shortCode }}</span>
+              <span class="sh-courier__text"><strong>{{ c.displayName }}</strong><span class="sh-small">{{ c.statusText }}</span></span>
+              <span class="sh-dot" [style.background]="statusDot(c)"></span>
+            </button>
+          }
+        </div>
+        <div class="sh-note">
+          <i class="bi bi-exclamation-triangle"></i>
+          <span>Keys are stored encrypted. Only people with the <strong>Manage courier API keys</strong> permission can change or reveal them, and every change and reveal is logged with the time.</span>
+        </div>
+      </div>
+
+      @if (detail; as d) {
+        <div class="sh-right">
+          <!-- Header -->
+          <div class="sh-card sh-pad sh-dhead">
+            <span class="sh-code sh-code--lg" [style.background]="tint(d.color, 0.12)" [style.color]="d.color">{{ d.shortCode }}</span>
+            <div class="sh-dhead__text">
+              <div class="sh-dhead__name">{{ d.displayName }}
+                <span class="sh-chip" [ngClass]="d.status === 'connected' || d.status === 'always' ? 'is-green' : d.status === 'keys' ? 'is-amber' : 'is-grey'">
+                  {{ d.status === 'connected' ? 'Connected' : d.status === 'always' ? 'Always on' : d.status === 'keys' ? 'Keys saved' : d.status === 'off' ? 'Switched off' : 'Not connected' }}
+                </span>
+              </div>
+              <div class="sh-small">{{ d.statusText }}@if (d.lastParcelAt) { · last parcel {{ ago(d.lastParcelAt) }} }</div>
+            </div>
+            @if (!d.isManual) {
+              <button type="button" class="sh-btn sh-btn--sm" [disabled]="busy" (click)="test()">Test connection</button>
+              @if (canKeys) {
+                <button type="button" class="sh-btn sh-btn--sm sh-btn--danger" nz-popconfirm nzPopconfirmTitle="Remove every saved key and token of this courier?" (nzOnConfirm)="disconnect()">Disconnect</button>
+              }
+            }
+          </div>
+
+          @if (testMessage) {
+            <div class="sh-banner" [ngClass]="testMessage.ok ? 'is-ok' : 'is-bad'"><i class="bi" [ngClass]="testMessage.ok ? 'bi-check-circle' : 'bi-x-circle'"></i>{{ testMessage.text }}</div>
+          }
+
+          @if (!d.apiAvailable && !d.isManual) {
+            <div class="sh-banner is-warn"><i class="bi bi-info-circle"></i>You can save {{ d.displayName }}'s keys now, but the app cannot talk to its API yet — only Pathao is built in. Parcels for it are not sent from here.</div>
+          }
+
+          @if (!d.isManual) {
+            <!-- Environments -->
+            <div class="sh-card sh-pad">
+              <div class="sh-row-head"><h2>Which keys are in use</h2><span class="sh-small">Sandbox and live keys are kept separately, so testing never touches real parcels.</span></div>
+              <div class="sh-envs">
+                @for (env of [Env.Live, Env.Sandbox]; track env) {
+                  <button type="button" class="sh-env" [class.is-on]="d.activeEnvironment === env" [disabled]="!canKeys" (click)="setActiveEnv(env)">
+                    <span class="sh-radio" [class.is-on]="d.activeEnvironment === env"></span>
+                    <span>
+                      <strong>{{ env === Env.Live ? 'Live' : 'Sandbox' }}</strong>
+                      <span class="sh-chip" [ngClass]="envSaved(env) ? 'is-green' : 'is-grey'">{{ envSaved(env) ? 'Keys saved' : 'No keys' }}</span>
+                      <span class="sh-small sh-block">{{ env === Env.Live ? 'Real parcels, real money. Changing a key here takes effect on the next parcel.' : 'The courier’s test server. Parcels are fake — use it after changing anything.' }}</span>
+                    </span>
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Keys -->
+            <div class="sh-card">
+              <div class="sh-card__head">
+                <h2>{{ keysEnv === Env.Live ? 'Live' : 'Sandbox' }} keys for {{ d.displayName }}</h2>
+                <div class="sh-seg" role="group" aria-label="Show keys for">
+                  <button type="button" [class.is-on]="keysEnv === Env.Live" (click)="keysEnv = Env.Live; editingKey = null; revealed = {}">Live</button>
+                  <button type="button" [class.is-on]="keysEnv === Env.Sandbox" (click)="keysEnv = Env.Sandbox; editingKey = null; revealed = {}">Sandbox</button>
+                </div>
+              </div>
+              @for (f of keysForEnv; track f.key) {
+                <div class="sh-key">
+                  <div class="sh-key__label"><strong>{{ f.label }}</strong><span class="sh-small">{{ f.help }}</span></div>
+                  @if (editingKey === f.key) {
+                    <div class="sh-key__edit">
+                      <input nz-input [type]="f.isSecret ? 'password' : 'text'" [(ngModel)]="editValue" [placeholder]="'paste the ' + f.label" autocomplete="off" (keyup.enter)="saveKey(f)" />
+                      <span class="sh-small">{{ f.isSecret ? 'The old value is replaced the moment you save. Nothing is shown again afterwards.' : 'Leave empty and save to remove it.' }}</span>
+                    </div>
+                    <div class="sh-key__acts">
+                      <button type="button" class="sh-btn sh-btn--sm sh-btn--primary" [disabled]="busy" (click)="saveKey(f)">Save</button>
+                      <button type="button" class="sh-btn sh-btn--sm" (click)="editingKey = null">Cancel</button>
+                    </div>
+                  } @else {
+                    <div class="sh-key__value">
+                      @if (!f.hasValue) { <span class="sh-muted">not set</span> }
+                      @else if (f.isSecret) {
+                        <code>{{ revealed[f.key] ?? f.display }}</code>
+                        @if (canKeys) { <button type="button" class="sh-link" (click)="reveal(f)">{{ revealed[f.key] !== undefined ? 'Hide' : 'Reveal' }}</button> }
+                      } @else { <code>{{ f.display }}</code> }
+                    </div>
+                    <div class="sh-key__acts">
+                      @if (f.hasValue) { <button type="button" class="sh-icon" (click)="copyField(f)" [attr.aria-label]="'Copy ' + f.label" title="Copy"><i class="bi bi-copy"></i></button> }
+                      @if (canKeys) { <button type="button" class="sh-btn sh-btn--sm" (click)="startEdit(f)">{{ f.hasValue ? 'Change' : 'Add' }}</button> }
+                    </div>
+                  }
+                </div>
+              }
+              @if (d.apiAvailable) {
+                <div class="sh-card__foot">
+                  <span class="sh-small">{{ keysEnv === d.activeEnvironment ? tokenText() : 'These keys are not in use. Switch to them above to test them.' }}</span>
+                  @if (canKeys && keysEnv === d.activeEnvironment) { <button type="button" class="sh-btn sh-btn--sm" [disabled]="busy" (click)="newToken()">Get a new token</button> }
+                </div>
+              }
+            </div>
+          }
+
+          <div class="sh-two">
+            <!-- Settings / pickup store -->
+            <div class="sh-card sh-pad">
+              @if (d.provider === Provider.Pathao) {
+                <div class="sh-row-head"><h2>Pickup store</h2><button type="button" class="sh-link" [disabled]="storesLoading" (click)="loadStores()">{{ storesLoading ? 'Loading…' : 'Refresh list' }}</button></div>
+                <label class="sh-label" for="sh-store">Store</label>
+                <select id="sh-store" class="sh-select" [(ngModel)]="settings.pickupStoreId" [disabled]="!canEdit">
+                  <option [ngValue]="null">Choose a store…</option>
+                  @for (s of stores; track s.storeId) { <option [ngValue]="s.storeId">{{ s.storeName }}{{ s.isDefault ? ' (default)' : '' }}{{ s.isActive ? '' : ' — inactive' }}</option> }
+                </select>
+                <p class="sh-small">Pulled from Pathao. Parcels are collected from this address. Press “Refresh list” after a new store is approved.</p>
+                <div class="sh-grid2">
+                  <div>
+                    <label class="sh-label" for="sh-dt">Default delivery type</label>
+                    <select id="sh-dt" class="sh-select" [(ngModel)]="settings.deliveryType" [disabled]="!canEdit">
+                      <option [ngValue]="48">Normal delivery (48)</option><option [ngValue]="12">On demand (12)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="sh-label" for="sh-it">Default item type</label>
+                    <select id="sh-it" class="sh-select" [(ngModel)]="settings.itemType" [disabled]="!canEdit">
+                      <option [ngValue]="2">Parcel (2)</option><option [ngValue]="1">Document (1)</option>
+                    </select>
+                  </div>
+                </div>
+                <label class="sh-label" for="sh-w">If a product has no weight, assume (kg)</label>
+                <nz-input-number id="sh-w" [(ngModel)]="settings.weight" [nzMin]="0.5" [nzMax]="10" [nzStep]="0.5" [nzDisabled]="!canEdit"></nz-input-number>
+              } @else {
+                <h2>Settings</h2>
+              }
+              <div class="sh-grid2 sh-mt">
+                <div><label class="sh-label" for="sh-name">Name</label><input id="sh-name" nz-input [(ngModel)]="settings.displayName" [disabled]="!canEdit" /></div>
+                <div><label class="sh-label" for="sh-code">Short code</label><input id="sh-code" nz-input [(ngModel)]="settings.shortCode" maxlength="8" [disabled]="!canEdit" /></div>
+              </div>
+              <label class="sh-switch sh-mt"><nz-switch [(ngModel)]="settings.isEnabled" [nzDisabled]="!canEdit" nzSize="small"></nz-switch> Switched on (can be chosen for parcels)</label>
+              @if (canEdit) { <div class="sh-mt"><button type="button" class="sh-btn sh-btn--primary sh-btn--sm" [disabled]="busy" (click)="saveSettings()">Save settings</button></div> }
+            </div>
+
+            <!-- Webhook -->
+            @if (d.apiAvailable) {
+              <div class="sh-card sh-pad">
+                <h2>Status updates (webhook)</h2>
+                <p class="sh-small">Paste this address into {{ d.displayName }}'s merchant panel so parcel statuses update here on their own. Also set the <strong>Webhook secret</strong> above to the same secret you enter there — updates without it are refused.</p>
+                <div class="sh-copyrow"><code class="sh-url">{{ webhookUrl }}</code><button type="button" class="sh-btn sh-btn--sm" (click)="copy(webhookUrl, 'Webhook address')">Copy</button></div>
+                <div class="sh-banner" [ngClass]="d.lastWebhookAt ? 'is-ok' : 'is-grey'">
+                  <span class="sh-dot" [style.background]="d.lastWebhookAt ? '#0E6B3F' : '#9AA39C'"></span>
+                  {{ d.lastWebhookAt ? 'Last update received ' + ago(d.lastWebhookAt) + ' — ' + d.lastWebhookNote : 'No update received yet.' }}
+                </div>
+                <p class="sh-small">The address must be reachable from the internet (your live API host), not localhost.</p>
+              </div>
+            }
+          </div>
+
+          <!-- Recent calls -->
+          @if (!d.isManual) {
+            <div class="sh-card sh-table-card">
+              <div class="sh-card__head"><h2>Recent calls to {{ d.displayName }}</h2><span class="sh-small">last 24 hours · key changes included</span></div>
+              <div class="sh-table-wrap">
+                <table class="sh-table">
+                  <thead><tr><th>Time</th><th>What</th><th>Endpoint</th><th>Code</th><th>Took</th><th>Result</th></tr></thead>
+                  <tbody>
+                    @for (l of d.logs; track $index) {
+                      <tr>
+                        <td>{{ l.time | date: 'HH:mm' }}</td>
+                        <td>{{ l.action }}</td>
+                        <td class="sh-mono">{{ logEndpoint(l) }}</td>
+                        <td>@if (l.statusCode) { <span class="sh-chip" [ngClass]="l.isError ? 'is-red' : 'is-green'">{{ l.statusCode }}</span> }</td>
+                        <td>{{ l.durationMs != null ? l.durationMs + ' ms' : '' }}</td>
+                        <td [class.is-red]="l.isError">{{ l.result }}</td>
+                      </tr>
+                    } @empty {
+                      <tr><td colspan="6" class="sh-empty">No calls in the last 24 hours.</td></tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ═════════ SHIPMENTS ═════════ -->
+  @if (tab === 'shipments') {
+    @if (page; as p) {
+      <div class="sh-card sh-table-card">
+        <div class="sh-card__head"><h2>Ready to send to a courier</h2><span class="sh-small">confirmed orders without a parcel yet</span></div>
+        <div class="sh-table-wrap">
+          <table class="sh-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" [checked]="allSelected" (change)="toggleAll($any($event.target).checked)" aria-label="Select all" [disabled]="!canSend" /></th>
+                <th>Order</th><th>Customer · where</th><th>Items</th><th>Weight</th><th class="is-right">Collect</th><th>Suggested</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of p.ready; track r.orderId) {
+                <tr>
+                  <td><input type="checkbox" [checked]="selected.has(r.orderId)" (change)="toggle(r, $any($event.target).checked)" [attr.aria-label]="'Select ' + r.orderNumber" [disabled]="!canSend" /></td>
+                  <td class="sh-mono">{{ r.orderNumber }}</td>
+                  <td>
+                    <strong class="sh-block">{{ r.customerName }}</strong>
+                    <span class="sh-small sh-ellipsis sh-block">{{ r.address }}</span>
+                    @for (pr of r.problems; track pr) { <span class="sh-small is-red sh-block">⚠ {{ pr }}</span> }
+                    @if (resultFor(r.orderId); as res) { <span class="sh-small is-red sh-block">✗ {{ res.message }}</span> }
+                  </td>
+                  <td class="sh-ellipsis sh-items" [title]="r.items">{{ r.items }}</td>
+                  <td>{{ r.weightKg }} kg@if (r.weightGuessed) { <span class="sh-small" title="Some products have no weight; the courier default was used"> (est.)</span> }</td>
+                  <td class="is-right"><strong [class.is-amber]="r.collect > 0">{{ r.collect > 0 ? money(r.collect) : '—' }}</strong></td>
+                  <td>@if (r.suggestedCourierName) { <span class="sh-chip is-grey">{{ r.suggestedCourierName }}</span> }</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="7" class="sh-empty">Nothing is waiting. Confirmed orders show up here until they get a parcel.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (canSend && p.ready.length) {
+          <div class="sh-card__foot">
+            <span class="sh-small">{{ selected.size }} selected. Pathao checks each order; one bad address does not stop the rest.</span>
+            <span class="sh-foot-acts">
+              <select class="sh-select sh-select--sm" [(ngModel)]="sendCourierId" aria-label="Courier">
+                @for (c of sendableCouriers; track c.id) { <option [ngValue]="c.id">{{ c.displayName }}{{ c.apiAvailable ? ' · ' + (c.activeEnvironment === Env.Live ? 'live' : 'sandbox') : '' }}</option> }
+              </select>
+              <button type="button" class="sh-btn sh-btn--primary sh-btn--sm" [disabled]="!selected.size || !sendCourierId || sending" (click)="send()">
+                {{ sending ? 'Sending…' : 'Send ' + selected.size + ' to ' + sendCourierName }}
+              </button>
+            </span>
+          </div>
+        }
+      </div>
+
+      <div class="sh-stats">
+        <div class="sh-card sh-stat"><span class="sh-small">Ready to send</span><strong class="is-amber">{{ p.counts.ready }}</strong><span class="sh-small">packed</span></div>
+        <div class="sh-card sh-stat"><span class="sh-small">Picked up</span><strong class="is-blue">{{ p.counts.pickedUp }}</strong><span class="sh-small">with the rider</span></div>
+        <div class="sh-card sh-stat"><span class="sh-small">In transit</span><strong class="is-blue">{{ p.counts.inTransit }}</strong><span class="sh-small">on the way</span></div>
+        <div class="sh-card sh-stat"><span class="sh-small">Delivered today</span><strong class="is-green">{{ p.counts.deliveredToday }}</strong><span class="sh-small">signed for</span></div>
+        <div class="sh-card sh-stat"><span class="sh-small">Failed or returning</span><strong class="is-red">{{ p.counts.failedOrReturning }}</strong><span class="sh-small">needs a call</span></div>
+      </div>
+
+      <div class="sh-card sh-table-card">
+        <div class="sh-card__head">
+          <h2>All parcels</h2>
+          <span class="sh-foot-acts"><span class="sh-small">updated by the courier's webhook</span>
+            <input nz-input class="sh-search" type="search" placeholder="Search consignment, order or phone" [(ngModel)]="filter" (keyup.enter)="loadShipments()" /></span>
+        </div>
+        <div class="sh-table-wrap">
+          <table class="sh-table">
+            <thead><tr><th>Consignment</th><th>Order</th><th>Customer · where</th><th>Courier</th><th>Type</th><th>Status</th><th class="is-right">Collect</th><th></th></tr></thead>
+            <tbody>
+              @for (s of p.shipments; track s.id) {
+                <tr>
+                  <td class="sh-mono">{{ s.consignmentId }}@if (s.environment === Env.Sandbox) { <span class="sh-chip is-grey">test</span> }</td>
+                  <td class="sh-mono">{{ s.orderNumber }}</td>
+                  <td><strong class="sh-block">{{ s.recipientName }}</strong><span class="sh-small sh-ellipsis sh-block">{{ s.recipientAddress }}</span></td>
+                  <td><span class="sh-chip" [style.background]="tint(s.courierColor, 0.12)" [style.color]="s.courierColor">{{ s.courierName }}</span></td>
+                  <td>{{ s.deliveryType === 12 ? 'On demand' : 'Normal' }}</td>
+                  <td><span class="sh-chip" [ngClass]="stagePill(s.stage)">{{ s.status.replace('_', ' ') }}</span><span class="sh-small sh-block">{{ ago(s.statusAt || s.creationTime) }}</span></td>
+                  <td class="is-right"><strong [class.is-amber]="s.codAmount > 0">{{ s.codAmount > 0 ? money(s.codAmount) : '—' }}</strong></td>
+                  <td class="is-right"><button type="button" class="sh-btn sh-btn--sm" [disabled]="refreshing.has(s.id)" (click)="track(s)">{{ refreshing.has(s.id) ? '…' : 'Track' }}</button></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="8" class="sh-empty">No parcels yet.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    } @else {
+      <nz-spin nzSimple class="sh-loading"></nz-spin>
+    }
+  }
+
+  <!-- ═════════ NEXT PHASE ═════════ -->
+  @if (tab === 'charges' || tab === 'cod' || tab === 'rules') {
+    <div class="sh-card sh-pad sh-next">
+      <h2>{{ tab === 'charges' ? 'Charges & zones' : tab === 'cod' ? 'Cash on delivery' : 'Rules & packaging' }} — coming in the next phase</h2>
+      <p class="sh-small">
+        @switch (tab) {
+          @case ('charges') { What you charge per zone vs. what the courier costs, checkout rules, big items couriers will not take, and who pays for returns. }
+          @case ('cod') { Cash each courier is holding, payouts matched against parcels, and the problems that need a look (short payouts, late cash, fee differences). }
+          @case ('rules') { Which courier gets each parcel (top-to-bottom rules), packing instructions per product, customer messages, and courier performance. }
+        }
+      </p>
+      <p class="sh-small">The Pathao connection, keys and parcels on the first two tabs are what these build on.</p>
+    </div>
+  }
+</div>
+
+<!-- ── Add courier ─────────────────────────────────────────────────────── -->
+@if (addOpen) {
+  <nz-drawer [nzVisible]="addOpen" [nzWidth]="420" nzTitle="Add a courier" (nzOnClose)="addOpen = false">
+    <div *nzDrawerContent>
+      <label class="sh-label" for="ac-p">Courier</label>
+      <select id="ac-p" class="sh-select" [(ngModel)]="addModel.provider">
+        @for (p of providerOptions; track p.value) { <option [ngValue]="p.value">{{ p.label }}</option> }
+      </select>
+      <label class="sh-label" for="ac-n">Name shown in the app</label>
+      <input id="ac-n" nz-input [(ngModel)]="addModel.displayName" placeholder="e.g. Pathao (Dhaka account)" />
+      <div class="sh-grid2">
+        <div><label class="sh-label" for="ac-c">Short code</label><input id="ac-c" nz-input [(ngModel)]="addModel.shortCode" maxlength="8" placeholder="e.g. PTH2" /></div>
+        <div><label class="sh-label" for="ac-col">Colour</label><input id="ac-col" type="color" class="sh-color" [(ngModel)]="addModel.color" /></div>
+      </div>
+      <p class="sh-small sh-mt">You can add the same courier twice, for example two Pathao merchant accounts.</p>
+      <div class="sh-mt"><button type="button" class="sh-btn sh-btn--primary" (click)="addCourier()">Add courier</button></div>
+    </div>
+  </nz-drawer>
+}

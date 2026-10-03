@@ -263,7 +263,7 @@ export const APP_ROUTES: Routes = [
   // ── Shipping & Courier Setup ───────────────────────────────────────────────
   {
     path: 'shipping-setup',
-    loadComponent: comingSoonComponent,
+    loadComponent: () => import('./pages/shipping/shipping.component').then(c => c.ShippingComponent),
     canActivate: [authGuard],
   },
 

@@ -11,6 +11,7 @@ using DymoEnergy.QuoteRequests;
 using DymoEnergy.ProjectPlanning;
 using DymoEnergy.Compliance;
 using DymoEnergy.Finance;
+using DymoEnergy.Shipping;
 using DymoEnergy.UserSiteSettings;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
@@ -74,6 +75,11 @@ public class DymoEnergyDbContext :
     public DbSet<FinanceSupplierBill>    FinanceSupplierBills     { get; set; }
     public DbSet<FinanceRecurringCost>   FinanceRecurringCosts    { get; set; }
     public DbSet<FinanceListItem>        FinanceListItems         { get; set; }
+
+    public DbSet<CourierAccount>    CourierAccounts    { get; set; }
+    public DbSet<CourierCredential> CourierCredentials { get; set; }
+    public DbSet<CourierApiLog>     CourierApiLogs     { get; set; }
+    public DbSet<Shipment>          Shipments          { get; set; }
     public DbSet<UserSiteSetting>      UserSiteSettings      { get; set; }
     public DbSet<UserSiteSettingImage> UserSiteSettingImages { get; set; }
 
@@ -504,6 +510,63 @@ public class DymoEnergyDbContext :
             b.Property(x => x.Color).HasMaxLength(FinanceConsts.MaxColor);
             b.Property(x => x.Amount).HasPrecision(18, 2);
             b.HasIndex(x => new { x.Kind, x.Order });
+        });
+
+        /* ── Shipping & couriers ────────────────────────────────────────── */
+        builder.Entity<CourierAccount>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "CourierAccounts", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.DisplayName).IsRequired().HasMaxLength(ShippingConsts.MaxName);
+            b.Property(x => x.ShortCode).IsRequired().HasMaxLength(8);
+            b.Property(x => x.Color).IsRequired().HasMaxLength(16);
+            b.Property(x => x.PickupStoreId).HasMaxLength(ShippingConsts.MaxShort);
+            b.Property(x => x.PickupStoreName).HasMaxLength(ShippingConsts.MaxName);
+            b.Property(x => x.DefaultWeightKg).HasPrecision(9, 2);
+            b.Property(x => x.LastWebhookNote).HasMaxLength(ShippingConsts.MaxName);
+        });
+
+        builder.Entity<CourierCredential>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "CourierCredentials", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Key).IsRequired().HasMaxLength(64);
+            b.Property(x => x.EncryptedValue).IsRequired().HasMaxLength(ShippingConsts.MaxEncrypted);
+            b.HasIndex(x => new { x.CourierAccountId, x.Environment, x.Key }).IsUnique();
+        });
+
+        builder.Entity<CourierApiLog>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "CourierApiLogs", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Action).IsRequired().HasMaxLength(ShippingConsts.MaxShort);
+            b.Property(x => x.Method).HasMaxLength(16);
+            b.Property(x => x.Endpoint).HasMaxLength(ShippingConsts.MaxName);
+            b.Property(x => x.Result).HasMaxLength(ShippingConsts.MaxName);
+            b.HasIndex(x => new { x.CourierAccountId, x.Time });
+        });
+
+        builder.Entity<Shipment>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "Shipments", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.ConsignmentId).HasMaxLength(ShippingConsts.MaxShort);
+            b.Property(x => x.MerchantOrderId).HasMaxLength(ShippingConsts.MaxShort);
+            b.Property(x => x.Status).IsRequired().HasMaxLength(ShippingConsts.MaxShort);
+            b.Property(x => x.StatusSlug).HasMaxLength(ShippingConsts.MaxShort);
+            b.Property(x => x.DeliveryFee).HasPrecision(18, 2);
+            b.Property(x => x.CodAmount).HasPrecision(18, 2);
+            b.Property(x => x.WeightKg).HasPrecision(9, 2);
+            b.Property(x => x.RecipientName).IsRequired().HasMaxLength(ShippingConsts.MaxName);
+            b.Property(x => x.RecipientPhone).IsRequired().HasMaxLength(32);
+            b.Property(x => x.RecipientAddress).IsRequired().HasMaxLength(ShippingConsts.MaxText);
+            b.Property(x => x.Note).HasMaxLength(ShippingConsts.MaxText);
+            b.HasIndex(x => x.OrderId);
+            b.HasIndex(x => x.ConsignmentId);
         });
 
         /* ── Quote Requests ─────────────────────────────────────────────── */
