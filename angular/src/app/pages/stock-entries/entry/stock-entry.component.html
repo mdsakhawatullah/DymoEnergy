@@ -1,0 +1,363 @@
+<div class="se ef">
+  <a class="ef-back" routerLink="/stock-entries"><i class="bi bi-chevron-left"></i>Stock entries</a>
+  <div class="ef-head">
+    <h1 class="se-title">{{ title }}</h1>
+    @if (number) {
+      <span class="ef-number">
+        <span class="se-mono">{{ number }}</span>
+        <span class="se-status" [ngClass]="status === Status.Draft ? 'is-draft' : status === Status.Reversed ? 'is-reversed' : 'is-posted'">
+          {{ status === Status.Draft ? 'Draft' : status === Status.Reversed ? 'Reversed' : 'Posted' }}</span>
+      </span>
+    }
+  </div>
+
+  @if (loading) {
+    <nz-spin nzSimple class="se-loading"></nz-spin>
+  } @else {
+    <!-- ── Type ───────────────────────────────────────────────────────── -->
+    <div class="ef-types" role="radiogroup" aria-label="Kind of entry">
+      @for (t of types; track t.type) {
+        <button type="button" role="radio" class="se-type" [class.is-on]="m.type === t.type" [attr.aria-checked]="m.type === t.type"
+          [disabled]="readonly && m.type !== t.type" (click)="setType(t.type)">
+          <span class="ef-type__icon" [style.background]="t.bg" [style.color]="t.color"><i class="bi" [ngClass]="t.icon"></i></span>
+          <span><strong class="se-block">{{ t.label }}</strong><span class="se-small">{{ t.hint }}</span></span>
+        </button>
+      }
+    </div>
+
+    @if (saved?.reversesNumber || saved?.reversedByNumber) {
+      <div class="ef-banner">
+        <i class="bi bi-arrow-counterclockwise"></i>
+        @if (saved?.reversesNumber) { This entry undoes <strong>{{ saved?.reversesNumber }}</strong>. }
+        @if (saved?.reversedByNumber) { This entry was undone by <strong>{{ saved?.reversedByNumber }}</strong>. }
+      </div>
+    }
+
+    <div class="ef-grid">
+      <div class="ef-main">
+        <!-- ── Details ────────────────────────────────────────────────── -->
+        <section class="se-card">
+          <div class="se-card__head"><h2>{{ detailsTitle }}</h2><span class="se-small">{{ detailsHint }}</span></div>
+          <div class="ef-fields">
+            @switch (m.type) {
+              @case (Type.StockIn) {
+                <div>
+                  <label class="se-label" for="ef-sup">Supplier</label>
+                  <select id="ef-sup" class="se-select" [(ngModel)]="m.supplierId" (ngModelChange)="supplierChanged($event)" [disabled]="readonly">
+                    <option [ngValue]="null">No supplier</option>
+                    @for (s of activeSuppliers; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+                    @if (canEdit) { <option [ngValue]="NEW_SUPPLIER">+ New supplier…</option> }
+                  </select>
+                </div>
+                <div>
+                  <label class="se-label" for="ef-inv">Supplier invoice no. <span class="se-opt">(optional)</span></label>
+                  <input id="ef-inv" class="se-input se-mono-input" [(ngModel)]="m.invoiceNumber" maxlength="128" placeholder="INV-0000" [disabled]="readonly" />
+                </div>
+                <div>
+                  <label class="se-label" for="ef-date">Received on</label>
+                  <nz-date-picker id="ef-date" class="ef-date" [(ngModel)]="m.date" nzFormat="dd/MM/yyyy" [nzAllowClear]="false" [nzDisabled]="readonly"></nz-date-picker>
+                </div>
+                @if (newSupplier; as ns) {
+                  <div class="ef-newsup">
+                    <div><label class="se-label" for="ef-ns-n">New supplier</label><input id="ef-ns-n" class="se-input" [(ngModel)]="ns.name" maxlength="256" placeholder="Name" /></div>
+                    <div><label class="se-label" for="ef-ns-p">Phone <span class="se-opt">(optional)</span></label><input id="ef-ns-p" class="se-input" [(ngModel)]="ns.phone" maxlength="32" /></div>
+                    <div class="ef-newsup__acts">
+                      <button type="button" class="se-btn se-btn--sm se-btn--primary" (click)="saveNewSupplier()">Add supplier</button>
+                      <button type="button" class="se-btn se-btn--sm" (click)="newSupplier = null">Cancel</button>
+                    </div>
+                  </div>
+                }
+                <div>
+                  <label class="se-label" for="ef-wh">Receive into</label>
+                  <select id="ef-wh" class="se-select" [(ngModel)]="m.warehouseId" (ngModelChange)="warehouseChanged()" [disabled]="readonly">
+                    @for (w of activeWarehouses; track w.id) { <option [ngValue]="w.id">{{ w.name }}</option> }
+                  </select>
+                </div>
+                <div>
+                  <label class="se-label" for="ef-po">Purchase order <span class="se-opt">(optional)</span></label>
+                  <input id="ef-po" class="se-input se-mono-input" [(ngModel)]="m.purchaseOrder" maxlength="128" placeholder="PO-0000" [disabled]="readonly" />
+                </div>
+                <div>
+                  <label class="se-label" for="ef-tr">Transport cost <span class="se-opt">(optional)</span></label>
+                  <nz-input-number id="ef-tr" class="ef-num" [(ngModel)]="m.transportCost" [nzMin]="0" [nzStep]="100" nzPrefix="৳" [nzDisabled]="readonly"></nz-input-number>
+                  <span class="se-small se-block ef-help">Split across items by value.</span>
+                </div>
+              }
+              @case (Type.StockOut) {
+                <div>
+                  <label class="se-label" for="ef-rs">Reason</label>
+                  <select id="ef-rs" class="se-select" [(ngModel)]="m.outReason" [disabled]="readonly">
+                    @for (r of reasons; track r.value) { <option [ngValue]="r.value">{{ r.label }}</option> }
+                  </select>
+                </div>
+                <div>
+                  <label class="se-label" for="ef-wh2">Take from</label>
+                  <select id="ef-wh2" class="se-select" [(ngModel)]="m.warehouseId" (ngModelChange)="warehouseChanged()" [disabled]="readonly">
+                    @for (w of activeWarehouses; track w.id) { <option [ngValue]="w.id">{{ w.name }}</option> }
+                  </select>
+                </div>
+                <div>
+                  <label class="se-label" for="ef-date2">Date</label>
+                  <nz-date-picker id="ef-date2" class="ef-date" [(ngModel)]="m.date" nzFormat="dd/MM/yyyy" [nzAllowClear]="false" [nzDisabled]="readonly"></nz-date-picker>
+                </div>
+                <div class="ef-wide">
+                  <label class="se-label" for="ef-ref">Reference <span class="se-opt">(optional)</span></label>
+                  <input id="ef-ref" class="se-input" [(ngModel)]="m.reference" maxlength="256" placeholder="e.g. Quote Q-1088, Mirsharai · or what happened" [disabled]="readonly" />
+                </div>
+              }
+              @case (Type.Transfer) {
+                <div>
+                  <label class="se-label" for="ef-from">From</label>
+                  <select id="ef-from" class="se-select" [(ngModel)]="m.warehouseId" (ngModelChange)="warehouseChanged()" [disabled]="readonly">
+                    @for (w of activeWarehouses; track w.id) { <option [ngValue]="w.id">{{ w.name }}</option> }
+                  </select>
+                </div>
+                <div>
+                  <label class="se-label" for="ef-to">To</label>
+                  <select id="ef-to" class="se-select" [(ngModel)]="m.toWarehouseId" [disabled]="readonly">
+                    @for (w of activeWarehouses; track w.id) { <option [ngValue]="w.id" [disabled]="w.id === m.warehouseId">{{ w.name }}</option> }
+                  </select>
+                </div>
+                <div>
+                  <label class="se-label" for="ef-date3">Date</label>
+                  <nz-date-picker id="ef-date3" class="ef-date" [(ngModel)]="m.date" nzFormat="dd/MM/yyyy" [nzAllowClear]="false" [nzDisabled]="readonly"></nz-date-picker>
+                </div>
+                <div class="ef-wide">
+                  <label class="se-label" for="ef-ref2">Why <span class="se-opt">(optional)</span></label>
+                  <input id="ef-ref2" class="se-input" [(ngModel)]="m.reference" maxlength="256" placeholder="e.g. For the Dhaka showroom" [disabled]="readonly" />
+                </div>
+                @if (activeWarehouses.length < 2) {
+                  <p class="se-small is-amber ef-wide">You need a second warehouse to move stock. Add one under Stock entries → Warehouses &amp; suppliers.</p>
+                }
+              }
+              @case (Type.Adjustment) {
+                <div>
+                  <label class="se-label" for="ef-wh4">Warehouse counted</label>
+                  <select id="ef-wh4" class="se-select" [(ngModel)]="m.warehouseId" (ngModelChange)="warehouseChanged()" [disabled]="readonly">
+                    @for (w of activeWarehouses; track w.id) { <option [ngValue]="w.id">{{ w.name }}</option> }
+                  </select>
+                </div>
+                <div>
+                  <label class="se-label" for="ef-date4">Counted on</label>
+                  <nz-date-picker id="ef-date4" class="ef-date" [(ngModel)]="m.date" nzFormat="dd/MM/yyyy" [nzAllowClear]="false" [nzDisabled]="readonly"></nz-date-picker>
+                </div>
+                <div>
+                  <label class="se-label" for="ef-ref4">Which count <span class="se-opt">(optional)</span></label>
+                  <input id="ef-ref4" class="se-input" [(ngModel)]="m.reference" maxlength="256" placeholder="e.g. monthly count" [disabled]="readonly" />
+                </div>
+              }
+            }
+          </div>
+        </section>
+
+        <!-- ── Items ──────────────────────────────────────────────────── -->
+        <section class="se-card">
+          <div class="se-card__head"><h2>Items</h2><span class="se-small">{{ countText }}</span></div>
+          <div class="ef-items">
+            @if (!readonly) {
+              <div class="ef-scan">
+                <i class="bi bi-upc-scan"></i>
+                <input #scanInput type="text" [(ngModel)]="scan" (ngModelChange)="onScanInput()" (keydown)="onScanKey($event)" (blur)="closeSuggestions()"
+                  (focus)="suggestOpen = !!scan.trim() && suggestions.length > 0" placeholder="Scan barcode, or type product name / SKU to add" aria-label="Add a product"
+                  role="combobox" [attr.aria-expanded]="suggestOpen" aria-controls="ef-suggest" autocomplete="off" />
+                <span class="ef-scan__chip">Scanner ready</span>
+                @if (suggestOpen) {
+                  <ul class="ef-suggest" id="ef-suggest" role="listbox">
+                    @for (p of suggestions; track p.id; let i = $index) {
+                      <li role="option" [attr.aria-selected]="i === activeSuggestion" [class.is-on]="i === activeSuggestion" (mousedown)="$event.preventDefault(); pick(p)">
+                        <span class="ef-thumb ef-thumb--sm">@if (p.image) { <img [src]="p.image" alt="" /> } @else { <i class="bi bi-box-seam"></i> }</span>
+                        <span class="ef-suggest__text"><strong>{{ p.name }}</strong><span class="se-mono se-small">{{ p.sku }}</span></span>
+                        <span class="se-small">{{ p.inStock }} in {{ whName(m.warehouseId) }}</span>
+                      </li>
+                    } @empty {
+                      <li class="ef-suggest__none">No product matches “{{ scan }}”.</li>
+                    }
+                  </ul>
+                }
+              </div>
+            }
+
+            <div class="ef-table" [class.is-adj]="m.type === Type.Adjustment">
+              <div class="ef-row ef-row--head">
+                <span>Product</span>
+                <span class="is-right">In stock</span>
+                <span class="is-center">{{ m.type === Type.Adjustment ? 'Counted' : 'Qty' }}</span>
+                <span class="is-right">{{ m.type === Type.StockIn ? 'Unit cost' : m.type === Type.Adjustment ? 'Difference' : 'Avg. cost' }}</span>
+                <span class="is-right">{{ m.type === Type.Transfer ? 'Left here' : 'Stock after' }}</span>
+                <span></span>
+              </div>
+
+              @for (l of lines; track l.productId) {
+                <div class="ef-line">
+                  <div class="ef-row">
+                    <span class="ef-prod">
+                      <span class="ef-thumb">@if (l.image) { <img [src]="l.image" alt="" /> } @else { <i class="bi bi-box-seam"></i> }</span>
+                      <span class="ef-prod__text">
+                        <strong [title]="l.name">{{ l.name }}</strong>
+                        <span class="se-mono se-small">{{ l.sku }}</span>
+                        @if (!l.showSerials && m.type !== Type.Adjustment && !readonly) {
+                          <button type="button" class="ef-sn-link" (click)="l.showSerials = true">+ serial numbers</button>
+                        }
+                      </span>
+                    </span>
+                    <span class="is-right ef-instock" [class.is-red]="l.inStock <= 0">{{ l.inStock }}</span>
+                    <span class="is-center">
+                      <span class="ef-stepper">
+                        <button type="button" (click)="step(l, -1)" [disabled]="readonly" aria-label="One less">−</button>
+                        @if (m.type === Type.Adjustment) {
+                          <input type="number" min="0" [(ngModel)]="l.counted" [disabled]="readonly" [attr.aria-label]="'Counted ' + l.name" />
+                        } @else {
+                          <input type="number" min="0" [(ngModel)]="l.qty" [disabled]="readonly" [attr.aria-label]="'Quantity of ' + l.name" />
+                        }
+                        <button type="button" (click)="step(l, 1)" [disabled]="readonly" aria-label="One more">+</button>
+                      </span>
+                    </span>
+                    <span class="is-right">
+                      @switch (m.type) {
+                        @case (Type.StockIn) {
+                          <span class="ef-cost"><span class="ef-cost__sym">৳</span><input type="number" min="0" [(ngModel)]="l.unitCost" [disabled]="readonly" [attr.aria-label]="'Unit cost of ' + l.name" /></span>
+                        }
+                        @case (Type.Adjustment) {
+                          <strong [class.is-green]="delta(l) > 0" [class.is-red]="delta(l) < 0">{{ signed(delta(l)) }}</strong>
+                        }
+                        @default { <span class="se-muted">{{ money(l.avgCost) }}</span> }
+                      }
+                    </span>
+                    <span class="is-right">
+                      <strong class="se-block ef-after" [class.is-red]="after(l) < 0">{{ after(l) }}</strong>
+                      <span class="se-small">{{ money(lineValue(l)) }}</span>
+                    </span>
+                    <span class="is-right">
+                      @if (!readonly) { <button type="button" class="se-icon" (click)="remove(l)" [attr.aria-label]="'Remove ' + l.name"><i class="bi bi-x-lg"></i></button> }
+                    </span>
+                  </div>
+
+                  @if (m.type !== Type.Adjustment && (l.showSerials || (readonly && l.serialsText))) {
+                    <div class="ef-sn" [class.is-open]="l.showSerials">
+                      <div class="ef-sn__head">
+                        <span class="ef-sn__title"><i class="bi bi-upc"></i><strong>Serial numbers</strong>
+                          <span class="ef-sn__count" [class.is-done]="serials(l).length === l.qty && l.qty > 0">{{ serials(l).length }} / {{ l.qty || 0 }}</span>
+                          <span class="ef-sn__bar"><span [style.width.%]="serialPct(l)"></span></span>
+                        </span>
+                        <button type="button" class="ef-sn-link" (click)="l.showSerials = !l.showSerials">{{ l.showSerials ? 'Hide' : (readonly ? 'Show' : 'Scan or paste serials') }}</button>
+                      </div>
+                      @if (l.showSerials) {
+                        <textarea class="se-input ef-sn__box" rows="4" [(ngModel)]="l.serialsText" (blur)="tidySerials(l)" [disabled]="readonly"
+                          [attr.aria-label]="'Serial numbers for ' + l.name" placeholder="One per line — scan each unit, or paste a list"></textarea>
+                        <span class="se-small">
+                          @if (m.type === Type.StockIn) { Needed for warranty cards and checking a product is genuine. You can post now and add the rest later. }
+                          @else { Optional. Serials listed here must be in {{ whName(m.warehouseId) }}; they are marked as {{ m.type === Type.Transfer ? 'moved' : 'gone out' }} when you post. }
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+              } @empty {
+                <div class="se-empty">No products yet. Scan a barcode or type a name above.</div>
+              }
+            </div>
+
+            <div class="ef-items__foot">
+              @if (!readonly) { <button type="button" class="se-btn se-btn--sm ef-add" (click)="focusScan()">+ Add product</button> } @else { <span></span> }
+              <span class="ef-total">
+                @if (m.type === Type.StockIn && m.transportCost) { <span class="se-small">incl. {{ money(m.transportCost) }} transport · </span> }
+                <span class="se-muted">{{ m.type === Type.StockIn ? 'Total cost' : 'Value at cost' }}</span> <strong>{{ money(total) }}</strong>
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Notes & attachments ────────────────────────────────────── -->
+        <section class="se-card">
+          <div class="se-card__head"><h2>Notes &amp; attachments</h2><span class="se-small">Optional</span></div>
+          <div class="ef-notes">
+            <div>
+              <label class="se-label" for="ef-note">Note</label>
+              <textarea id="ef-note" class="se-input" rows="4" [(ngModel)]="m.note" maxlength="4000" [disabled]="readonly"
+                placeholder="Anything the team should know — e.g. 2 cartons had dented corners."></textarea>
+            </div>
+            <div>
+              <span class="se-label">Attachments</span>
+              @if (canEdit) {
+                <label class="ef-drop" [class.is-over]="dragOver" (dragover)="$event.preventDefault(); dragOver = true" (dragleave)="dragOver = false" (drop)="onDrop($event)">
+                  <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png" (change)="onFiles($any($event.target).files); $any($event.target).value = ''" />
+                  <i class="bi bi-upload"></i>{{ uploading ? 'Uploading ' + uploading + '…' : 'Upload invoice, challan or photos' }}
+                </label>
+                <span class="se-small se-block ef-help">PDF, JPG or PNG · up to 10 MB each</span>
+              }
+              @for (a of attachments; track a.url) {
+                <div class="ef-file">
+                  <i class="bi" [ngClass]="a.fileName.toLowerCase().endsWith('.pdf') ? 'bi-file-earmark-pdf' : 'bi-file-earmark-image'"></i>
+                  <a [href]="a.url" target="_blank" rel="noopener">{{ a.fileName }}</a>
+                  <span class="se-small">{{ size(a.sizeBytes) }}</span>
+                  @if (canEdit) { <button type="button" class="se-icon" (click)="removeAttachment(a)" [attr.aria-label]="'Remove ' + a.fileName"><i class="bi bi-x-lg"></i></button> }
+                </div>
+              } @empty {
+                @if (!canEdit) { <p class="se-small">None.</p> }
+              }
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ── Side ─────────────────────────────────────────────────────── -->
+      <aside class="ef-side">
+        <section class="se-card se-pad">
+          <h2 class="ef-side__title">Summary</h2>
+          <dl class="ef-dl">
+            <dt>Type</dt><dd [style.color]="typeMeta(m.type).color">{{ typeMeta(m.type).label }}</dd>
+            @switch (m.type) {
+              @case (Type.StockIn) { <dt>Receive into</dt><dd>{{ whName(m.warehouseId) }}</dd> }
+              @case (Type.Transfer) { <dt>Route</dt><dd>{{ whName(m.warehouseId) }} → {{ whName(m.toWarehouseId) }}</dd> }
+              @case (Type.StockOut) { <dt>Take from</dt><dd>{{ whName(m.warehouseId) }}</dd> }
+              @default { <dt>Warehouse</dt><dd>{{ whName(m.warehouseId) }}</dd> }
+            }
+            <dt>Products</dt><dd>{{ lines.length }}</dd>
+            <dt>Units</dt><dd [class.is-green]="units > 0 && m.type !== Type.Transfer" [class.is-red]="units < 0" [class.is-blue]="m.type === Type.Transfer">{{ unitsText }}</dd>
+          </dl>
+          <div class="ef-sum-total"><span class="se-muted">{{ m.type === Type.StockIn ? 'Total cost' : 'Value at cost' }}</span><strong>{{ money(total) }}</strong></div>
+        </section>
+
+        @if (lines.length) {
+          <section class="se-card se-pad">
+            <h2 class="ef-side__title">{{ status === Status.Draft ? 'Stock after posting' : 'Stock change' }}</h2>
+            @for (l of lines; track l.productId) {
+              <div class="ef-after-row">
+                <span class="ef-after-row__name" [title]="l.name">{{ l.name }}</span>
+                <span class="se-muted">{{ l.inStock }}</span>
+                <i class="bi bi-arrow-right se-muted"></i>
+                <strong [class.is-green]="delta(l) > 0" [class.is-red]="after(l) < 0 || delta(l) < 0">{{ after(l) }}</strong>
+              </div>
+            }
+            @if (m.type === Type.Transfer) { <p class="se-small se-mt">{{ whName(m.toWarehouseId) }} gets {{ units }} {{ units === 1 ? 'unit' : 'units' }}.</p> }
+          </section>
+        }
+
+        <div class="ef-info">
+          <i class="bi bi-info-circle"></i>
+          <span>Posting updates product stock straight away. Posted entries can't be edited — use <strong>Reverse entry</strong> to undo one.</span>
+        </div>
+      </aside>
+    </div>
+  }
+</div>
+
+<!-- ── Footer ──────────────────────────────────────────────────────────── -->
+@if (!loading) {
+  <div class="ef-foot">
+    <span class="ef-foot__text" [class.is-amber]="status === Status.Draft && problems.length">{{ footText }}</span>
+    <span class="ef-foot__acts">
+      <button type="button" class="se-btn" (click)="cancel()">{{ readonly ? 'Back' : 'Cancel' }}</button>
+      @if (saved && status !== Status.Draft) { <button type="button" class="se-btn" (click)="print()">{{ m.type === Type.StockIn ? 'Print GRN' : 'Print slip' }}</button> }
+      @if (status === Status.Draft && canEdit) {
+        <button type="button" class="se-btn" [disabled]="!!busy" (click)="saveDraft()">{{ busy === 'save' ? 'Saving…' : 'Save draft' }}</button>
+        @if (canPost) { <button type="button" class="se-btn se-btn--primary" [disabled]="!!busy || uploading > 0" (click)="postEntry()">{{ busy === 'post' ? 'Posting…' : 'Post stock entry' }}</button> }
+      }
+      @if (status === Status.Posted && canPost && !saved?.reversesId) {
+        <button type="button" class="se-btn se-btn--danger" [disabled]="!!busy" nz-popconfirm
+          nzPopconfirmTitle="Undo this entry? A new entry with the opposite effect is posted; this one stays in the history." (nzOnConfirm)="reverse()">
+          {{ busy === 'reverse' ? 'Reversing…' : 'Reverse entry' }}</button>
+      }
+    </span>
+  </div>
+}

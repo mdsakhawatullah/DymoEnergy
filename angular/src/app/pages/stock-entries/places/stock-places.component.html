@@ -1,0 +1,93 @@
+<nz-drawer [nzVisible]="true" [nzWidth]="480" nzTitle="Warehouses & suppliers" (nzOnClose)="closed.emit()">
+  <div *nzDrawerContent class="se">
+    <div class="sp-seg" role="tablist">
+      <button type="button" role="tab" [class.is-on]="tab === 'warehouses'" (click)="tab = 'warehouses'">Warehouses</button>
+      <button type="button" role="tab" [class.is-on]="tab === 'suppliers'" (click)="tab = 'suppliers'">Suppliers</button>
+    </div>
+
+    @if (tab === 'warehouses') {
+      @for (w of warehouses; track w.id) {
+        @if (whId === w.id && wh) {
+          <ng-container *ngTemplateOutlet="whForm"></ng-container>
+        } @else {
+          <div class="sp-row" [class.is-off]="!w.isActive">
+            <span class="sp-code">{{ w.shortCode }}</span>
+            <div class="sp-text">
+              <strong>{{ w.name }}</strong>
+              @if (w.isDefault) { <span class="se-status is-posted sp-tag">Default</span> }
+              @if (!w.isActive) { <span class="se-status is-draft sp-tag">Off</span> }
+              <span class="se-small se-block">{{ w.units.toLocaleString('en-IN') }} units@if (w.address) { · {{ w.address }} }</span>
+            </div>
+            @if (canEdit) { <button type="button" class="se-icon" (click)="editWarehouse(w)" [attr.aria-label]="'Edit ' + w.name"><i class="bi bi-pencil"></i></button> }
+          </div>
+        }
+      }
+      @if (wh && whId === null) { <ng-container *ngTemplateOutlet="whForm"></ng-container> }
+      @else if (canEdit && !wh) { <button type="button" class="se-btn se-btn--sm se-mt" (click)="editWarehouse()">+ Add warehouse</button> }
+      <p class="se-small se-mt">Stock that existed before stock entries were used counts as sitting in the default warehouse.</p>
+    }
+
+    @if (tab === 'suppliers') {
+      @for (s of suppliers; track s.id) {
+        @if (supId === s.id && sup) {
+          <ng-container *ngTemplateOutlet="supForm"></ng-container>
+        } @else {
+          <div class="sp-row" [class.is-off]="!s.isActive">
+            <span class="sp-code"><i class="bi bi-truck"></i></span>
+            <div class="sp-text">
+              <strong>{{ s.name }}</strong>
+              @if (!s.isActive) { <span class="se-status is-draft sp-tag">Off</span> }
+              <span class="se-small se-block">{{ contact(s) }}</span>
+            </div>
+            @if (canEdit) { <button type="button" class="se-icon" (click)="editSupplier(s)" [attr.aria-label]="'Edit ' + s.name"><i class="bi bi-pencil"></i></button> }
+          </div>
+        }
+      } @empty {
+        @if (!sup) { <p class="se-empty">No suppliers yet.</p> }
+      }
+      @if (sup && supId === null) { <ng-container *ngTemplateOutlet="supForm"></ng-container> }
+      @else if (canEdit && !sup) { <button type="button" class="se-btn se-btn--sm se-mt" (click)="editSupplier()">+ Add supplier</button> }
+    }
+  </div>
+</nz-drawer>
+
+<ng-template #whForm>
+  @if (wh; as m) {
+    <div class="sp-form">
+      <div class="sp-grid">
+        <div><label class="se-label" for="wh-n">Name</label><input id="wh-n" class="se-input" [(ngModel)]="m.name" maxlength="128" placeholder="e.g. Chattogram" /></div>
+        <div><label class="se-label" for="wh-c">Short code</label><input id="wh-c" class="se-input" [(ngModel)]="m.shortCode" maxlength="8" placeholder="CTG" /></div>
+      </div>
+      <label class="se-label se-mt" for="wh-a">Address <span class="se-opt">(optional)</span></label>
+      <input id="wh-a" class="se-input" [(ngModel)]="m.address" maxlength="512" />
+      <label class="sp-check se-mt"><nz-switch nzSize="small" [(ngModel)]="m.isDefault"></nz-switch> Default warehouse</label>
+      <label class="sp-check"><nz-switch nzSize="small" [(ngModel)]="m.isActive" [nzDisabled]="m.isDefault"></nz-switch> In use</label>
+      <div class="sp-acts">
+        <button type="button" class="se-btn se-btn--sm se-btn--primary" [disabled]="saving" (click)="saveWarehouse()">{{ saving ? 'Saving…' : 'Save' }}</button>
+        <button type="button" class="se-btn se-btn--sm" (click)="wh = null">Cancel</button>
+      </div>
+    </div>
+  }
+</ng-template>
+
+<ng-template #supForm>
+  @if (sup; as m) {
+    <div class="sp-form">
+      <label class="se-label" for="sp-n">Name</label>
+      <input id="sp-n" class="se-input" [(ngModel)]="m.name" maxlength="256" placeholder="e.g. [Supplier A] Trading" />
+      <div class="sp-grid se-mt">
+        <div><label class="se-label" for="sp-p">Phone</label><input id="sp-p" class="se-input" [(ngModel)]="m.phone" maxlength="32" /></div>
+        <div><label class="se-label" for="sp-e">Email</label><input id="sp-e" class="se-input" type="email" [(ngModel)]="m.email" maxlength="256" /></div>
+      </div>
+      <label class="se-label se-mt" for="sp-a">Address <span class="se-opt">(optional)</span></label>
+      <input id="sp-a" class="se-input" [(ngModel)]="m.address" maxlength="512" />
+      <label class="se-label se-mt" for="sp-note">Note <span class="se-opt">(optional)</span></label>
+      <textarea id="sp-note" class="se-input" rows="2" [(ngModel)]="m.note" maxlength="2000"></textarea>
+      <label class="sp-check se-mt"><nz-switch nzSize="small" [(ngModel)]="m.isActive"></nz-switch> Shown when receiving stock</label>
+      <div class="sp-acts">
+        <button type="button" class="se-btn se-btn--sm se-btn--primary" [disabled]="saving" (click)="saveSupplier()">{{ saving ? 'Saving…' : 'Save' }}</button>
+        <button type="button" class="se-btn se-btn--sm" (click)="sup = null">Cancel</button>
+      </div>
+    </div>
+  }
+</ng-template>

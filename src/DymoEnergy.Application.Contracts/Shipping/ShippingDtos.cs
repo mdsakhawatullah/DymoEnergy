@@ -244,6 +244,7 @@ public class ShipmentDto
     public int      CourierAccountId { get; set; }
     public string   CourierName    { get; set; } = string.Empty;
     public string   CourierColor   { get; set; } = string.Empty;
+    public CourierProvider CourierProvider { get; set; }
     public CourierEnvironment Environment { get; set; }
     public string   Status         { get; set; } = string.Empty;
     /// <summary>ready | picked | transit | delivered | failed | returned | cancelled</summary>
@@ -255,6 +256,67 @@ public class ShipmentDto
     public decimal  CodAmount      { get; set; }
     public decimal  DeliveryFee    { get; set; }
     public int      DeliveryType   { get; set; }
+}
+
+public class ShipmentEventDto
+{
+    public DateTime Time   { get; set; }
+    public string   Status { get; set; } = string.Empty;
+    public string   Stage  { get; set; } = string.Empty;
+    /// <summary>sent | webhook | tracked | now</summary>
+    public string   Source { get; set; } = string.Empty;
+    public string?  Event  { get; set; }
+    public string?  Note   { get; set; }
+    public decimal? CollectedAmount { get; set; }
+}
+
+public class ShipmentOrderItemDto
+{
+    public string  Name      { get; set; } = string.Empty;
+    public string? Sku       { get; set; }
+    public double  Quantity  { get; set; }
+    public double  UnitPrice { get; set; }
+    public double  LineTotal { get; set; }
+}
+
+public class ShipmentOrderDto
+{
+    public int       Id            { get; set; }
+    public string    Number        { get; set; } = string.Empty;
+    public DateTime  Date          { get; set; }
+    public string    Status        { get; set; } = string.Empty;
+    public string?   PaymentType   { get; set; }
+    public string?   CustomerName  { get; set; }
+    public string?   CustomerPhone { get; set; }
+    public string?   CustomerEmail { get; set; }
+    public string?   DeliveryContact { get; set; }
+    public string?   DeliveryPhone   { get; set; }
+    public string?   DeliveryAddress { get; set; }
+    public string?   Notes         { get; set; }
+    public double    Subtotal      { get; set; }
+    public double    DiscountTotal { get; set; }
+    public double    TaxTotal      { get; set; }
+    public double    ShippingCost  { get; set; }
+    public double    GrandTotal    { get; set; }
+    public double    AmountPaid    { get; set; }
+    public double    BalanceDue    { get; set; }
+    public List<ShipmentOrderItemDto> Items { get; set; } = new();
+}
+
+/// <summary>Everything about one parcel: the parcel, its status history and the order it carries.</summary>
+public class ShipmentDetailDto
+{
+    public ShipmentDto Shipment   { get; set; } = new();
+    public string?  MerchantOrderId { get; set; }
+    public string   RecipientPhone  { get; set; } = string.Empty;
+    public decimal  WeightKg        { get; set; }
+    public int      ItemType        { get; set; }
+    public string?  Note            { get; set; }
+    public string   CourierShortCode { get; set; } = string.Empty;
+    public bool     CanTrack        { get; set; }
+    public string?  PayoutNote      { get; set; }
+    public List<ShipmentEventDto> Events { get; set; } = new();
+    public ShipmentOrderDto? Order  { get; set; }
 }
 
 public class ShipmentCountsDto

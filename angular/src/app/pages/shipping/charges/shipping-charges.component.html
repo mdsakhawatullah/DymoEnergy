@@ -4,8 +4,15 @@
       <!-- ── Zones ───────────────────────────────────────────────────── -->
       <div class="sh-card sh-table-card">
         <div class="sh-card__head">
-          <div><h2>Delivery charge by zone</h2><span class="sh-small">What the customer pays at checkout next to what the courier charges you.</span></div>
-          @if (canEdit) { <button type="button" class="sh-btn sh-btn--sm" (click)="startZone()">+ Add zone</button> }
+          <div><h2>Delivery charge by zone</h2><span class="sh-small">What the customer pays at checkout next to what {{ p.pathaoAccountName || 'Pathao' }} charges you — courier costs come from Pathao's price plan.</span></div>
+          @if (canEdit) {
+            <span class="ch-head-acts">
+              @if (p.pathaoAccountId && linkedCount) {
+                <button type="button" class="sh-btn sh-btn--sm" [disabled]="refreshing" (click)="refreshPrices()"><i class="bi bi-arrow-repeat"></i>{{ refreshing ? 'Asking Pathao…' : 'Refresh from Pathao' }}</button>
+              }
+              <button type="button" class="sh-btn sh-btn--sm" (click)="startZone()">+ Add zone</button>
+            </span>
+          }
         </div>
         <div class="sh-table-wrap">
           <table class="sh-table ch-table">
@@ -21,7 +28,18 @@
                   <td><strong class="sh-block">{{ z.name }}</strong>@if (z.note) { <span class="sh-small">{{ z.note }}</span> }</td>
                   <td class="is-right"><strong>{{ money(z.charge) }}</strong></td>
                   <td class="is-right">{{ z.perExtraKg ? '+' + money(z.perExtraKg) : '—' }}</td>
-                  <td class="is-right">{{ money(z.courierCost) }}</td>
+                  <td class="is-right">
+                    @if (z.priceCheckedAt) {
+                      <strong>{{ money(z.courierCost) }}</strong>@if (z.courierPerExtraKg) { <span class="sh-small"> +{{ money(z.courierPerExtraKg) }}/kg</span> }
+                      <span class="sh-small sh-block" [title]="'Pathao price for ' + z.pathaoZoneName + ', ' + z.pathaoCityName">Pathao · {{ z.pathaoZoneName }} · {{ z.priceCheckedAt | date: 'd MMM' }}</span>
+                    } @else if (z.pathaoZoneId) {
+                      <span class="sh-small sh-block">{{ z.pathaoZoneName }}, {{ z.pathaoCityName }}</span>
+                      @if (canEdit) { <button type="button" class="sh-link" [disabled]="refreshingId === z.id" (click)="refreshPrices(z)">{{ refreshingId === z.id ? 'Asking…' : 'Get Pathao price' }}</button> }
+                    } @else {
+                      <span class="sh-small">not linked to Pathao</span>
+                    }
+                    @if (z.priceError) { <span class="sh-small is-red sh-block" [title]="z.priceError">⚠ last check failed</span> }
+                  </td>
                   <td class="is-right"><span class="sh-chip" [ngClass]="z.margin > 0 ? 'is-green' : z.margin < 0 ? 'is-red' : 'is-grey'">{{ marginText(z) }}</span></td>
                   <td>{{ z.days || '—' }}</td>
                   @if (canEdit) {
@@ -34,7 +52,10 @@
                   }
                 </tr>
               } @empty {
-                <tr><td [attr.colspan]="canEdit ? 7 : 6" class="sh-empty">No zones yet. Add one for each delivery area you price differently.</td></tr>
+                <tr><td [attr.colspan]="canEdit ? 7 : 6" class="sh-empty">
+                  No zones yet. Add one for each delivery area you price differently, and pick a Pathao city and zone inside it — the courier cost is then taken from Pathao.
+                  @if (!p.pathaoAccountId) { <span class="sh-block is-amber">Switch on Pathao and save its keys under Couriers &amp; keys first.</span> }
+                </td></tr>
               }
             </tbody>
           </table>
@@ -140,13 +161,49 @@
       <div class="sh-grid2">
         <div><label class="sh-label" for="z-c">Customer pays</label><nz-input-number id="z-c" [(ngModel)]="zone.charge" [nzMin]="0" nzPrefix="৳"></nz-input-number></div>
         <div><label class="sh-label" for="z-k">Per extra kg</label><nz-input-number id="z-k" [(ngModel)]="zone.perExtraKg" [nzMin]="0" nzPrefix="৳"></nz-input-number></div>
-        <div><label class="sh-label" for="z-cc">Courier costs you</label><nz-input-number id="z-cc" [(ngModel)]="zone.courierCost" [nzMin]="0" nzPrefix="৳"></nz-input-number></div>
+        <div><label class="sh-label" for="z-cc">Courier costs you</label><nz-input-number id="z-cc" [(ngModel)]="zone.courierCost" [nzMin]="0" nzPrefix="৳" [nzDisabled]="!!zone.pathaoZoneId"></nz-input-number></div>
         <div><label class="sh-label" for="z-d">Arrives in</label><input id="z-d" nz-input [(ngModel)]="zone.days" maxlength="64" placeholder="e.g. 2–4 days" /></div>
+      </div>
+      <div class="ch-pathao">
+        <strong class="sh-block">Price from Pathao</strong>
+        <span class="sh-small sh-block">Pick one Pathao city and zone that sits inside this delivery zone. Its Pathao price becomes the courier cost.</span>
+        @if (!page?.pathaoAccountId) {
+          <span class="sh-small is-amber sh-block sh-mt">No Pathao courier is switched on. Set it up under Couriers &amp; keys, or type the courier cost yourself.</span>
+        } @else if (pathaoError) {
+          <span class="sh-small is-red sh-block sh-mt">{{ pathaoError }}</span>
+        } @else {
+          <div class="sh-grid2">
+            <div>
+              <label class="sh-label" for="z-pc">Pathao city</label>
+              <select id="z-pc" class="sh-select" [(ngModel)]="zone.pathaoCityId" (ngModelChange)="cityChanged($event)" [disabled]="citiesLoading">
+                <option [ngValue]="null">{{ citiesLoading ? 'Loading…' : 'Not linked' }}</option>
+                @for (c of cities; track c.id) { <option [ngValue]="c.id">{{ c.name }}</option> }
+              </select>
+            </div>
+            <div>
+              <label class="sh-label" for="z-pz">Pathao zone</label>
+              <select id="z-pz" class="sh-select" [(ngModel)]="zone.pathaoZoneId" [disabled]="!zone.pathaoCityId || areasLoading">
+                <option [ngValue]="null">{{ areasLoading ? 'Loading…' : 'Choose…' }}</option>
+                @for (a of areas; track a.id) { <option [ngValue]="a.id">{{ a.name }}</option> }
+              </select>
+            </div>
+          </div>
+          @if (zone.pathaoZoneId) {
+            <span class="sh-small sh-block sh-mt">Priced with your Pathao defaults (delivery type, item type) at the included weight, plus one more kg for the per-kg cost. If “Customer pays” is still 0, it starts at Pathao's price.</span>
+          }
+        }
       </div>
       <div class="sh-banner sh-mt" [ngClass]="zoneMargin > 0 ? 'is-ok' : zoneMargin < 0 ? 'is-bad' : 'is-grey'">
         {{ zoneMargin >= 0 ? 'You keep ' + money(zoneMargin) : 'You lose ' + money(-zoneMargin) }} on each parcel at the base weight.
       </div>
-      <div class="sh-mt"><button type="button" class="sh-btn sh-btn--primary" [disabled]="zoneSaving" (click)="saveZone()">{{ zoneSaving ? 'Saving…' : 'Save zone' }}</button></div>
+      <div class="sh-mt ch-drawer-acts">
+        @if (zone.pathaoZoneId) {
+          <button type="button" class="sh-btn sh-btn--primary" [disabled]="zoneSaving" (click)="saveZone(true)">{{ zoneSaving ? 'Asking Pathao…' : 'Save & get Pathao price' }}</button>
+          <button type="button" class="sh-btn" [disabled]="zoneSaving" (click)="saveZone()">Save only</button>
+        } @else {
+          <button type="button" class="sh-btn sh-btn--primary" [disabled]="zoneSaving" (click)="saveZone()">{{ zoneSaving ? 'Saving…' : 'Save zone' }}</button>
+        }
+      </div>
     </div>
   </nz-drawer>
 }

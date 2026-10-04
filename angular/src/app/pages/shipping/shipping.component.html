@@ -62,7 +62,7 @@
         <div class="sh-card sh-list">
           @for (c of overview?.couriers ?? []; track c.id) {
             <button type="button" class="sh-courier" [class.is-active]="selectedId === c.id" (click)="select(c)">
-              <span class="sh-code" [style.background]="tint(c.color, 0.12)" [style.color]="c.color">{{ c.shortCode }}</span>
+              <app-courier-badge [provider]="c.provider" [color]="c.color" [code]="c.shortCode" [name]="c.displayName" />
               <span class="sh-courier__text"><strong>{{ c.displayName }}</strong><span class="sh-small">{{ c.statusText }}</span></span>
               <span class="sh-dot" [style.background]="statusDot(c)"></span>
             </button>
@@ -78,7 +78,11 @@
         <div class="sh-right">
           <!-- Header -->
           <div class="sh-card sh-pad sh-dhead">
-            <span class="sh-code sh-code--lg" [style.background]="tint(d.color, 0.12)" [style.color]="d.color">{{ d.shortCode }}</span>
+            @if (courierLogo(d.provider); as logo) {
+              <img class="sh-brandlogo" [src]="logo" [alt]="d.displayName + ' logo'" />
+            } @else {
+              <app-courier-badge [provider]="d.provider" [color]="d.color" [code]="d.shortCode" [name]="d.displayName" [large]="true" />
+            }
             <div class="sh-dhead__text">
               <div class="sh-dhead__name">{{ d.displayName }}
                 <span class="sh-chip" [ngClass]="d.status === 'connected' || d.status === 'always' ? 'is-green' : d.status === 'keys' ? 'is-amber' : 'is-grey'">
@@ -217,7 +221,12 @@
             @if (d.apiAvailable) {
               <div class="sh-card sh-pad">
                 <h2>Status updates (webhook)</h2>
-                <p class="sh-small">Paste this address into {{ d.displayName }}'s merchant panel so parcel statuses update here on their own. Also set the <strong>Webhook secret</strong> above to the same secret you enter there — updates without it are refused.</p>
+                <ol class="sh-steps-list sh-small">
+                  <li>In Pathao's merchant panel, open the developer / API settings where webhooks are set up.</li>
+                  <li>Paste the address below as the <strong>Callback URL</strong>, and make up a <strong>Webhook secret</strong>.</li>
+                  <li>Save the same secret above as <strong>Webhook secret</strong> ({{ keysEnv === Env.Live ? 'live' : 'sandbox' }} keys) — updates without it are refused.</li>
+                  <li>Press save in Pathao. It sends a check, and this app answers it with the header Pathao asks for.</li>
+                </ol>
                 <div class="sh-copyrow"><code class="sh-url">{{ webhookUrl }}</code><button type="button" class="sh-btn sh-btn--sm" (click)="copy(webhookUrl, 'Webhook address')">Copy</button></div>
                 <div class="sh-banner" [ngClass]="d.lastWebhookAt ? 'is-ok' : 'is-grey'">
                   <span class="sh-dot" [style.background]="d.lastWebhookAt ? '#0E6B3F' : '#9AA39C'"></span>
@@ -332,10 +341,10 @@
             <tbody>
               @for (s of p.shipments; track s.id) {
                 <tr>
-                  <td class="sh-mono">{{ s.consignmentId }}@if (s.environment === Env.Sandbox) { <span class="sh-chip is-grey">test</span> }</td>
-                  <td class="sh-mono">{{ s.orderNumber }}</td>
+                  <td class="sh-mono"><button type="button" class="sh-cons-link" (click)="detailId = s.id; detailCourierId = s.courierAccountId" [attr.aria-label]="'Show parcel ' + s.consignmentId">{{ s.consignmentId }}</button>@if (s.environment === Env.Sandbox) { <span class="sh-chip is-grey">test</span> }</td>
+                  <td class="sh-mono"><button type="button" class="sh-cons-link sh-cons-link--quiet" (click)="detailId = s.id; detailCourierId = s.courierAccountId">{{ s.orderNumber }}</button></td>
                   <td><strong class="sh-block">{{ s.recipientName }}</strong><span class="sh-small sh-ellipsis sh-block">{{ s.recipientAddress }}</span></td>
-                  <td><span class="sh-chip" [style.background]="tint(s.courierColor, 0.12)" [style.color]="s.courierColor">{{ s.courierName }}</span></td>
+                  <td><span class="sh-chip sh-chip--logo" [style.background]="tint(s.courierColor, 0.12)" [style.color]="s.courierColor">@if (courierMark(s.courierProvider ?? providerOf(s.courierAccountId)); as m) { <img class="sh-chip__logo" [src]="m" alt="" /> }{{ s.courierName }}</span></td>
                   <td>{{ s.deliveryType === 12 ? 'On demand' : 'Normal' }}</td>
                   <td><span class="sh-chip" [ngClass]="stagePill(s.stage)">{{ s.status.replace('_', ' ') }}</span><span class="sh-small sh-block">{{ ago(s.statusAt || s.creationTime) }}</span></td>
                   <td class="is-right"><strong [class.is-amber]="s.codAmount > 0">{{ s.codAmount > 0 ? money(s.codAmount) : '—' }}</strong></td>
@@ -358,6 +367,10 @@
   @if (tab === 'cod') { <app-shipping-cod [canEdit]="canEdit" (changed)="loadOverview()" /> }
   @if (tab === 'rules') { <app-shipping-rules [canEdit]="canEdit" /> }
 </div>
+
+@if (detailId) {
+  <app-shipment-detail [shipmentId]="detailId" [providerFallback]="providerOf(detailCourierId)" (closed)="detailId = null" (changed)="onDetailChanged($event)" />
+}
 
 <!-- ── Add courier ─────────────────────────────────────────────────────── -->
 @if (addOpen) {

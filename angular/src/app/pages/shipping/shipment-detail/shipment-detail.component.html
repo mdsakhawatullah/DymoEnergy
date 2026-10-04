@@ -1,0 +1,148 @@
+<nz-drawer [nzVisible]="true" nzWidth="min(780px, 100vw)" [nzTitle]="title" (nzOnClose)="closed.emit()">
+  <ng-template #title>
+    <span class="sd-title">Parcel <span class="sh-mono">{{ detail?.shipment?.consignmentId }}</span></span>
+  </ng-template>
+
+  <div *nzDrawerContent class="sh">
+    @if (detail; as d) {
+      <!-- ── Header ───────────────────────────────────────────────────── -->
+      <div class="sd-head">
+        @if (courierLogo(provider); as logo) {
+          <img class="sd-logo" [src]="logo" [alt]="d.shipment.courierName + ' logo'" />
+        } @else {
+          <app-courier-badge [provider]="provider" [color]="d.shipment.courierColor" [code]="d.courierShortCode" [name]="d.shipment.courierName" [large]="true" />
+        }
+        <div class="sd-head__text">
+          <div class="sd-head__line">
+            <strong class="sh-mono sd-cons">{{ d.shipment.consignmentId }}</strong>
+            <button type="button" class="sh-icon" (click)="copy(d.shipment.consignmentId, 'Consignment ID')" aria-label="Copy consignment ID" title="Copy"><i class="bi bi-copy"></i></button>
+            @if (d.shipment.environment === Env.Sandbox) { <span class="sh-chip is-grey" title="Sent with the sandbox keys — not a real parcel">test</span> }
+          </div>
+          <span class="sh-small">{{ d.shipment.courierName }} · {{ d.shipment.deliveryType === 12 ? 'On demand' : 'Normal delivery' }} · sent {{ d.shipment.creationTime | date: 'd MMM y, HH:mm' }}</span>
+        </div>
+        @if (d.canTrack) {
+          <button type="button" class="sh-btn sh-btn--sm" [disabled]="tracking" (click)="track()"><i class="bi bi-arrow-repeat"></i>{{ tracking ? 'Checking…' : 'Track' }}</button>
+        }
+      </div>
+
+      <!-- ── Where it is ──────────────────────────────────────────────── -->
+      <section class="sd-card">
+        <div class="sd-status">
+          <span class="sh-chip sd-status__chip" [ngClass]="stagePill(stage)">{{ d.shipment.status.replace('_', ' ') }}</span>
+          <span class="sh-small">since {{ (d.shipment.statusAt || d.shipment.creationTime) | date: 'd MMM, HH:mm' }}</span>
+        </div>
+        <ol class="sd-steps" [class.is-off]="offTrack" aria-label="Delivery progress">
+          @for (s of steps; track s.stage; let i = $index) {
+            <li class="sd-step" [class.is-done]="i <= reached" [class.is-current]="i === reached && !offTrack">
+              <span class="sd-step__dot">@if (i <= reached) { <i class="bi bi-check"></i> }</span>
+              <span class="sd-step__label">{{ s.label }}</span>
+            </li>
+          }
+        </ol>
+        @if (offTrack) {
+          <div class="sh-banner" [ngClass]="stage === 'failed' ? 'is-bad' : 'is-warn'">
+            <i class="bi bi-exclamation-triangle"></i>
+            {{ stage === 'failed' ? 'Delivery failed — call the customer and arrange a new attempt or a return.' : stage === 'returned' ? 'The parcel is on its way back to you.' : 'This parcel was cancelled.' }}
+          </div>
+        }
+      </section>
+
+      <!-- ── Parcel ───────────────────────────────────────────────────── -->
+      <section class="sd-card">
+        <h3 class="sd-h">Parcel</h3>
+        <dl class="sd-dl">
+          <dt>Cash to collect</dt><dd><strong [class.is-amber]="d.shipment.codAmount > 0">{{ d.shipment.codAmount > 0 ? money(d.shipment.codAmount) : 'Nothing — prepaid' }}</strong></dd>
+          <dt>Delivery fee</dt><dd>{{ d.shipment.deliveryFee ? money(d.shipment.deliveryFee) : '—' }}</dd>
+          <dt>Weight</dt><dd>{{ d.weightKg }} kg · {{ d.itemType === 1 ? 'document' : 'parcel' }}</dd>
+          <dt>Recipient</dt><dd>{{ d.shipment.recipientName }}<span class="sh-small sd-block">{{ d.recipientPhone }}</span></dd>
+          <dt>Address</dt><dd>{{ d.shipment.recipientAddress }}</dd>
+          @if (d.merchantOrderId) { <dt>Your reference</dt><dd class="sh-mono">{{ d.merchantOrderId }}</dd> }
+          @if (d.note) { <dt>Instruction</dt><dd>{{ d.note }}</dd> }
+          @if (d.payoutNote) { <dt>Cash</dt><dd class="is-green">{{ d.payoutNote }}</dd> }
+        </dl>
+      </section>
+
+      <!-- ── History ──────────────────────────────────────────────────── -->
+      <section class="sd-card">
+        <h3 class="sd-h">Status history</h3>
+        <ol class="sd-timeline">
+          @for (e of events; track $index; let first = $first) {
+            <li class="sd-event" [class.is-first]="first">
+              <span class="sd-event__dot" [ngClass]="dotClass(e.stage)"></span>
+              <div class="sd-event__body">
+                <div class="sd-event__line"><strong>{{ e.status.replace('_', ' ') }}</strong><span class="sh-small">{{ e.time | date: 'd MMM y, HH:mm' }}</span></div>
+                @if (e.note) { <span class="sd-event__note">{{ e.note }}</span> }
+                @if (e.collectedAmount) { <span class="sh-small sd-block">Collected {{ money(e.collectedAmount) }}</span> }
+                <span class="sh-small sd-block">{{ sourceText(e) }}</span>
+              </div>
+            </li>
+          }
+        </ol>
+        @if (d.events.length <= 2) {
+          <p class="sh-small">Updates appear here as {{ d.shipment.courierName }} sends them to the webhook. Press Track to ask for the latest status now.</p>
+        }
+      </section>
+
+      <!-- ── Order ────────────────────────────────────────────────────── -->
+      @if (d.order; as o) {
+        <section class="sd-card">
+          <div class="sd-order-head">
+            <div>
+              <h3 class="sd-h">Order <span class="sh-mono">{{ o.number }}</span></h3>
+              <span class="sh-small">{{ o.date | date: 'd MMM y' }} · {{ o.status }}@if (o.paymentType) { · {{ o.paymentType }} }</span>
+            </div>
+            <button type="button" class="sh-btn sh-btn--sm" (click)="openInvoice()"><i class="bi bi-receipt"></i>Invoice</button>
+          </div>
+
+          <div class="sd-people">
+            <div>
+              <span class="sh-label">Customer</span>
+              <strong class="sd-block">{{ o.customerName || '—' }}</strong>
+              @if (o.customerPhone) { <a class="sh-small sd-block" [href]="'tel:' + o.customerPhone">{{ o.customerPhone }}</a> }
+              @if (o.customerEmail) { <a class="sh-small sd-block" [href]="'mailto:' + o.customerEmail">{{ o.customerEmail }}</a> }
+            </div>
+            <div>
+              <span class="sh-label">Deliver to</span>
+              @if (o.deliveryContact) { <strong class="sd-block">{{ o.deliveryContact }}</strong> }
+              @if (o.deliveryPhone) { <a class="sh-small sd-block" [href]="'tel:' + o.deliveryPhone">{{ o.deliveryPhone }}</a> }
+              <span class="sh-small sd-block">{{ o.deliveryAddress || '—' }}</span>
+            </div>
+          </div>
+
+          <table class="sd-items">
+            <thead><tr><th>Item</th><th class="is-right">Qty</th><th class="is-right">Price</th><th class="is-right">Total</th></tr></thead>
+            <tbody>
+              @for (i of o.items; track $index) {
+                <tr>
+                  <td><span class="sd-block">{{ i.name }}</span>@if (i.sku) { <span class="sh-mono sh-small">{{ i.sku }}</span> }</td>
+                  <td class="is-right">{{ i.quantity }}</td>
+                  <td class="is-right">{{ money(i.unitPrice) }}</td>
+                  <td class="is-right">{{ money(i.lineTotal) }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4" class="sh-small">No items on this order.</td></tr>
+              }
+            </tbody>
+          </table>
+
+          <dl class="sd-totals">
+            <dt>Subtotal</dt><dd>{{ money(o.subtotal) }}</dd>
+            @if (o.discountTotal) { <dt>Discount</dt><dd>−{{ money(o.discountTotal) }}</dd> }
+            @if (o.taxTotal) { <dt>Tax</dt><dd>{{ money(o.taxTotal) }}</dd> }
+            @if (o.shippingCost) { <dt>Shipping</dt><dd>{{ money(o.shippingCost) }}</dd> }
+            <dt class="sd-totals__grand">Total</dt><dd class="sd-totals__grand">{{ money(o.grandTotal) }}</dd>
+            <dt>Paid</dt><dd class="is-green">{{ money(o.amountPaid) }}</dd>
+            <dt>Balance due</dt><dd [class.is-amber]="o.balanceDue > 0"><strong>{{ money(o.balanceDue) }}</strong></dd>
+          </dl>
+          @if (o.notes) { <p class="sh-small"><strong>Note:</strong> {{ o.notes }}</p> }
+        </section>
+      } @else {
+        <section class="sd-card"><p class="sh-small">The order for this parcel was deleted.</p></section>
+      }
+    } @else if (failed) {
+      <div class="sh-banner is-bad"><i class="bi bi-x-circle"></i>Could not load this parcel. <button type="button" class="sh-link" (click)="load()">Try again</button></div>
+    } @else {
+      <nz-spin nzSimple class="sh-loading"></nz-spin>
+    }
+  </div>
+</nz-drawer>

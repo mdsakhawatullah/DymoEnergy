@@ -318,7 +318,44 @@ public abstract class ShippingAppService_Tests<TStartupModule> : DymoEnergyAppli
         s.Status.ShouldBe("In_Transit");
         s.Stage.ShouldBe("transit");
         (await _service.GetCourierAsync(pathao.Id)).LastWebhookNote.ShouldBe("In_Transit, consignment DF2609XYZ");
+
+        // Pathao event without order_status: the status comes from the event name; the reason lands in the history.
+        (await webhook.HandleAsync(pathao.Id, new Dictionary<string, string> { ["X-PATHAO-Signature"] = "hook-secret" },
+            """{"consignment_id":"DF2609XYZ","event":"order.delivery-failed","reason":"Customer not reachable","updated_at":"2099-01-01 10:00:00"}""")).StatusCode.ShouldBe(202);
+        var detail = await _service.GetShipmentDetailAsync(s.Id);
+        detail.Shipment.Status.ShouldBe("Delivery Failed");
+        detail.Shipment.Stage.ShouldBe("failed");
+        detail.Events.First().Source.ShouldBe("sent");
+        detail.Events.Last().Note.ShouldBe("Customer not reachable");
+        detail.Events.Count(e => e.Source == "webhook").ShouldBe(2);
+        detail.Order!.Number.ShouldBe("ORD-T-5");
+        detail.Order.Items.Single().Quantity.ShouldBe(1);
+        detail.CanTrack.ShouldBeTrue();
     }
+
+    [Fact]
+    public async Task Should_Answer_Pathaos_Webhook_Check_With_Its_Header()
+    {
+        var pathao = await PathaoAsync();
+        var webhook = GetRequiredService<IShippingWebhookService>();
+
+        // Works before any secret is saved, and changes nothing.
+        var (status, headers) = await webhook.HandleAsync(pathao.Id, new Dictionary<string, string>(), """{"event":"webhook_integration"}""");
+        status.ShouldBe(202);
+        headers["X-Pathao-Merchant-Webhook-Integration-Secret"].ShouldBe("f3992ecc-59da-4cbe-a049-a13da2018d51");
+        (await _service.GetCourierAsync(pathao.Id)).LastWebhookNote!.ShouldStartWith("Webhook connected");
+
+        // Any other event still needs the secret.
+        (await webhook.HandleAsync(pathao.Id, new Dictionary<string, string>(), """{"event":"order.delivered","consignment_id":"X"}""")).StatusCode.ShouldBe(401);
+    }
+
+    [Theory]
+    [InlineData("order.pickup-requested", "Pickup Requested")]
+    [InlineData("order.at-the-sorting-hub", "At The Sorting Hub")]
+    [InlineData("order.delivered", "Delivered")]
+    [InlineData(null, null)]
+    public void Should_Turn_Pathao_Event_Names_Into_Statuses(string? eventName, string? expected) =>
+        ShippingWebhookService.StatusFromEvent(eventName).ShouldBe(expected);
 
     // ── helpers ───────────────────────────────────────────────────────────
 

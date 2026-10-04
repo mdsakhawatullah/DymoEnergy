@@ -9,6 +9,7 @@ import type {
   CreateUpdateCourierRuleDto,
   CreateUpdateShippingItemDto,
   CreateUpdateShippingZoneDto,
+  RefreshZonePricesResultDto,
   RulesPageDto,
   ShippingItemDto,
   ShippingSettingDto,
@@ -34,6 +35,9 @@ export class ShippingConfigService {
   createZone = (input: CreateUpdateShippingZoneDto) => this.req<ShippingZoneDto>({ method: 'POST', url: `${BASE}/zone`, body: input });
   updateZone = (id: number, input: CreateUpdateShippingZoneDto) => this.req<ShippingZoneDto>({ method: 'PUT', url: `${BASE}/${id}/zone`, body: input });
   deleteZone = (id: number) => this.req<void>({ method: 'DELETE', url: `${BASE}/${id}/zone` });
+  /** Asks Pathao's price plan for one zone, or for every linked zone when no id is given. */
+  refreshZonePrices = (zoneId?: number) =>
+    this.req<RefreshZonePricesResultDto>({ method: 'POST', url: `${BASE}/refresh-zone-prices`, body: { zoneId: zoneId ?? null } });
 
   // ── Lists ───────────────────────────────────────────────────────────────
   createItem = (input: CreateUpdateShippingItemDto) => this.req<ShippingItemDto>({ method: 'POST', url: `${BASE}/item`, body: input });

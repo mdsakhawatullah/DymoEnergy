@@ -32,7 +32,7 @@
             <tbody>
               @for (c of p.couriers; track c.courierAccountId) {
                 <tr>
-                  <td><span class="sh-code cod-code" [style.background]="tint(c.color, 0.12)" [style.color]="c.color">{{ c.shortCode }}</span><strong>{{ c.name }}</strong></td>
+                  <td><app-courier-badge class="cod-code" [provider]="c.provider" [color]="c.color" [code]="c.shortCode" [name]="c.name" [small]="true" /><strong>{{ c.name }}</strong></td>
                   <td class="is-right">{{ c.parcels }}</td>
                   <td class="is-right">{{ money(c.collected) }}</td>
                   <td class="is-right sh-muted" [title]="'Delivery charges plus ' + c.codFeePercent + '% cash fee'">−{{ money(c.fee) }}</td>

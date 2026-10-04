@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using DymoEnergy.Finance;
 using DymoEnergy.Orders;
@@ -7,6 +8,8 @@ using DymoEnergy.Products;
 using Shouldly;
 using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Volo.Abp.Modularity;
 using Xunit;
 
@@ -22,6 +25,39 @@ public abstract class ShippingConfigAppService_Tests<TStartupModule> : DymoEnerg
     {
         _config = GetRequiredService<IShippingConfigAppService>();
         _shipping = GetRequiredService<IShippingAppService>();
+    }
+
+    protected override void AfterAddApplication(IServiceCollection services)
+    {
+        services.Replace(ServiceDescriptor.Transient<PathaoClient, FakePathaoClient>());
+    }
+
+    /// <summary>Pathao answering the price plan: ৳110 for the first kg, ৳135 for two.</summary>
+    private static (HttpStatusCode, string) PathaoPrices(string method, string path)
+    {
+        if (path.EndsWith("/issue-token"))
+            return (HttpStatusCode.OK, """{"token_type":"Bearer","expires_in":432000,"access_token":"ACCESS-1","refresh_token":"REFRESH-1"}""");
+        if (path.EndsWith("/merchant/price-plan"))
+        {
+            var n = FakePathaoServer.Requests.Count(r => r.Path.EndsWith("/merchant/price-plan"));
+            var price = n % 2 == 1 ? 110 : 135;
+            return (HttpStatusCode.OK, "{\"type\":\"success\",\"code\":200,\"data\":{\"price\":" + price + ",\"discount\":0,\"promo_discount\":0,\"plan_id\":69,\"cod_enabled\":1,\"cod_percentage\":0.01,\"additional_charge\":0,\"final_price\":" + price + "}}");
+        }
+        return (HttpStatusCode.NotFound, """{"message":"Not found","type":"error","code":404}""");
+    }
+
+    private async Task<int> ConnectPathaoAsync()
+    {
+        var overview = await _shipping.GetOverviewAsync();
+        var pathao = await _shipping.GetCourierAsync(overview.Couriers.First(c => c.Provider == CourierProvider.Pathao).Id);
+        foreach (var (k, v) in new[] { ("base_url", "https://sandbox.example.test/"), ("client_id", "CLIENT-ID-1234"), ("client_secret", "SECRET-abcd"), ("username", "ops@example.test"), ("password", "pass-wxyz") })
+            await _shipping.UpdateCourierCredentialAsync(pathao.Id, new UpdateCourierCredentialDto { Environment = CourierEnvironment.Sandbox, Key = k, Value = v });
+        await _shipping.UpdateCourierSettingsAsync(pathao.Id, new UpdateCourierSettingsDto
+        {
+            DisplayName = pathao.DisplayName, ShortCode = pathao.ShortCode, Color = pathao.Color, IsEnabled = true,
+            PickupStoreId = "5501", PickupStoreName = "Agrabad warehouse", DefaultDeliveryType = 48, DefaultItemType = 2, DefaultWeightKg = 1,
+        });
+        return pathao.Id;
     }
 
     private async Task<int> AddOrderAsync(string number, string product, string weight, string address, double due = 0)
@@ -64,33 +100,53 @@ public abstract class ShippingConfigAppService_Tests<TStartupModule> : DymoEnerg
     // ── charges & zones ───────────────────────────────────────────────────
 
     [Fact]
-    public async Task Should_Seed_Zones_With_Margins_And_Save_Changes()
+    public async Task Should_Price_Zones_From_Pathao_Instead_Of_Made_Up_Numbers()
     {
         var page = await _config.GetChargesAsync();
-        page.Zones.Count.ShouldBe(5);
-        page.Zones.First(z => z.Name == "Inside Dhaka").Margin.ShouldBe(10);
-        page.Zones.First(z => z.Name.StartsWith("Hill")).Margin.ShouldBe(-10);
-        page.BigItems.ShouldNotBeEmpty();
+        page.Zones.ShouldBeEmpty();                       // nothing invented
         page.ReturnPolicies.Count.ShouldBe(3);
 
-        // Seeding runs once, even when the page is opened again.
-        (await _config.GetChargesAsync()).Zones.Count.ShouldBe(5);
+        FakePathaoServer.Reset(PathaoPrices);
+        var pathaoId = await ConnectPathaoAsync();
+        (await _config.GetChargesAsync()).PathaoAccountId.ShouldBe(pathaoId);
 
-        var setting = page.Setting;
-        setting.FreeDeliveryOver = 25000; setting.FreeDeliveryEnabled = true;
-        await _config.UpdateSettingAsync(setting);
-        (await _config.GetChargesAsync()).Setting.FreeDeliveryOver.ShouldBe(25000);
+        var dhaka = await _config.CreateZoneAsync(new CreateUpdateShippingZoneDto
+        {
+            Name = "Inside Dhaka", Days = "1–2 days", PathaoCityId = 1, PathaoCityName = "Dhaka", PathaoZoneId = 298, PathaoZoneName = "Mirpur",
+        });
+        var unlinked = await _config.CreateZoneAsync(new CreateUpdateShippingZoneDto { Name = "Hill districts", Charge = 250 });
 
-        var zone = await _config.CreateZoneAsync(new CreateUpdateShippingZoneDto { Name = "Sylhet", Charge = 150, CourierCost = 120, Days = "3 days" });
-        zone.Order.ShouldBe(6);
-        zone.Margin.ShouldBe(30);
-        await _config.UpdateZoneAsync(zone.Id, new CreateUpdateShippingZoneDto { Name = "Sylhet division", Charge = 150, CourierCost = 160 });
-        (await _config.GetChargesAsync()).Zones.Single(z => z.Id == zone.Id).Margin.ShouldBe(-10);
-        await _config.DeleteZoneAsync(zone.Id);
-        (await _config.GetChargesAsync()).Zones.Count.ShouldBe(5);
+        var result = await _config.RefreshZonePricesAsync(new RefreshZonePricesInput());
+        result.Zones.Single(z => z.ZoneId == dhaka.Id).Ok.ShouldBeTrue();
+        result.Zones.Single(z => z.ZoneId == unlinked.Id).Ok.ShouldBeFalse();
+        result.CodFeePercent.ShouldBe(1);
 
-        var item = await _config.CreateItemAsync(new CreateUpdateShippingItemDto { Kind = ShippingItemKind.ReturnPolicy, Title = "Lost by courier" });
-        (await _config.GetChargesAsync()).ReturnPolicies.Last().Id.ShouldBe(item.Id);
+        var zones = (await _config.GetChargesAsync()).Zones;
+        var priced = zones.Single(z => z.Id == dhaka.Id);
+        priced.CourierCost.ShouldBe(110);
+        priced.CourierPerExtraKg.ShouldBe(25);
+        priced.Charge.ShouldBe(110);                       // no customer price yet: starts at Pathao's
+        priced.PriceCheckedAt.ShouldNotBeNull();
+        zones.Single(z => z.Id == unlinked.Id).CourierCost.ShouldBe(0);
+        (await _shipping.GetCourierAsync(pathaoId)).CodFeePercent.ShouldBe(1);
+
+        // The body Pathao got says which location and weight were priced.
+        var body = FakePathaoServer.Requests.First(r => r.Path.EndsWith("/merchant/price-plan")).Body;
+        body.ShouldContain("\"recipient_zone\":298");
+        body.ShouldContain("\"store_id\":\"5501\"");
+
+        // A customer price set by hand is kept on the next refresh.
+        await _config.UpdateZoneAsync(dhaka.Id, new CreateUpdateShippingZoneDto
+        {
+            Name = "Inside Dhaka", Charge = 130, PerExtraKg = 25, CourierCost = 110, PathaoCityId = 1, PathaoCityName = "Dhaka", PathaoZoneId = 298, PathaoZoneName = "Mirpur",
+        });
+        await _config.RefreshZonePricesAsync(new RefreshZonePricesInput { ZoneId = dhaka.Id });
+        var again = (await _config.GetChargesAsync()).Zones.Single(z => z.Id == dhaka.Id);
+        again.Charge.ShouldBe(130);
+        again.Margin.ShouldBe(20);
+
+        await _config.DeleteZoneAsync(unlinked.Id);
+        (await _config.GetChargesAsync()).Zones.Count.ShouldBe(1);
     }
 
     // ── rules ─────────────────────────────────────────────────────────────

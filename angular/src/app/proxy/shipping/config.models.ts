@@ -1,4 +1,4 @@
-import type { CourierSummaryDto } from './models';
+import type { CourierProvider, CourierSummaryDto } from './models';
 
 export enum ShippingItemKind { BigItem = 1, ReturnPolicy = 2, PackingRule = 3, CustomerMessage = 4 }
 
@@ -27,6 +27,13 @@ export interface ShippingZoneDto {
   days?: string | null;
   order: number;
   margin: number;
+  pathaoCityId?: number | null;
+  pathaoCityName?: string | null;
+  pathaoZoneId?: number | null;
+  pathaoZoneName?: string | null;
+  courierPerExtraKg: number;
+  priceCheckedAt?: string | null;
+  priceError?: string | null;
 }
 
 export interface CreateUpdateShippingZoneDto {
@@ -37,6 +44,16 @@ export interface CreateUpdateShippingZoneDto {
   courierCost: number;
   days?: string | null;
   order: number;
+  pathaoCityId?: number | null;
+  pathaoCityName?: string | null;
+  pathaoZoneId?: number | null;
+  pathaoZoneName?: string | null;
+}
+
+export interface RefreshZonePricesResultDto {
+  zones: { zoneId: number; name: string; ok: boolean; message: string }[];
+  codFeePercent?: number | null;
+  source: string;
 }
 
 export interface ShippingItemDto {
@@ -65,6 +82,8 @@ export interface ChargesPageDto {
   zones: ShippingZoneDto[];
   bigItems: ShippingItemDto[];
   returnPolicies: ShippingItemDto[];
+  pathaoAccountId?: number | null;
+  pathaoAccountName?: string | null;
 }
 
 // ── Rules & packaging ───────────────────────────────────────────────────────
@@ -118,6 +137,7 @@ export interface CodCourierDto {
   name: string;
   shortCode: string;
   color: string;
+  provider: CourierProvider;
   parcels: number;
   collected: number;
   fee: number;

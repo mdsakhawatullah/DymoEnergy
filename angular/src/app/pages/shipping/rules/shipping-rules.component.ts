@@ -5,6 +5,7 @@ import { ShippingConfigService } from '../../../proxy/shipping/shipping-config.s
 import { CourierRuleDto, CreateUpdateCourierRuleDto, RulesPageDto, ShippingItemKind } from '../../../proxy/shipping/config.models';
 import { tint } from '../../project-planning/project-planning.utils';
 import { ShippingItemListComponent } from '../item-list/shipping-item-list.component';
+import { courierMark } from '../courier-logo';
 
 /** The editable copy of a rule; empty strings and nulls mean "this condition is not used". */
 interface RuleForm {
@@ -55,6 +56,10 @@ export class ShippingRulesComponent implements OnInit {
   liveNumber(r: CourierRuleDto): number | null {
     if (!r.isEnabled) return null;
     return (this.page?.rules ?? []).filter(x => x.isEnabled).indexOf(r) + 1;
+  }
+
+  courierMark(id?: number | null): string | null {
+    return courierMark(this.page?.couriers.find(c => c.id === id)?.provider);
   }
 
   courierName(id?: number | null): string {

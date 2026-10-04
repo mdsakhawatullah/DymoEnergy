@@ -95,6 +95,15 @@ public static class DymoEnergyPermissions
         public const string ManageKeys = Default + ".ManageKeys";
     }
 
+    public static class Stock
+    {
+        public const string Default = GroupName + ".Stock";
+        /// <summary>Create and change draft entries, warehouses and suppliers.</summary>
+        public const string Edit    = Default + ".Edit";
+        /// <summary>Post entries (changes product stock) and reverse posted ones.</summary>
+        public const string Post    = Default + ".Post";
+    }
+
     public static class Companies
     {
         public const string Default = GroupName + ".Companies";

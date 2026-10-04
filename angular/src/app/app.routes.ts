@@ -122,6 +122,16 @@ export const APP_ROUTES: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'stock-entries/new',
+    loadComponent: () => import('./pages/stock-entries/entry/stock-entry.component').then(c => c.StockEntryComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'stock-entries/:id',
+    loadComponent: () => import('./pages/stock-entries/entry/stock-entry.component').then(c => c.StockEntryComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'stock-ledger',
     loadComponent: () => import('./pages/stock-ledger/stock-ledger.component').then(c => c.StockLedgerComponent),
     canActivate: [authGuard],

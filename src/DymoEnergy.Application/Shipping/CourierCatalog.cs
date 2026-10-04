@@ -29,7 +29,7 @@ public static class CourierCatalog
             new("username", "Merchant username", "The email you sign in to Pathao with.", false),
             new("password", "Password", "Pathao exchanges this for a token. Change it here whenever you change it there.", true),
             new(WebhookSecret, "Webhook secret", "The secret you set in Pathao's webhook settings. Status updates without it are refused.", true),
-            new(WebhookReply, "Webhook reply header", "Optional. If Pathao's webhook setup asks for a header in the reply, enter it as Name: Value.", false),
+            new(WebhookReply, "Webhook reply header", "Optional, extra header to send back (Name: Value). Pathao's own webhook check is answered automatically.", false),
         },
         [CourierProvider.Steadfast] = new List<Field>
         {

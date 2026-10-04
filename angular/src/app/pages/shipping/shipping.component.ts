@@ -23,6 +23,9 @@ import { fmtCompact, fmtFull } from '../budgets-costs/finance.utils';
 import { ShippingChargesComponent } from './charges/shipping-charges.component';
 import { ShippingCodComponent } from './cod/shipping-cod.component';
 import { ShippingRulesComponent } from './rules/shipping-rules.component';
+import { ShipmentDetailComponent } from './shipment-detail/shipment-detail.component';
+import { CourierBadgeComponent } from './courier-badge/courier-badge.component';
+import { courierLogo, courierMark } from './courier-logo';
 
 type TabKey = 'couriers' | 'shipments' | 'charges' | 'cod' | 'rules';
 
@@ -36,7 +39,7 @@ const PERM = {
   selector: 'app-shipping',
   templateUrl: './shipping.component.html',
   styleUrl: './shipping.component.css',
-  imports: [SharedModule, ShippingChargesComponent, ShippingCodComponent, ShippingRulesComponent],
+  imports: [SharedModule, ShippingChargesComponent, ShippingCodComponent, ShippingRulesComponent, ShipmentDetailComponent, CourierBadgeComponent],
 })
 export class ShippingComponent implements OnInit {
   readonly Env = CourierEnvironment;
@@ -80,6 +83,9 @@ export class ShippingComponent implements OnInit {
   sendResults: SendParcelResultDto[] = [];
   filter = '';
   refreshing = new Set<number>();
+  /** Parcel open in the detail drawer. */
+  detailId: number | null = null;
+  detailCourierId: number | null = null;
 
   canSend = false;
   canEdit = false;
@@ -120,6 +126,8 @@ export class ShippingComponent implements OnInit {
   money = (v: number) => fmtFull(v, '৳');
   compact = (v: number) => fmtCompact(v, { currencySymbol: '৳', compactMoney: true });
   tint = tint;
+  courierMark = courierMark;
+  courierLogo = courierLogo;
 
   // ── Couriers ────────────────────────────────────────────────────────────
   select(c: CourierSummaryDto): void {
@@ -362,6 +370,18 @@ export class ShippingComponent implements OnInit {
       },
       error: () => this.refreshing.delete(s.id),
     });
+  }
+
+  /** Keeps the list in step after Track inside the drawer. */
+  /** Kind of courier for an account, from the courier list already loaded. */
+  providerOf(accountId: number | null | undefined): CourierProvider | null {
+    return this.overview?.couriers.find(c => c.id === accountId)?.provider ?? null;
+  }
+
+  onDetailChanged(updated: ShipmentDto): void {
+    const list = this.page?.shipments ?? [];
+    const i = list.findIndex(x => x.id === updated.id);
+    if (i >= 0) list[i] = updated;
   }
 
   stagePill(stage: string): string {

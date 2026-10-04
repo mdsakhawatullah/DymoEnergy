@@ -22,6 +22,7 @@ using Volo.Abp.EntityFrameworkCore.Modeling;
 using Volo.Abp.FeatureManagement.EntityFrameworkCore;
 using Volo.Abp.Identity;
 using Volo.Abp.Identity.EntityFrameworkCore;
+using DymoEnergy.Stock;
 using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Volo.Abp.OpenIddict.EntityFrameworkCore;
@@ -85,6 +86,16 @@ public class DymoEnergyDbContext :
     public DbSet<ShippingListItem>  ShippingListItems  { get; set; }
     public DbSet<CourierRule>       CourierRules       { get; set; }
     public DbSet<CourierPayout>     CourierPayouts     { get; set; }
+    public DbSet<ShipmentEvent>     ShipmentEvents     { get; set; }
+
+    // Stock
+    public DbSet<Warehouse>            Warehouses            { get; set; }
+    public DbSet<StockSupplier>        StockSuppliers        { get; set; }
+    public DbSet<StockBalance>         StockBalances         { get; set; }
+    public DbSet<StockEntry>           StockEntries          { get; set; }
+    public DbSet<StockEntryLine>       StockEntryLines       { get; set; }
+    public DbSet<StockEntryAttachment> StockEntryAttachments { get; set; }
+    public DbSet<StockSerial>          StockSerials          { get; set; }
     public DbSet<UserSiteSetting>      UserSiteSettings      { get; set; }
     public DbSet<UserSiteSettingImage> UserSiteSettingImages { get; set; }
 
@@ -600,6 +611,10 @@ public class DymoEnergyDbContext :
             b.Property(x => x.Charge).HasPrecision(18, 2);
             b.Property(x => x.PerExtraKg).HasPrecision(18, 2);
             b.Property(x => x.CourierCost).HasPrecision(18, 2);
+            b.Property(x => x.CourierPerExtraKg).HasPrecision(18, 2);
+            b.Property(x => x.PathaoCityName).HasMaxLength(128);
+            b.Property(x => x.PathaoZoneName).HasMaxLength(128);
+            b.Property(x => x.PriceError).HasMaxLength(512);
         });
 
         builder.Entity<ShippingListItem>(b =>
@@ -637,6 +652,94 @@ public class DymoEnergyDbContext :
             b.Property(x => x.Reference).HasMaxLength(ShippingConsts.MaxShort);
             b.Property(x => x.Note).HasMaxLength(ShippingConsts.MaxText);
             b.HasIndex(x => x.CourierAccountId);
+        });
+
+        builder.Entity<ShipmentEvent>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "ShipmentEvents", DymoEnergyConsts.DbSchema);
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Status).IsRequired().HasMaxLength(128);
+            b.Property(x => x.Source).IsRequired().HasMaxLength(16);
+            b.Property(x => x.Event).HasMaxLength(64);
+            b.Property(x => x.Note).HasMaxLength(512);
+            b.Property(x => x.CollectedAmount).HasPrecision(18, 2);
+            b.HasIndex(x => x.ShipmentId);
+        });
+
+        /* ── Stock ──────────────────────────────────────────────────────── */
+        builder.Entity<Warehouse>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "Warehouses", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(128);
+            b.Property(x => x.ShortCode).IsRequired().HasMaxLength(8);
+            b.Property(x => x.Address).HasMaxLength(512);
+        });
+
+        builder.Entity<StockSupplier>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "StockSuppliers", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(256);
+            b.Property(x => x.Phone).HasMaxLength(32);
+            b.Property(x => x.Email).HasMaxLength(256);
+            b.Property(x => x.Address).HasMaxLength(512);
+            b.Property(x => x.Note).HasMaxLength(2000);
+        });
+
+        builder.Entity<StockBalance>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "StockBalances", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.AvgCost).HasPrecision(18, 2);
+            b.HasIndex(x => new { x.ProductId, x.WarehouseId }).IsUnique();
+        });
+
+        builder.Entity<StockEntry>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "StockEntries", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Number).IsRequired().HasMaxLength(32);
+            b.Property(x => x.InvoiceNumber).HasMaxLength(128);
+            b.Property(x => x.PurchaseOrder).HasMaxLength(128);
+            b.Property(x => x.TransportCost).HasPrecision(18, 2);
+            b.Property(x => x.Reference).HasMaxLength(256);
+            b.Property(x => x.Note).HasMaxLength(4000);
+            b.Property(x => x.PostedByName).HasMaxLength(256);
+            b.HasIndex(x => x.Number);
+            b.HasIndex(x => new { x.Status, x.Date });
+        });
+
+        builder.Entity<StockEntryLine>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "StockEntryLines", DymoEnergyConsts.DbSchema);
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.UnitCost).HasPrecision(18, 2);
+            b.Property(x => x.LandedUnitCost).HasPrecision(18, 2);
+            b.HasIndex(x => x.StockEntryId);
+            b.HasIndex(x => x.ProductId);
+        });
+
+        builder.Entity<StockEntryAttachment>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "StockEntryAttachments", DymoEnergyConsts.DbSchema);
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.FileName).IsRequired().HasMaxLength(256);
+            b.Property(x => x.Url).IsRequired().HasMaxLength(1024);
+            b.HasIndex(x => x.StockEntryId);
+        });
+
+        builder.Entity<StockSerial>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "StockSerials", DymoEnergyConsts.DbSchema);
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Serial).IsRequired().HasMaxLength(StockConsts.SerialMaxLength);
+            b.HasIndex(x => new { x.ProductId, x.Serial }).IsUnique();
+            b.HasIndex(x => x.Serial);
         });
 
         /* ── Quote Requests ─────────────────────────────────────────────── */

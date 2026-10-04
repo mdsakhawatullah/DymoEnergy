@@ -5,6 +5,9 @@
 .ch-table { min-width: 720px; }
 .ch-acts { white-space: nowrap; }
 .ch-acts .sh-icon[disabled] { opacity: 0.3; cursor: default; }
+.ch-head-acts { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+.ch-pathao { margin-top: 14px; padding: 12px 14px; border: 1px solid var(--sh-border, #E3E6E0); border-radius: 10px; background: var(--sh-inset, #F7F8F5); }
+.ch-drawer-acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .ch-warn { background: #FDECEA; color: #B42318; font-size: 13px; }
 .ch-rule { padding: 12px 0; border-top: 1px solid var(--sh-soft, #F1F3EE); display: flex; flex-direction: column; gap: 6px; }
 .ch-rule .sh-label { margin-top: 4px; }

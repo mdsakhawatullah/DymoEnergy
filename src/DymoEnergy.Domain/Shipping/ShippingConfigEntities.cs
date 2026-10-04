@@ -30,6 +30,18 @@ public class ShippingZone : FullAuditedAggregateRoot<int>
     public decimal CourierCost { get; set; }
     public string? Days        { get; set; }
     public int     Order       { get; set; }
+
+    // ── Where the courier cost comes from ─────────────────────────────────
+    /// <summary>A sample Pathao city and zone inside this zone; its Pathao price becomes the courier cost.</summary>
+    public int?    PathaoCityId   { get; set; }
+    public string? PathaoCityName { get; set; }
+    public int?    PathaoZoneId   { get; set; }
+    public string? PathaoZoneName { get; set; }
+    /// <summary>What Pathao charges for each kg above the included weight.</summary>
+    public decimal CourierPerExtraKg { get; set; }
+    public DateTime? PriceCheckedAt  { get; set; }
+    /// <summary>Last price-check problem, shown next to the zone; null when it worked.</summary>
+    public string? PriceError        { get; set; }
 }
 
 /// <summary>Editable text lists: big items, return policies, packing rules, customer messages.</summary>

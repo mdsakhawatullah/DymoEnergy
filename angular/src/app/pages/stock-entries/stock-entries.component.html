@@ -1,12 +1,217 @@
-<div class="card">
-  <div class="card-header">
-    <div class="row">
-      <div class="col col-md-6">
-        <h5 class="card-title">{{ '::Menu:StockEntry' | abpLocalization }}</h5>
-      </div>
+<div class="se">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="se-head">
+    <div>
+      <h1 class="se-title">Stock entries</h1>
+      <div class="se-sub">Every change to stock — goods received, taken out, moved or corrected. Posted entries update product stock.</div>
+    </div>
+    <div class="se-head__actions">
+      <button type="button" class="se-btn" (click)="placesOpen = true"><i class="bi bi-buildings"></i>Warehouses &amp; suppliers</button>
+      <button type="button" class="se-btn" [disabled]="exporting" (click)="export()"><i class="bi bi-download"></i>{{ exporting ? 'Exporting…' : 'Export' }}</button>
+      @if (canEdit) { <a class="se-btn se-btn--primary" routerLink="/stock-entries/new"><i class="bi bi-plus-lg"></i>New stock entry</a> }
     </div>
   </div>
-  <div class="card-body">
-    <p class="text-muted">Stock Entries page — coming soon.</p>
+
+  <!-- ── KPIs ───────────────────────────────────────────────────────────── -->
+  @if (overview; as o) {
+    <div class="sl-kpis">
+      <div class="se-card sl-kpi">
+        <span class="sl-kpi__icon" style="background:#E6F2EA;color:#0E6B3F"><i class="bi bi-wallet2"></i></span>
+        <div>
+          <span class="se-muted">Stock value (at cost)</span>
+          <strong class="sl-kpi__big">{{ lakh(o.stockValue) }}</strong>
+          <span class="se-small se-block">{{ o.stockUnits.toLocaleString('en-IN') }} units across {{ o.productsInStock }} products</span>
+          @if (o.productsWithoutCost) { <span class="se-small se-block is-amber" title="These have stock but were never received through a stock entry, so their cost is unknown.">{{ o.productsWithoutCost }} without a cost yet</span> }
+        </div>
+      </div>
+      <div class="se-card sl-kpi">
+        <span class="sl-kpi__icon" style="background:#E6F2EA;color:#0E6B3F"><i class="bi bi-download"></i></span>
+        <div>
+          <span class="se-muted">Received this month</span>
+          <strong class="sl-kpi__big">{{ signed(o.receivedUnits) }}</strong>
+          <span class="se-small se-block is-green">{{ lakh(o.receivedValue) }} · {{ o.receivedEntries }} {{ o.receivedEntries === 1 ? 'entry' : 'entries' }}</span>
+        </div>
+      </div>
+      <div class="se-card sl-kpi">
+        <span class="sl-kpi__icon" style="background:#FDECEA;color:#B42318"><i class="bi bi-upload"></i></span>
+        <div>
+          <span class="se-muted">Out this month</span>
+          <strong class="sl-kpi__big">{{ o.outUnits ? '−' + o.outUnits.toLocaleString('en-IN') : '0' }}</strong>
+          <span class="se-small se-block">{{ outText }}</span>
+        </div>
+      </div>
+      <div class="se-card sl-kpi">
+        <span class="sl-kpi__icon" style="background:#FDF0D9;color:#D97706"><i class="bi bi-exclamation-triangle"></i></span>
+        <div>
+          <span class="se-muted">Low or out of stock</span>
+          <strong class="sl-kpi__big">{{ o.lowCount }}</strong>
+          <span class="se-small se-block" [class.is-amber]="o.lowCount">{{ o.lowCount ? 'Restock suggested' : 'Everything is stocked' }}</span>
+        </div>
+      </div>
+    </div>
+
+    @if (o.restock.length) {
+      <div class="sl-restock">
+        <span class="sl-restock__label"><i class="bi bi-exclamation-triangle"></i>Needs restock</span>
+        <div class="sl-restock__chips">
+          @for (r of o.restock; track r.productId) {
+            <button type="button" class="sl-restock__chip" [disabled]="!canEdit" (click)="receiveOne(r.productId)" [title]="'Receive ' + r.name">
+              {{ r.name }} <b [class.is-red]="r.left <= 0" [class.is-amber]="r.left > 0">{{ r.left }} left</b>
+            </button>
+          }
+          @if (o.lowCount > o.restock.length) { <span class="se-small">+{{ o.lowCount - o.restock.length }} more</span> }
+        </div>
+        @if (canEdit) { <button type="button" class="se-btn se-btn--sm" (click)="receiveRestock()">Receive stock</button> }
+      </div>
+    }
+  }
+
+  <!-- ── Entries ────────────────────────────────────────────────────────── -->
+  <div class="se-card sl-list">
+    <div class="sl-tabs" role="tablist">
+      @for (t of tabs; track t.key) {
+        <button type="button" role="tab" class="se-tab" [class.is-active]="tab === t.key" [attr.aria-selected]="tab === t.key" (click)="setTab(t.key)">
+          @if (t.dot) { <span class="sl-dot" [style.background]="t.dot"></span> }
+          {{ t.label }}
+          @if (page) { <span class="sl-count">{{ t.count(page.counts) }}</span> }
+        </button>
+      }
+    </div>
+
+    <div class="sl-filters">
+      <label class="sl-search">
+        <i class="bi bi-search"></i>
+        <input type="search" [(ngModel)]="filter" (ngModelChange)="onSearch()" placeholder="Entry no., supplier, invoice or product" aria-label="Search entries" />
+      </label>
+      <select class="se-select sl-filter" [(ngModel)]="warehouseId" (ngModelChange)="filtersChanged()" aria-label="Warehouse">
+        <option [ngValue]="null">All warehouses</option>
+        @for (w of overview?.warehouses ?? []; track w.id) { <option [ngValue]="w.id">{{ w.name }}</option> }
+      </select>
+      <select class="se-select sl-filter" [(ngModel)]="days" (ngModelChange)="filtersChanged()" aria-label="Period">
+        @for (r of ranges; track r.label) { <option [ngValue]="r.value">{{ r.label }}</option> }
+      </select>
+      <select class="se-select sl-filter" [(ngModel)]="status" (ngModelChange)="filtersChanged()" aria-label="Status">
+        <option [ngValue]="null">Any status</option>
+        <option [ngValue]="Status.Posted">Posted</option>
+        <option [ngValue]="Status.Draft">Draft</option>
+        <option [ngValue]="Status.Reversed">Reversed</option>
+      </select>
+    </div>
+
+    <div class="sl-table-wrap">
+      <table class="sl-table">
+        <thead>
+          <tr><th class="sl-caret"></th><th>Entry</th><th>Type</th><th>Supplier / reason</th><th>Items</th><th class="is-right">Units</th><th class="is-right">Value</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          @for (e of page?.items ?? []; track e.id) {
+            <tr class="sl-row" [class.is-open]="expanded.has(e.id)" [class.is-hl]="highlight === e.id" (click)="toggle(e)">
+              <td class="sl-caret">
+                <button type="button" class="se-icon" [attr.aria-expanded]="expanded.has(e.id)" [attr.aria-label]="(expanded.has(e.id) ? 'Hide' : 'Show') + ' items of ' + e.number" (click)="$event.stopPropagation(); toggle(e)">
+                  <i class="bi" [ngClass]="expanded.has(e.id) ? 'bi-chevron-down' : 'bi-chevron-right'"></i>
+                </button>
+              </td>
+              <td><span class="se-mono se-block sl-num">{{ e.number }}</span><span class="se-small">{{ e.date | date: 'd MMM y' }}</span></td>
+              <td><span class="se-chip" [style.background]="typeMeta(e.type).bg" [style.color]="typeMeta(e.type).color"><i class="bi" [ngClass]="typeMeta(e.type).icon"></i>{{ typeMeta(e.type).label }}</span></td>
+              <td><strong class="se-block">{{ e.title }}</strong><span class="se-small">{{ e.subtitle }}</span></td>
+              <td>{{ e.itemCount }} {{ e.itemCount === 1 ? 'item' : 'items' }}</td>
+              <td class="is-right"><strong [ngClass]="unitsClass(e)">{{ unitsText(e) }}</strong></td>
+              <td class="is-right"><strong>{{ money(e.value) }}</strong></td>
+              <td><span class="se-status" [ngClass]="statusClass(e.status)">{{ statusLabel(e.status) }}</span></td>
+            </tr>
+
+            @if (expanded.has(e.id)) {
+              <tr class="sl-detail-row">
+                <td colspan="8">
+                  @if (details[e.id]; as d) {
+                    <div class="sl-detail">
+                      <table class="sl-lines">
+                        <thead>
+                          <tr>
+                            <th>Product</th>
+                            <th class="is-right">{{ d.type === Type.Adjustment ? 'Change' : 'Qty' }}</th>
+                            <th class="is-right">Unit cost</th>
+                            <th class="is-right">{{ d.type === Type.Transfer ? 'Left in ' + d.warehouseName : 'Stock after' }}</th>
+                            <th class="is-right">Line total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (l of d.lines; track l.id) {
+                            <tr>
+                              <td><strong class="se-block">{{ l.productName }}</strong>
+                                <span class="se-mono se-small">{{ l.sku }}@if (l.serials.length) { · {{ l.serials.length }} {{ l.serials.length === 1 ? 'serial' : 'serials' }} recorded }</span></td>
+                              <td class="is-right"><strong [class.is-green]="d.type !== Type.Transfer && (l.change > 0 || (d.status === Status.Draft && d.type === Type.StockIn))"
+                                [class.is-red]="d.type !== Type.Transfer && (l.change < 0 || (d.status === Status.Draft && d.type === Type.StockOut))"
+                                [class.is-blue]="d.type === Type.Transfer">{{ lineQty(d, l.change, l.quantity) }}</strong></td>
+                              <td class="is-right se-muted">{{ money(d.type === Type.StockIn && d.status === Status.Draft ? l.unitCost : l.landedUnitCost) }}</td>
+                              <td class="is-right se-muted">{{ d.status === Status.Draft ? '—' : l.stockAfter }}</td>
+                              <td class="is-right"><strong>{{ money(l.lineTotal) }}</strong></td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                      <div class="sl-detail__foot">
+                        <span class="se-small">
+                          @if (d.status === Status.Draft) { Draft — stock has not changed yet. }
+                          @else { Posted@if (d.postedByName) { by {{ d.postedByName }} } · {{ d.postedAt | date: 'd MMM, HH:mm' }} }
+                          @if (d.attachments.length) { · {{ d.attachments.length }} {{ d.attachments.length === 1 ? 'attachment' : 'attachments' }} }
+                          @if (d.reversesNumber) { · undoes <strong>{{ d.reversesNumber }}</strong> }
+                          @if (d.reversedByNumber) { · <span class="is-red">undone by <strong>{{ d.reversedByNumber }}</strong></span> }
+                          @if (d.note) { · {{ d.note }} }
+                        </span>
+                        <span class="sl-detail__acts">
+                          @for (a of d.attachments; track a.id) {
+                            <a class="se-btn se-btn--sm" [href]="a.url" target="_blank" rel="noopener" [title]="a.fileName"><i class="bi bi-paperclip"></i>{{ a.fileName.length > 18 ? a.fileName.slice(0, 16) + '…' : a.fileName }}</a>
+                          }
+                          <button type="button" class="se-btn se-btn--sm" (click)="print(d)">{{ d.type === Type.StockIn ? 'Print GRN' : 'Print slip' }}</button>
+                          @if (d.status === Status.Draft) {
+                            @if (canEdit) {
+                              <button type="button" class="se-btn se-btn--sm se-btn--danger" nz-popconfirm nzPopconfirmTitle="Delete this draft?" (nzOnConfirm)="deleteDraft(e)">Delete draft</button>
+                              <button type="button" class="se-btn se-btn--sm" (click)="open(e)">Continue editing</button>
+                            }
+                            @if (canPost) { <button type="button" class="se-btn se-btn--sm se-btn--primary" [disabled]="busy.has(e.id)" (click)="post(e)">{{ busy.has(e.id) ? 'Posting…' : 'Post' }}</button> }
+                          } @else if (d.status === Status.Posted && !d.reversesId && canPost) {
+                            <button type="button" class="se-btn se-btn--sm se-btn--danger" [disabled]="busy.has(e.id)" nz-popconfirm
+                              [nzPopconfirmTitle]="'Undo ' + d.number + '? A new entry with the opposite effect is posted; this one stays in the history.'" (nzOnConfirm)="reverse(e)">
+                              {{ busy.has(e.id) ? 'Reversing…' : 'Reverse entry' }}</button>
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  } @else {
+                    <nz-spin nzSimple class="sl-detail-spin"></nz-spin>
+                  }
+                </td>
+              </tr>
+            }
+          } @empty {
+            <tr><td colspan="8" class="se-empty">
+              @if (loading) { <nz-spin nzSimple></nz-spin> }
+              @else if (failed) { Could not load the entries. <button type="button" class="se-link" (click)="load()">Try again</button> }
+              @else { No entries match. @if (canEdit) { <a class="se-link" routerLink="/stock-entries/new">Add the first one</a> } }
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (page && page.totalCount) {
+      <div class="sl-foot">
+        <span class="se-muted">Showing <strong>{{ page.items.length }}</strong> of {{ page.totalCount }} {{ page.totalCount === 1 ? 'entry' : 'entries' }} · click a row to see its items</span>
+        @if (pageCount > 1) {
+          <nav class="sl-pages" aria-label="Pages">
+            @for (p of pages; track $index) {
+              @if (p === null) { <span class="sl-gap">…</span> }
+              @else { <button type="button" class="sl-page" [class.is-on]="p === pageIndex" [attr.aria-current]="p === pageIndex ? 'page' : null" (click)="goTo(p)">{{ p }}</button> }
+            }
+          </nav>
+        }
+      </div>
+    }
   </div>
 </div>
+
+@if (placesOpen && overview) {
+  <app-stock-places [warehouses]="overview.warehouses" [suppliers]="overview.suppliers" [canEdit]="canEdit"
+    (closed)="placesOpen = false" (changed)="loadOverview()" />
+}

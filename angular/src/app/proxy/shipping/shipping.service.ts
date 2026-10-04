@@ -6,8 +6,10 @@ import type {
   CourierEnvironment,
   CourierTestResultDto,
   CreateCourierDto,
+  PathaoLocationDto,
   PathaoStoreDto,
   SendParcelResultDto,
+  ShipmentDetailDto,
   ShipmentDto,
   ShipmentsPageDto,
   ShippingOverviewDto,
@@ -49,10 +51,13 @@ export class ShippingService {
 
   // ── Pathao ──────────────────────────────────────────────────────────────
   getPathaoStores = (id: number) => this.req<PathaoStoreDto[]>({ method: 'GET', url: `${BASE}/${id}/pathao-stores` });
+  getPathaoCities = (id: number) => this.req<PathaoLocationDto[]>({ method: 'GET', url: `${BASE}/${id}/pathao-cities` });
+  getPathaoZones = (id: number, cityId: number) => this.req<PathaoLocationDto[]>({ method: 'GET', url: `${BASE}/${id}/pathao-zones/${cityId}` });
 
   // ── Shipments ───────────────────────────────────────────────────────────
   getShipments = (filter?: string) => this.req<ShipmentsPageDto>({ method: 'GET', url: `${BASE}/shipments`, params: { filter } });
   sendParcels = (orderIds: number[], courierAccountId: number) =>
     this.req<SendParcelResultDto[]>({ method: 'POST', url: `${BASE}/send-parcels`, body: { orderIds, courierAccountId } });
+  getShipmentDetail = (id: number) => this.req<ShipmentDetailDto>({ method: 'GET', url: `${BASE}/${id}/shipment-detail` });
   refreshShipment = (id: number) => this.req<ShipmentDto>({ method: 'POST', url: `${BASE}/${id}/refresh-shipment` });
 }

@@ -133,6 +133,9 @@
     "Permission:Shipping.Send": "Send parcels to couriers",
     "Permission:Shipping.Edit": "Edit courier settings",
     "Permission:Shipping.ManageKeys": "Manage courier API keys",
+    "Permission:Stock": "Stock entries",
+    "Permission:Stock.Edit": "Create and edit draft stock entries",
+    "Permission:Stock.Post": "Post and reverse stock entries",
 
     "Enum:CompanyStatus.1": "Active",
     "Enum:CompanyStatus.2": "Inactive",

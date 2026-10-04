@@ -32,6 +32,13 @@ public class ShippingZoneDto
     public int     Order       { get; set; }
     /// <summary>Charge − courier cost: positive is kept, negative is lost on every parcel.</summary>
     public decimal Margin      { get; set; }
+    public int?    PathaoCityId   { get; set; }
+    public string? PathaoCityName { get; set; }
+    public int?    PathaoZoneId   { get; set; }
+    public string? PathaoZoneName { get; set; }
+    public decimal CourierPerExtraKg { get; set; }
+    public DateTime? PriceCheckedAt  { get; set; }
+    public string? PriceError        { get; set; }
 }
 
 public class CreateUpdateShippingZoneDto
@@ -43,6 +50,33 @@ public class CreateUpdateShippingZoneDto
     [Range(0, 10000000)] public decimal CourierCost { get; set; }
     [MaxLength(64)] public string? Days { get; set; }
     public int Order { get; set; }
+    public int? PathaoCityId { get; set; }
+    [MaxLength(128)] public string? PathaoCityName { get; set; }
+    public int? PathaoZoneId { get; set; }
+    [MaxLength(128)] public string? PathaoZoneName { get; set; }
+}
+
+/// <summary>Leave <see cref="ZoneId"/> empty to refresh every zone linked to Pathao.</summary>
+public class RefreshZonePricesInput
+{
+    public int? ZoneId { get; set; }
+}
+
+public class ZonePriceResultDto
+{
+    public int     ZoneId  { get; set; }
+    public string  Name    { get; set; } = string.Empty;
+    public bool    Ok      { get; set; }
+    public string  Message { get; set; } = string.Empty;
+}
+
+public class RefreshZonePricesResultDto
+{
+    public List<ZonePriceResultDto> Zones { get; set; } = new();
+    /// <summary>Pathao's cash-on-delivery fee %, copied to the Pathao courier settings; null when Pathao did not say.</summary>
+    public decimal? CodFeePercent { get; set; }
+    /// <summary>What was asked, e.g. "Pathao · live · normal delivery · parcel · 1 kg".</summary>
+    public string  Source { get; set; } = string.Empty;
 }
 
 public class ShippingItemDto
@@ -74,6 +108,9 @@ public class ChargesPageDto
     public List<ShippingZoneDto> Zones          { get; set; } = new();
     public List<ShippingItemDto> BigItems       { get; set; } = new();
     public List<ShippingItemDto> ReturnPolicies { get; set; } = new();
+    /// <summary>The Pathao account prices come from; null when none is switched on.</summary>
+    public int?   PathaoAccountId { get; set; }
+    public string? PathaoAccountName { get; set; }
 }
 
 // ── Rules & packaging ─────────────────────────────────────────────────────
@@ -148,6 +185,7 @@ public class CodCourierDto
     public string  Name      { get; set; } = string.Empty;
     public string  ShortCode { get; set; } = string.Empty;
     public string  Color     { get; set; } = string.Empty;
+    public CourierProvider Provider { get; set; }
     public int     Parcels   { get; set; }
     public decimal Collected { get; set; }
     public decimal Fee       { get; set; }

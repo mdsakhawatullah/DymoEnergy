@@ -2,6 +2,9 @@ import { Component, Input, OnInit } from '@angular/core';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModule } from '../../../shared/shared.module';
 import { ShippingConfigService } from '../../../proxy/shipping/shipping-config.service';
+import { ShippingService } from '../../../proxy/shipping/shipping.service';
+import { PathaoLocationDto } from '../../../proxy/shipping/models';
+import { Observable, of, switchMap } from 'rxjs';
 import { ChargesPageDto, ShippingItemKind, ShippingSettingDto, ShippingZoneDto } from '../../../proxy/shipping/config.models';
 import { fmtFull } from '../../budgets-costs/finance.utils';
 import { ShippingItemListComponent } from '../item-list/shipping-item-list.component';
@@ -28,7 +31,7 @@ export class ShippingChargesComponent implements OnInit {
   zoneId: number | null = null;
   zone = this.blankZone();
 
-  constructor(private api: ShippingConfigService, private message: NzMessageService) {}
+  constructor(private api: ShippingConfigService, private shipping: ShippingService, private message: NzMessageService) {}
 
   ngOnInit(): void {
     this.load();
@@ -89,29 +92,115 @@ export class ShippingChargesComponent implements OnInit {
 
   // ── Zones ───────────────────────────────────────────────────────────────
   private blankZone() {
-    return { name: '', note: '', charge: 0, perExtraKg: 0, courierCost: 0, days: '', order: 0 };
+    return {
+      name: '', note: '', charge: 0, perExtraKg: 0, courierCost: 0, days: '', order: 0,
+      pathaoCityId: null as number | null, pathaoZoneId: null as number | null,
+    };
   }
+
+  // Pathao locations for the zone drawer, loaded once per page.
+  cities: PathaoLocationDto[] = [];
+  areas: PathaoLocationDto[] = [];
+  citiesLoading = false;
+  areasLoading = false;
+  pathaoError = '';
+  refreshing = false;
+  refreshingId: number | null = null;
 
   startZone(z?: ShippingZoneDto): void {
     this.zoneId = z?.id ?? null;
     this.zone = z
-      ? { name: z.name, note: z.note ?? '', charge: z.charge, perExtraKg: z.perExtraKg, courierCost: z.courierCost, days: z.days ?? '', order: z.order }
+      ? {
+          name: z.name, note: z.note ?? '', charge: z.charge, perExtraKg: z.perExtraKg, courierCost: z.courierCost, days: z.days ?? '', order: z.order,
+          pathaoCityId: z.pathaoCityId ?? null, pathaoZoneId: z.pathaoZoneId ?? null,
+        }
       : this.blankZone();
+    // Show the saved names straight away, before Pathao's lists arrive.
+    this.areas = z?.pathaoZoneId ? [{ id: z.pathaoZoneId, name: z.pathaoZoneName ?? '' }] : [];
+    if (z?.pathaoCityId && !this.cities.some(c => c.id === z.pathaoCityId)) this.cities = [...this.cities, { id: z.pathaoCityId, name: z.pathaoCityName ?? '' }];
     this.zoneOpen = true;
+    this.loadCities();
+    if (z?.pathaoCityId) this.loadAreas(z.pathaoCityId, true);
+  }
+
+  private loadCities(): void {
+    const id = this.page?.pathaoAccountId;
+    if (!id || this.cities.length > 1 || this.citiesLoading) return;
+    this.citiesLoading = true;
+    this.pathaoError = '';
+    this.shipping.getPathaoCities(id).subscribe({
+      next: list => { this.citiesLoading = false; this.cities = list.sort((a, b) => a.name.localeCompare(b.name)); },
+      error: e => { this.citiesLoading = false; this.pathaoError = e?.error?.error?.message ?? 'Could not reach Pathao. Check its keys on Couriers & keys.'; },
+    });
+  }
+
+  private loadAreas(cityId: number, keep = false): void {
+    const id = this.page?.pathaoAccountId;
+    if (!id) return;
+    this.areasLoading = true;
+    if (!keep) { this.areas = []; this.zone.pathaoZoneId = null; }
+    this.shipping.getPathaoZones(id, cityId).subscribe({
+      next: list => { this.areasLoading = false; this.areas = list.sort((a, b) => a.name.localeCompare(b.name)); },
+      error: () => (this.areasLoading = false),
+    });
+  }
+
+  cityChanged(cityId: number | null): void {
+    if (cityId) this.loadAreas(cityId);
+    else { this.areas = []; this.zone.pathaoZoneId = null; }
   }
 
   get zoneMargin(): number {
     return (this.zone.charge || 0) - (this.zone.courierCost || 0);
   }
 
-  saveZone(): void {
+  private zoneInput() {
+    const z = this.zone;
+    return {
+      name: z.name.trim(), note: z.note.trim() || null, days: z.days.trim() || null, order: z.order,
+      charge: z.charge || 0, perExtraKg: z.perExtraKg || 0, courierCost: z.courierCost || 0,
+      pathaoCityId: z.pathaoZoneId ? z.pathaoCityId : null, pathaoCityName: z.pathaoZoneId ? this.cities.find(c => c.id === z.pathaoCityId)?.name ?? null : null,
+      pathaoZoneId: z.pathaoZoneId, pathaoZoneName: z.pathaoZoneId ? this.areas.find(a => a.id === z.pathaoZoneId)?.name ?? null : null,
+    };
+  }
+
+  /** Saves the zone; with <paramref name="price"/> also asks Pathao for its price right after. */
+  saveZone(price = false): void {
     if (!this.zone.name.trim()) return void this.message.warning('Give the zone a name.');
-    const input = { ...this.zone, name: this.zone.name.trim(), note: this.zone.note.trim() || null, days: this.zone.days.trim() || null };
+    if (price && !this.zone.pathaoZoneId) return void this.message.warning('Choose a Pathao city and zone first.');
     this.zoneSaving = true;
-    const call = this.zoneId ? this.api.updateZone(this.zoneId, input) : this.api.createZone(input);
-    call.subscribe({
-      next: () => { this.zoneSaving = false; this.zoneOpen = false; this.load(); },
+    const call: Observable<ShippingZoneDto> = this.zoneId ? this.api.updateZone(this.zoneId, this.zoneInput()) : this.api.createZone(this.zoneInput());
+    call.pipe(switchMap(saved => (price ? this.api.refreshZonePrices(saved.id) : of(null)))).subscribe({
+      next: r => {
+        this.zoneSaving = false;
+        this.zoneOpen = false;
+        const res = r?.zones[0];
+        if (res) res.ok ? this.message.success(`${res.name}: Pathao charges ${res.message}.`) : this.message.error(`${res.name}: ${res.message}`, { nzDuration: 8000 });
+        this.load();
+      },
       error: () => (this.zoneSaving = false),
+    });
+  }
+
+  get linkedCount(): number {
+    return (this.page?.zones ?? []).filter(z => z.pathaoZoneId).length;
+  }
+
+  refreshPrices(z?: ShippingZoneDto): void {
+    this.refreshing = !z;
+    this.refreshingId = z?.id ?? null;
+    this.api.refreshZonePrices(z?.id).subscribe({
+      next: r => {
+        this.refreshing = false;
+        this.refreshingId = null;
+        const ok = r.zones.filter(x => x.ok).length;
+        const bad = r.zones.filter(x => !x.ok && x.message !== 'No Pathao location chosen.');
+        if (ok) this.message.success(`${ok} ${ok === 1 ? 'price' : 'prices'} updated from ${r.source}.${r.codFeePercent != null ? ` Pathao's cash fee: ${r.codFeePercent}%.` : ''}`, { nzDuration: 6000 });
+        if (bad.length) this.message.error(bad.map(x => `${x.name}: ${x.message}`).join('  •  '), { nzDuration: 10000 });
+        if (!ok && !bad.length) this.message.info('No zone is linked to a Pathao location yet. Edit a zone and choose one.');
+        this.load();
+      },
+      error: () => { this.refreshing = false; this.refreshingId = null; },
     });
   }
 
@@ -123,8 +212,11 @@ export class ShippingChargesComponent implements OnInit {
     const zones = this.page?.zones ?? [];
     const a = zones[index], b = zones[index + step];
     if (!a || !b) return;
-    const dto = (z: ShippingZoneDto, order: number) =>
-      ({ name: z.name, note: z.note, charge: z.charge, perExtraKg: z.perExtraKg, courierCost: z.courierCost, days: z.days, order });
+    // Send everything back, including the Pathao link, so reordering never clears it.
+    const dto = (z: ShippingZoneDto, order: number) => ({
+      name: z.name, note: z.note, charge: z.charge, perExtraKg: z.perExtraKg, courierCost: z.courierCost, days: z.days, order,
+      pathaoCityId: z.pathaoCityId, pathaoCityName: z.pathaoCityName, pathaoZoneId: z.pathaoZoneId, pathaoZoneName: z.pathaoZoneName,
+    });
     const orderA = a.order === b.order ? index + 1 : a.order;
     const orderB = a.order === b.order ? index + 1 + step : b.order;
     this.api.updateZone(a.id, dto(a, orderB)).subscribe(() => this.api.updateZone(b.id, dto(b, orderA)).subscribe(() => this.load()));

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DymoEnergy.Permissions;
 using DymoEnergy.Shared;
+using DymoEnergy.Stock;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
@@ -17,13 +18,16 @@ public class ProductAppService : ApplicationService, IProductAppService
 {
     private readonly IRepository<Product, int>      _productRepository;
     private readonly IRepository<ProductImage, int> _imageRepository;
+    private readonly StockLedger                    _stockLedger;
 
     public ProductAppService(
         IRepository<Product, int>      productRepository,
-        IRepository<ProductImage, int> imageRepository)
+        IRepository<ProductImage, int> imageRepository,
+        StockLedger                    stockLedger)
     {
         _productRepository = productRepository;
         _imageRepository   = imageRepository;
+        _stockLedger       = stockLedger;
     }
 
     // ── READ ─────────────────────────────────────────────────────────────
@@ -150,7 +154,10 @@ public class ProductAppService : ApplicationService, IProductAppService
             !string.Equals(product.Slug, input.Slug, StringComparison.OrdinalIgnoreCase))
             await EnsureSlugIsUniqueAsync(input.Slug);
 
+        var oldStock = product.StockQuantity;
         ApplyInput(product, input);
+        // Products already tracked by stock entries get the change booked as an adjustment.
+        await _stockLedger.RecordProductPageChangeAsync(product, oldStock, CurrentUser.Id, CurrentUser.UserName);
         await _productRepository.UpdateAsync(product, autoSave: true);
 
         var imageQuery    = await _imageRepository.GetQueryableAsync();

@@ -31,14 +31,17 @@ public class ShippingAppService : ApplicationService, IShippingAppService
     private readonly PathaoClient     _pathao;
     private readonly OrderFactsBuilder _facts;
     private readonly IRepository<CourierRule, int> _rules;
+    private readonly IRepository<ShipmentEvent, int> _events;
+    private readonly IRepository<CourierPayout, int> _payouts;
 
     public ShippingAppService(
         IRepository<CourierAccount, int> accounts, IRepository<CourierApiLog, int> logs, IRepository<Shipment, int> shipments,
         IRepository<Order, int> orders, IRepository<OrderItem, int> orderItems, IRepository<Product, int> products,
-        CourierVault vault, CourierLogWriter log, PathaoClient pathao, OrderFactsBuilder facts, IRepository<CourierRule, int> rules)
+        CourierVault vault, CourierLogWriter log, PathaoClient pathao, OrderFactsBuilder facts, IRepository<CourierRule, int> rules,
+        IRepository<ShipmentEvent, int> events, IRepository<CourierPayout, int> payouts)
     {
         _accounts = accounts; _logs = logs; _shipments = shipments; _orders = orders; _orderItems = orderItems;
-        _products = products; _vault = vault; _log = log; _pathao = pathao; _facts = facts; _rules = rules;
+        _products = products; _vault = vault; _log = log; _pathao = pathao; _facts = facts; _rules = rules; _events = events; _payouts = payouts;
     }
 
     // ══ OVERVIEW ═════════════════════════════════════════════════════════════
@@ -367,6 +370,7 @@ public class ShippingAppService : ApplicationService, IShippingAppService
                 shipment.Status = call.Data.Status;
                 shipment.DeliveryFee = call.Data.DeliveryFee;
                 await _shipments.InsertAsync(shipment, autoSave: true);
+                await AddEventAsync(shipment, "sent", $"Sent to {a.DisplayName}");
             }
             else
             {
@@ -374,6 +378,7 @@ public class ShippingAppService : ApplicationService, IShippingAppService
                 await _shipments.InsertAsync(shipment, autoSave: true);
                 shipment.ConsignmentId = $"{a.ShortCode}-{shipment.Id:D5}";
                 await _shipments.UpdateAsync(shipment, autoSave: true);
+                await AddEventAsync(shipment, "sent", $"Handed to {a.DisplayName}");
             }
 
             results.Add(new SendParcelResultDto
@@ -398,13 +403,69 @@ public class ShippingAppService : ApplicationService, IShippingAppService
             var call = await _pathao.GetOrderInfoAsync(conn.BaseUrl, conn.Token, s.ConsignmentId);
             await _log.WriteAsync(a.Id, a.ActiveEnvironment, "Order info", call, call.Data?.Status);
             var info = Unwrap(call);
+            var changed = !string.Equals(s.Status, info.Status, StringComparison.OrdinalIgnoreCase);
             s.Status = info.Status;
             s.StatusSlug = info.StatusSlug;
             s.StatusAt = info.UpdatedAt ?? Clock.Now;
             await _shipments.UpdateAsync(s, autoSave: true);
+            if (changed) await AddEventAsync(s, "tracked", "Checked with Pathao");
         }
         return (await MapShipmentsAsync(new List<Shipment> { s }, await _accounts.GetListAsync())).Single();
     }
+
+    public async Task<ShipmentDetailDto> GetShipmentDetailAsync(int id)
+    {
+        var s = await _shipments.GetAsync(id);
+        var accounts = await _accounts.GetListAsync();
+        var a = accounts.FirstOrDefault(x => x.Id == s.CourierAccountId);
+        var dto = new ShipmentDetailDto
+        {
+            Shipment = (await MapShipmentsAsync(new List<Shipment> { s }, accounts)).Single(),
+            MerchantOrderId = s.MerchantOrderId, RecipientPhone = s.RecipientPhone, WeightKg = s.WeightKg, ItemType = s.ItemType, Note = s.Note,
+            CourierShortCode = a?.ShortCode ?? "", CanTrack = a?.Provider == CourierProvider.Pathao && !string.IsNullOrEmpty(s.ConsignmentId),
+        };
+
+        var events = (await _events.GetListAsync(e => e.ShipmentId == id)).OrderBy(e => e.Time).ThenBy(e => e.Id).ToList();
+        dto.Events = events.Select(e => new ShipmentEventDto
+        {
+            Time = e.Time, Status = e.Status, Stage = CourierCatalog.Stage(e.Status), Source = e.Source, Event = e.Event, Note = e.Note, CollectedAmount = e.CollectedAmount,
+        }).ToList();
+        // Parcels sent before history was kept: show when it was sent and where it is now.
+        if (!events.Any(e => e.Source == "sent"))
+            dto.Events.Insert(0, new ShipmentEventDto { Time = s.CreationTime, Status = "Sent", Stage = "ready", Source = "sent", Note = a == null ? null : $"Sent to {a.DisplayName}" });
+        if (dto.Events.Count == 0 || !string.Equals(dto.Events[^1].Status, s.Status, StringComparison.OrdinalIgnoreCase))
+            dto.Events.Add(new ShipmentEventDto { Time = s.StatusAt ?? s.CreationTime, Status = s.Status, Stage = CourierCatalog.Stage(s.Status), Source = "now" });
+
+        if (s.PayoutId is { } payoutId && await _payouts.FindAsync(payoutId) is { } payout)
+            dto.PayoutNote = $"Cash paid out on {payout.Date:d MMM yyyy}{(string.IsNullOrEmpty(payout.Reference) ? "" : " · " + payout.Reference)}";
+
+        var order = await _orders.FindAsync(s.OrderId);
+        if (order != null)
+        {
+            var items = (await _orderItems.GetListAsync(i => i.OrderId == order.Id)).OrderBy(i => i.DisplayOrder).ThenBy(i => i.Id);
+            dto.Order = new ShipmentOrderDto
+            {
+                Id = order.Id, Number = order.OrderNumber ?? $"#{order.Id}", Date = order.OrderDate, Status = order.Status.ToString(),
+                PaymentType = order.PaymentType?.ToString(), CustomerName = order.CustomerName, CustomerPhone = order.CustomerPhone,
+                CustomerEmail = order.CustomerEmail, DeliveryContact = order.DeliveryContact, DeliveryPhone = order.DeliveryPhone,
+                DeliveryAddress = order.DeliveryAddress, Notes = order.Notes, Subtotal = order.Subtotal, DiscountTotal = order.DiscountTotal,
+                TaxTotal = order.TaxTotal, ShippingCost = order.ShippingCost, GrandTotal = order.GrandTotal, AmountPaid = order.AmountPaid,
+                BalanceDue = order.BalanceDue,
+                Items = items.Select(i => new ShipmentOrderItemDto
+                {
+                    Name = i.ProductName ?? "Item", Sku = i.Sku, Quantity = i.Quantity, UnitPrice = i.UnitPrice,
+                    LineTotal = i.LineTotal != 0 ? i.LineTotal : i.Quantity * i.UnitPrice,
+                }).ToList(),
+            };
+        }
+        return dto;
+    }
+
+    private async Task AddEventAsync(Shipment s, string source, string? note) =>
+        await _events.InsertAsync(new ShipmentEvent
+        {
+            ShipmentId = s.Id, Time = s.StatusAt ?? Clock.Now, Status = s.Status.Length > 128 ? s.Status[..128] : s.Status, Source = source, Note = note,
+        }, autoSave: true);
 
     // ══ HELPERS ══════════════════════════════════════════════════════════════
 
@@ -610,7 +671,7 @@ public class ShippingAppService : ApplicationService, IShippingAppService
             return new ShipmentDto
             {
                 Id = s.Id, OrderId = s.OrderId, OrderNumber = numbers.GetValueOrDefault(s.OrderId, $"#{s.OrderId}"), ConsignmentId = s.ConsignmentId,
-                CourierAccountId = s.CourierAccountId, CourierName = a?.DisplayName ?? "Courier", CourierColor = a?.Color ?? "#6B7280",
+                CourierAccountId = s.CourierAccountId, CourierName = a?.DisplayName ?? "Courier", CourierColor = a?.Color ?? "#6B7280", CourierProvider = a?.Provider ?? default,
                 Environment = s.Environment, Status = s.Status, Stage = CourierCatalog.Stage(s.Status), StatusAt = s.StatusAt,
                 CreationTime = s.CreationTime, RecipientName = s.RecipientName, RecipientAddress = s.RecipientAddress,
                 CodAmount = s.CodAmount, DeliveryFee = s.DeliveryFee, DeliveryType = s.DeliveryType,

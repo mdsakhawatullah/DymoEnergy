@@ -17,7 +17,7 @@
               <div class="ru-line"><span class="ru-kw">If</span><span>{{ r.ifText }}</span></div>
               <div class="ru-line"><span class="ru-kw">Then</span>
                 @if (r.noParcel) { <span class="sh-chip is-grey ru-chip">No courier parcel</span> }
-                @else { <span class="sh-chip ru-chip" [style.background]="tint(r.courierColor || '#5F6B63', 0.12)" [style.color]="r.courierColor || '#5F6B63'">{{ courierName(r.courierAccountId) }}</span> }
+                @else { <span class="sh-chip ru-chip" [style.background]="tint(r.courierColor || '#5F6B63', 0.12)" [style.color]="r.courierColor || '#5F6B63'">@if (courierMark(r.courierAccountId); as m) { <img class="ru-logo" [src]="m" alt="" /> }{{ courierName(r.courierAccountId) }}</span> }
                 @if (r.thenNote) { <span class="sh-small">{{ r.thenNote }}</span> }
               </div>
             </div>

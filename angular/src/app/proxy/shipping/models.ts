@@ -129,6 +129,7 @@ export interface ShipmentDto {
   courierAccountId: number;
   courierName: string;
   courierColor: string;
+  courierProvider: CourierProvider;
   environment: CourierEnvironment;
   status: string;
   stage: 'ready' | 'picked' | 'transit' | 'delivered' | 'failed' | 'returned' | 'cancelled';
@@ -144,3 +145,52 @@ export interface ShipmentDto {
 export interface ShipmentCountsDto { ready: number; pickedUp: number; inTransit: number; deliveredToday: number; failedOrReturning: number; }
 
 export interface ShipmentsPageDto { ready: ReadyOrderDto[]; counts: ShipmentCountsDto; shipments: ShipmentDto[]; }
+
+export interface PathaoLocationDto { id: number; name: string; homeDeliveryAvailable?: boolean | null; pickupAvailable?: boolean | null; }
+
+export interface ShipmentEventDto {
+  time: string;
+  status: string;
+  stage: ShipmentDto['stage'];
+  source: 'sent' | 'webhook' | 'tracked' | 'now';
+  event?: string | null;
+  note?: string | null;
+  collectedAmount?: number | null;
+}
+
+export interface ShipmentOrderDto {
+  id: number;
+  number: string;
+  date: string;
+  status: string;
+  paymentType?: string | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  customerEmail?: string | null;
+  deliveryContact?: string | null;
+  deliveryPhone?: string | null;
+  deliveryAddress?: string | null;
+  notes?: string | null;
+  subtotal: number;
+  discountTotal: number;
+  taxTotal: number;
+  shippingCost: number;
+  grandTotal: number;
+  amountPaid: number;
+  balanceDue: number;
+  items: { name: string; sku?: string | null; quantity: number; unitPrice: number; lineTotal: number }[];
+}
+
+export interface ShipmentDetailDto {
+  shipment: ShipmentDto;
+  merchantOrderId?: string | null;
+  recipientPhone: string;
+  weightKg: number;
+  itemType: number;
+  note?: string | null;
+  courierShortCode: string;
+  canTrack: boolean;
+  payoutNote?: string | null;
+  events: ShipmentEventDto[];
+  order?: ShipmentOrderDto | null;
+}

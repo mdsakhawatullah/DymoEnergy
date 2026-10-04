@@ -87,3 +87,18 @@ public class Shipment : FullAuditedAggregateRoot<int>
     /// <summary>Set once the courier has paid this parcel’s cash out.</summary>
     public int?     PayoutId         { get; set; }
 }
+
+/// <summary>One step in a parcel's life: sent, a webhook from the courier, or a manual track.</summary>
+public class ShipmentEvent : Volo.Abp.Domain.Entities.Entity<int>
+{
+    public int      ShipmentId { get; set; }
+    public System.DateTime Time { get; set; }
+    public string   Status     { get; set; } = string.Empty;
+    /// <summary>sent | webhook | tracked</summary>
+    public string   Source     { get; set; } = "webhook";
+    /// <summary>The courier's event name, e.g. order.delivery-failed.</summary>
+    public string?  Event      { get; set; }
+    /// <summary>Failure reason or other detail the courier sent.</summary>
+    public string?  Note       { get; set; }
+    public decimal? CollectedAmount { get; set; }
+}

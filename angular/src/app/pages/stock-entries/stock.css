@@ -1,0 +1,58 @@
+:host { display: block; }
+
+.se {
+  --se-accent: var(--de-primary, #0E6B3F);
+  --se-border: var(--de-border, #E3E6E0);
+  --se-soft: var(--de-border-soft, #F1F3EE);
+  --se-muted: var(--de-text-muted, #5F6B63);
+  --se-text: var(--de-text, #16201A);
+  --se-inset: var(--de-surface-muted, #F7F8F5);
+  color: var(--se-text);
+  font-family: var(--de-font, system-ui, sans-serif);
+}
+.is-red { color: #B42318; }
+.is-amber { color: #9A5B00; }
+.is-green { color: #0B5A34; }
+.is-blue { color: #1E40AF; }
+
+.se-title { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.se-sub { color: var(--se-muted); font-size: 13px; }
+.se-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.se-head__actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.se-btn { height: 40px; padding: 0 16px; border-radius: 8px; border: 1px solid var(--de-border-input, #D8DDD5); background: #fff; color: var(--se-text); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; text-decoration: none; }
+.se-btn:hover { background: var(--se-inset); }
+.se-btn[disabled] { opacity: 0.55; cursor: default; }
+.se-btn--primary { background: var(--se-accent); border-color: var(--se-accent); color: #fff; }
+.se-btn--primary:hover { background: var(--se-accent); filter: brightness(0.92); }
+.se-btn--sm { height: 32px; padding: 0 12px; font-size: 13px; font-weight: 500; }
+.se-btn--danger { color: #B42318; border-color: #F3C7C2; }
+.se-btn:focus-visible, .se-link:focus-visible, .se-icon:focus-visible, .se-tab:focus-visible, .se-type:focus-visible { outline: 2px solid var(--se-accent); outline-offset: 2px; }
+.se-link { background: none; border: 0; padding: 0; color: var(--se-accent); font: inherit; font-size: 13px; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.se-icon { width: 30px; height: 30px; border: 0; border-radius: 6px; background: none; color: var(--se-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.se-icon:hover { background: var(--se-soft); color: var(--se-text); }
+
+.se-card { background: #fff; border: 1px solid var(--se-border); border-radius: 12px; }
+.se-card h2 { font-size: 16px; font-weight: 700; margin: 0; }
+.se-card__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--se-soft); flex-wrap: wrap; }
+.se-pad { padding: 16px 20px; }
+.se-muted { color: var(--se-muted); font-size: 13px; }
+.se-small { font-size: 12px; color: var(--se-muted); }
+.se-block { display: block; }
+.se-mono { font-family: var(--de-font-mono, ui-monospace, monospace); font-size: 12px; }
+.se-empty { color: var(--se-muted); font-size: 13px; padding: 24px 20px; text-align: center; }
+.se-loading { display: block; padding: 60px 0; text-align: center; }
+.se-mt { margin-top: 12px; }
+
+.se-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 2px 10px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.se-status { display: inline-block; border-radius: 6px; padding: 2px 10px; font-size: 13px; font-weight: 600; }
+.se-status.is-posted { background: #E6F2EA; color: #0B5A34; }
+.se-status.is-draft { background: #fff; border: 1px dashed #C9CFC9; color: var(--se-muted); }
+.se-status.is-reversed { background: #FDECEA; color: #B42318; }
+
+.se-label { display: block; font-size: 14px; font-weight: 600; margin: 0 0 6px; }
+.se-label .se-opt { font-weight: 400; color: var(--se-muted); }
+.se-select, .se-input { width: 100%; height: 42px; border: 1px solid var(--de-border-input, #D8DDD5); border-radius: 8px; padding: 0 12px; font: inherit; font-size: 14px; background: #fff; color: var(--se-text); }
+.se-select:focus, .se-input:focus { outline: none; border-color: var(--se-accent); box-shadow: 0 0 0 3px rgba(14, 107, 63, 0.12); }
+.se-select[disabled], .se-input[disabled] { background: var(--se-inset); }
+textarea.se-input { height: auto; padding: 10px 12px; resize: vertical; }

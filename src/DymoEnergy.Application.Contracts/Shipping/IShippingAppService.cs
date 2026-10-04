@@ -33,6 +33,8 @@ public interface IShippingAppService : IApplicationService
     Task<ShipmentsPageDto>        GetShipmentsAsync(GetShipmentsInput input);
     Task<List<SendParcelResultDto>> SendParcelsAsync(SendParcelsDto input);
     Task<ShipmentDto>             RefreshShipmentAsync(int id);
+    /// <summary>The parcel, its status history and the order it carries.</summary>
+    Task<ShipmentDetailDto>       GetShipmentDetailAsync(int id);
 }
 
 /// <summary>Handles status updates pushed by a courier. Called by an anonymous controller.</summary>

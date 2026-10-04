@@ -30,3 +30,6 @@
   .ru-side { position: static; }
   .ru-rule { flex-wrap: wrap; }
 }
+
+.ru-chip { display: inline-flex; align-items: center; gap: 6px; }
+.ru-logo { width: 16px; height: 16px; object-fit: contain; }

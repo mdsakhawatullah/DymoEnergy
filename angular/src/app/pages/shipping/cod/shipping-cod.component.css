@@ -4,7 +4,7 @@
 .cod-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .cod-side { position: sticky; top: 8px; display: flex; flex-direction: column; gap: 10px; }
 .cod-table { min-width: 760px; }
-.cod-code { width: 34px; height: 28px; margin-right: 10px; vertical-align: middle; }
+.cod-code { margin-right: 10px; vertical-align: middle; }
 .sh-table tr.is-hl td { background: #FEF8E7; }
 .cod-issue { border-left: 3px solid #D97706; background: #FEF8E7; border-radius: 8px; padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .cod-issue.is-red { border-color: #B42318; background: #FDECEA; }

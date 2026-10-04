@@ -12,6 +12,8 @@ public interface IShippingConfigAppService : IApplicationService
     Task<ShippingZoneDto>    CreateZoneAsync(CreateUpdateShippingZoneDto input);
     Task<ShippingZoneDto>    UpdateZoneAsync(int id, CreateUpdateShippingZoneDto input);
     Task                     DeleteZoneAsync(int id);
+    /// <summary>Asks Pathao's price plan for each linked zone (or just one) and stores the courier cost.</summary>
+    Task<RefreshZonePricesResultDto> RefreshZonePricesAsync(RefreshZonePricesInput input);
 
     // ── Lists (big items, return policies, packing, customer messages) ────
     Task<ShippingItemDto> CreateItemAsync(CreateUpdateShippingItemDto input);

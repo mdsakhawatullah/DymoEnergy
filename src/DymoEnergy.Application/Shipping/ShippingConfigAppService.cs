@@ -30,15 +30,17 @@ public class ShippingConfigAppService : ApplicationService, IShippingConfigAppSe
     private readonly IRepository<FinanceAccount, int>   _financeAccounts;
     private readonly IRepository<FinanceTransaction, int> _financeTxs;
     private readonly OrderFactsBuilder _facts;
+    private readonly IShippingAppService _shipping;
 
     public ShippingConfigAppService(
         IRepository<ShippingSetting, int> settings, IRepository<ShippingZone, int> zones, IRepository<ShippingListItem, int> items,
         IRepository<CourierRule, int> rules, IRepository<CourierPayout, int> payouts, IRepository<CourierAccount, int> accounts,
         IRepository<Shipment, int> shipments, IRepository<Order, int> orders,
-        IRepository<FinanceAccount, int> financeAccounts, IRepository<FinanceTransaction, int> financeTxs, OrderFactsBuilder facts)
+        IRepository<FinanceAccount, int> financeAccounts, IRepository<FinanceTransaction, int> financeTxs, OrderFactsBuilder facts,
+        IShippingAppService shipping)
     {
         _settings = settings; _zones = zones; _items = items; _rules = rules; _payouts = payouts; _accounts = accounts;
-        _shipments = shipments; _orders = orders; _financeAccounts = financeAccounts; _financeTxs = financeTxs; _facts = facts;
+        _shipments = shipments; _orders = orders; _financeAccounts = financeAccounts; _financeTxs = financeTxs; _facts = facts; _shipping = shipping;
     }
 
     // ══ CHARGES & ZONES ══════════════════════════════════════════════════════
@@ -47,8 +49,10 @@ public class ShippingConfigAppService : ApplicationService, IShippingConfigAppSe
     {
         await EnsureSeedAsync();
         var items = await _items.GetListAsync();
+        var pathao = await PathaoAccountAsync();
         return new ChargesPageDto
         {
+            PathaoAccountId = pathao?.Id, PathaoAccountName = pathao?.DisplayName,
             Setting = MapSetting(await LoadSettingAsync()),
             Zones = (await _zones.GetListAsync()).OrderBy(z => z.Order).ThenBy(z => z.Id).Select(MapZone).ToList(),
             BigItems = ItemsOf(items, ShippingItemKind.BigItem),
@@ -90,6 +94,71 @@ public class ShippingConfigAppService : ApplicationService, IShippingConfigAppSe
 
     [Authorize(DymoEnergyPermissions.Shipping.Edit)]
     public async Task DeleteZoneAsync(int id) => await _zones.DeleteAsync(id, autoSave: true);
+
+    /// <summary>
+    /// Courier cost per zone straight from Pathao's price plan: the price for the included weight at the
+    /// zone's sample Pathao location, and the extra for one more kg. A zone the customer price was never
+    /// set for (0) starts at Pathao's price, so nothing is charged below cost by accident.
+    /// </summary>
+    [Authorize(DymoEnergyPermissions.Shipping.Edit)]
+    public async Task<RefreshZonePricesResultDto> RefreshZonePricesAsync(RefreshZonePricesInput request)
+    {
+        var zoneId = request.ZoneId;
+        var pathao = await PathaoAccountAsync() ?? throw new UserFriendlyException("Switch on a Pathao courier and save its keys first.");
+        var setting = await LoadSettingAsync();
+        var zones = (await _zones.GetListAsync(z => zoneId == null || z.Id == zoneId)).OrderBy(z => z.Order).ToList();
+        if (zoneId != null && zones.Count == 0) throw new UserFriendlyException("That zone no longer exists.");
+
+        // Pathao prices from 0.5 to 10 kg.
+        var baseKg = Math.Clamp(setting.WeightIncludedKg, 0.5m, 9m);
+        var result = new RefreshZonePricesResultDto
+        {
+            Source = $"{pathao.DisplayName} · {(pathao.ActiveEnvironment == CourierEnvironment.Live ? "live" : "sandbox")} · "
+                   + $"{(pathao.DefaultDeliveryType == 12 ? "on demand" : "normal delivery")} · {(pathao.DefaultItemType == 1 ? "document" : "parcel")} · {baseKg:0.##} kg",
+        };
+
+        foreach (var z in zones)
+        {
+            if (z.PathaoCityId is not { } city || z.PathaoZoneId is not { } area)
+            {
+                result.Zones.Add(new ZonePriceResultDto { ZoneId = z.Id, Name = z.Name, Message = "No Pathao location chosen." });
+                continue;
+            }
+            try
+            {
+                var input = new PathaoPriceInputDto { ItemType = pathao.DefaultItemType, DeliveryType = pathao.DefaultDeliveryType, CityId = city, ZoneId = area, WeightKg = baseKg };
+                var first = await _shipping.GetPathaoPriceAsync(pathao.Id, input);
+                input.WeightKg = baseKg + 1;
+                var next = await _shipping.GetPathaoPriceAsync(pathao.Id, input);
+
+                z.CourierCost = Math.Round(first.FinalPrice, 2);
+                z.CourierPerExtraKg = Math.Max(0, Math.Round(next.FinalPrice - first.FinalPrice, 2));
+                z.PriceCheckedAt = Clock.Now;
+                z.PriceError = null;
+                if (z.Charge == 0) { z.Charge = z.CourierCost; z.PerExtraKg = z.CourierPerExtraKg; }
+
+                // Pathao sends the cash fee as a fraction (0.01) on some accounts and a percent (1) on others.
+                if (first.CodPercentage > 0) result.CodFeePercent = first.CodPercentage <= 1 ? first.CodPercentage * 100 : first.CodPercentage;
+                result.Zones.Add(new ZonePriceResultDto { ZoneId = z.Id, Name = z.Name, Ok = true, Message = $"৳{z.CourierCost:0.##} + ৳{z.CourierPerExtraKg:0.##}/kg" });
+            }
+            catch (UserFriendlyException ex)
+            {
+                z.PriceError = ex.Message.Length > 500 ? ex.Message[..500] : ex.Message;
+                result.Zones.Add(new ZonePriceResultDto { ZoneId = z.Id, Name = z.Name, Message = ex.Message });
+            }
+            await _zones.UpdateAsync(z, autoSave: true);
+        }
+
+        if (result.CodFeePercent is { } cod && cod <= 20 && pathao.CodFeePercent != cod)
+        {
+            pathao.CodFeePercent = Math.Round(cod, 2);
+            await _accounts.UpdateAsync(pathao, autoSave: true);
+        }
+        return result;
+    }
+
+    private async Task<CourierAccount?> PathaoAccountAsync() =>
+        (await _accounts.GetListAsync(a => a.Provider == CourierProvider.Pathao && a.IsEnabled)).OrderBy(a => a.Order).FirstOrDefault();
 
     // ══ LISTS ════════════════════════════════════════════════════════════════
 
@@ -229,7 +298,7 @@ public class ShippingConfigAppService : ApplicationService, IShippingConfigAppSe
             var a = accounts[g.Key];
             return new CodCourierDto
             {
-                CourierAccountId = a.Id, Name = a.DisplayName, ShortCode = a.ShortCode, Color = a.Color, Parcels = g.Count(),
+                CourierAccountId = a.Id, Name = a.DisplayName, ShortCode = a.ShortCode, Color = a.Color, Provider = a.Provider, Parcels = g.Count(),
                 Collected = g.Sum(p => p.Cod), Fee = g.Sum(p => p.Fee), ShouldReceive = g.Sum(p => p.Expected),
                 Schedule = a.PayoutSchedule, CodFeePercent = a.CodFeePercent,
             };
@@ -387,6 +456,9 @@ public class ShippingConfigAppService : ApplicationService, IShippingConfigAppSe
     {
         z.Name = i.Name.Trim(); z.Note = Clean(i.Note); z.Charge = Math.Round(i.Charge, 2); z.PerExtraKg = Math.Round(i.PerExtraKg, 2);
         z.CourierCost = Math.Round(i.CourierCost, 2); z.Days = Clean(i.Days);
+        if (z.PathaoZoneId != i.PathaoZoneId) { z.PriceCheckedAt = null; z.PriceError = null; }   // new location: old price no longer applies
+        z.PathaoCityId = i.PathaoZoneId == null ? null : i.PathaoCityId; z.PathaoCityName = i.PathaoZoneId == null ? null : Clean(i.PathaoCityName);
+        z.PathaoZoneId = i.PathaoZoneId; z.PathaoZoneName = i.PathaoZoneId == null ? null : Clean(i.PathaoZoneName);
         if (i.Order > 0) z.Order = i.Order;
     }
 
@@ -400,6 +472,8 @@ public class ShippingConfigAppService : ApplicationService, IShippingConfigAppSe
     {
         Id = z.Id, Name = z.Name, Note = z.Note, Charge = z.Charge, PerExtraKg = z.PerExtraKg, CourierCost = z.CourierCost,
         Days = z.Days, Order = z.Order, Margin = z.Charge - z.CourierCost,
+        PathaoCityId = z.PathaoCityId, PathaoCityName = z.PathaoCityName, PathaoZoneId = z.PathaoZoneId, PathaoZoneName = z.PathaoZoneName,
+        CourierPerExtraKg = z.CourierPerExtraKg, PriceCheckedAt = z.PriceCheckedAt, PriceError = z.PriceError,
     };
 
     private static ShippingItemDto MapItem(ShippingListItem i) => new()
@@ -434,18 +508,7 @@ public class ShippingConfigAppService : ApplicationService, IShippingConfigAppSe
             if (await _settings.GetCountAsync() > 0) return;
             await _settings.InsertAsync(new ShippingSetting(), autoSave: true);
 
-            if (await _zones.GetCountAsync() == 0)
-            {
-                var o = 0;
-                await _zones.InsertManyAsync(new[]
-                {
-                    new ShippingZone { Name = "Chattogram city", Note = "own city · same day on request", Charge = 80, PerExtraKg = 20, CourierCost = 70, Days = "Same day", Order = ++o },
-                    new ShippingZone { Name = "Inside Dhaka", Note = "Pathao normal", Charge = 110, PerExtraKg = 25, CourierCost = 100, Days = "1–2 days", Order = ++o },
-                    new ShippingZone { Name = "Dhaka suburb", Note = "Savar, Keraniganj, Gazipur", Charge = 140, PerExtraKg = 30, CourierCost = 140, Days = "2 days", Order = ++o },
-                    new ShippingZone { Name = "Outside Dhaka & Chattogram", Note = "all other districts", Charge = 160, PerExtraKg = 35, CourierCost = 180, Days = "2–4 days", Order = ++o },
-                    new ShippingZone { Name = "Hill districts & islands", Note = "Bandarban, Rangamati, Hatiya", Charge = 250, PerExtraKg = 45, CourierCost = 260, Days = "4–7 days", Order = ++o },
-                }, autoSave: true);
-            }
+            // No starting zones: each one is added on the page and priced from Pathao.
 
             if (await _items.GetCountAsync() == 0)
             {

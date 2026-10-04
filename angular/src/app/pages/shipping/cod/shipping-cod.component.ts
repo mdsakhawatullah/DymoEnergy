@@ -5,12 +5,13 @@ import { ShippingConfigService } from '../../../proxy/shipping/shipping-config.s
 import { CodIssueDto, CodPageDto, CodParcelDto, CodPayoutDto } from '../../../proxy/shipping/config.models';
 import { fmtCompact, fmtFull } from '../../budgets-costs/finance.utils';
 import { tint } from '../../project-planning/project-planning.utils';
+import { CourierBadgeComponent } from '../courier-badge/courier-badge.component';
 
 @Component({
   selector: 'app-shipping-cod',
   templateUrl: './shipping-cod.component.html',
   styleUrls: ['../shipping.component.css', './shipping-cod.component.css'],
-  imports: [SharedModule],
+  imports: [SharedModule, CourierBadgeComponent],
 })
 export class ShippingCodComponent implements OnInit {
   @Input() canEdit = false;

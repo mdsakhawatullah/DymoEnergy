@@ -29,7 +29,8 @@ public class ShippingWebhookController : DymoEnergyController
     [RequestSizeLimit(MaxBodyBytes)]
     public async Task<IActionResult> Receive(int courierAccountId)
     {
-        using var reader = new StreamReader(Request.Body);
+        // Leave the body stream open: middleware later in the pipeline (ABP Studio) reads it again.
+        using var reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true);
         var body = await reader.ReadToEndAsync();
         var headers = Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString());
 
