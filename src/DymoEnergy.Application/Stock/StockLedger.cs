@@ -27,17 +27,20 @@ public class StockLedger : ITransientDependency
     private readonly IRepository<StockEntry, int>     _entries;
     private readonly IRepository<StockEntryLine, int> _lines;
     private readonly IRepository<Product, int>        _products;
+    private readonly IRepository<StockLedgerLine, int> _ledgerLines;
     private readonly IAsyncQueryableExecuter _async;
     private readonly IDataFilter _dataFilter;
     private readonly IClock _clock;
+    private readonly LedgerWriter _ledger;
 
     public StockLedger(
         IRepository<StockBalance, int> balances, IRepository<Warehouse, int> warehouses, IRepository<StockSerial, int> serials,
         IRepository<StockEntry, int> entries, IRepository<StockEntryLine, int> lines, IRepository<Product, int> products,
-        IAsyncQueryableExecuter async, IDataFilter dataFilter, IClock clock)
+        IRepository<StockLedgerLine, int> ledgerLines,
+        IAsyncQueryableExecuter async, IDataFilter dataFilter, IClock clock, LedgerWriter ledger)
     {
         _balances = balances; _warehouses = warehouses; _serials = serials; _entries = entries; _lines = lines; _products = products;
-        _async = async; _dataFilter = dataFilter; _clock = clock;
+        _ledgerLines = ledgerLines; _async = async; _dataFilter = dataFilter; _clock = clock; _ledger = ledger;
     }
 
     // ── Warehouses ──────────────────────────────────────────────────────────
@@ -128,16 +131,19 @@ public class StockLedger : ITransientDependency
     // ── Posting ─────────────────────────────────────────────────────────────
 
     /// <summary>Applies a draft to stock and fills in what each line did. Throws without changing anything when it cannot be done.</summary>
-    public async Task PostAsync(StockEntry entry, List<StockEntryLine> lines, Guid? userId, string? userName)
+    public async Task PostAsync(StockEntry entry, List<StockEntryLine> lines, Guid? userId, string? userName,
+        bool hasPhoto = false, string? cameFrom = null)
     {
         if (entry.Status != StockEntryStatus.Draft) throw new UserFriendlyException("Only drafts can be posted.");
         if (lines.Count == 0) throw new UserFriendlyException("Add at least one product before posting.");
 
         var productIds = lines.Select(l => l.ProductId).ToList();
         var balances = await BalancesAsync(productIds);
-        var names = await ProductNamesAsync(productIds);
+        var facts = await ProductFactsAsync(productIds);
+        var names = facts.ToDictionary(f => f.Key, f => f.Value.Name);
         var warehouses = (await WarehousesAsync()).ToDictionary(w => w.Id);
         string Wh(int id) => warehouses.TryGetValue(id, out var w) ? w.Name : "the warehouse";
+        var moves = new List<LedgerMove>();
 
         StockBalance Bal(int productId, int warehouseId)
         {
@@ -161,6 +167,10 @@ public class StockLedger : ITransientDependency
             var name = names.GetValueOrDefault(line.ProductId, "a product");
             var from = Bal(line.ProductId, entry.WarehouseId);
             line.StockBefore = from.Quantity;
+            var fromQtyBefore = from.Quantity;
+            var fromCostBefore = from.AvgCost;
+            int? toQtyBefore = null;
+            decimal toCostBefore = 0;
 
             switch (entry.Type)
             {
@@ -194,6 +204,8 @@ public class StockLedger : ITransientDependency
                     line.UnitCost = line.LandedUnitCost = from.AvgCost;
                     from.Quantity -= line.Quantity;
                     var to = Bal(line.ProductId, toId);
+                    toQtyBefore = to.Quantity;
+                    toCostBefore = to.AvgCost;
                     Add(to, line.Quantity, from.AvgCost);
                     line.ToStockAfter = to.Quantity;
                     line.Change = -line.Quantity;   // for the source warehouse; the total does not change
@@ -211,6 +223,39 @@ public class StockLedger : ITransientDependency
                 }
             }
             line.StockAfter = from.Quantity;
+
+            var fact = facts.GetValueOrDefault(line.ProductId);
+            var serials = SplitSerials(line.Serials);
+            var move = NewMove(entry, line, fact, hasPhoto, cameFrom);
+            move.WarehouseId = entry.WarehouseId;
+            move.WarehouseName = Wh(entry.WarehouseId);
+            move.Movement = MovementFor(entry, toTarget: false);
+            move.Change = line.Change;
+            move.QuantityBefore = fromQtyBefore;
+            move.QuantityAfter = from.Quantity;
+            move.UnitCost = line.LandedUnitCost;
+            move.CostBefore = fromCostBefore;
+            move.CostAfter = from.AvgCost;
+            move.Serials = serials;
+            moves.Add(move);
+
+            // A transfer moves stock twice: out of one warehouse and into the other.
+            if (entry.Type == StockEntryType.Transfer && toQtyBefore is { } wasThere)
+            {
+                var toBal = Bal(line.ProductId, entry.ToWarehouseId!.Value);
+                var inbound = NewMove(entry, line, fact, hasPhoto, cameFrom);
+                inbound.WarehouseId = toBal.WarehouseId;
+                inbound.WarehouseName = Wh(toBal.WarehouseId);
+                inbound.Movement = MovementFor(entry, toTarget: true);
+                inbound.Change = line.Quantity;
+                inbound.QuantityBefore = wasThere;
+                inbound.QuantityAfter = toBal.Quantity;
+                inbound.UnitCost = line.LandedUnitCost;
+                inbound.CostBefore = toCostBefore;
+                inbound.CostAfter = toBal.AvgCost;
+                inbound.Serials = serials;
+                moves.Add(inbound);
+            }
         }
 
         await ApplySerialsAsync(entry, lines, names, Wh);
@@ -230,19 +275,24 @@ public class StockLedger : ITransientDependency
         await _lines.UpdateManyAsync(lines, autoSave: true);
         await _entries.UpdateAsync(entry, autoSave: true);
         await SyncProductTotalsAsync(productIds);
+        await _ledger.AppendAsync(moves);
     }
 
     /// <summary>Creates and posts the entry that undoes <paramref name="entry"/>.</summary>
-    public async Task<StockEntry> ReverseAsync(StockEntry entry, List<StockEntryLine> lines, Guid? userId, string? userName)
+    public async Task<StockEntry> ReverseAsync(StockEntry entry, List<StockEntryLine> lines, Guid? userId, string? userName,
+        bool hasPhoto = false, string? cameFrom = null)
     {
         if (entry.Status != StockEntryStatus.Posted) throw new UserFriendlyException("Only posted entries can be reversed.");
         if (entry.ReversesId != null) throw new UserFriendlyException("This entry already undoes another one. Post a new entry instead.");
 
         var productIds = lines.Select(l => l.ProductId).ToList();
         var balances = await BalancesAsync(productIds);
-        var names = await ProductNamesAsync(productIds);
+        var facts = await ProductFactsAsync(productIds);
+        var names = facts.ToDictionary(f => f.Key, f => f.Value.Name);
         var warehouses = (await WarehousesAsync()).ToDictionary(w => w.Id);
         string Wh(int id) => warehouses.TryGetValue(id, out var w) ? w.Name : "the warehouse";
+        var moves = new List<LedgerMove>();
+        var original = await _ledgerLineIdsAsync(entry.Id);
 
         StockBalance Bal(int productId, int warehouseId)
         {
@@ -277,6 +327,10 @@ public class StockLedger : ITransientDependency
             };
             var b = Bal(line.ProductId, reversal.WarehouseId);
             nl.StockBefore = b.Quantity;
+            var qtyBefore = b.Quantity;
+            var costBefore = b.AvgCost;
+            int? toQtyBefore = null;
+            decimal toCostBefore = 0;
 
             switch (entry.Type)
             {
@@ -296,6 +350,8 @@ public class StockLedger : ITransientDependency
                         throw new UserFriendlyException($"{name}: only {b.Quantity} left in {Wh(b.WarehouseId)}, cannot move {line.Quantity} back.");
                     b.Quantity -= line.Quantity;
                     var to = Bal(line.ProductId, reversal.ToWarehouseId!.Value);
+                    toQtyBefore = to.Quantity;
+                    toCostBefore = to.AvgCost;
                     Add(to, line.Quantity, line.UnitCost);
                     nl.ToStockAfter = to.Quantity;
                     nl.Change = -line.Quantity;
@@ -311,6 +367,41 @@ public class StockLedger : ITransientDependency
             }
             nl.StockAfter = b.Quantity;
             newLines.Add(nl);
+
+            var fact = facts.GetValueOrDefault(line.ProductId);
+            var serials = SplitSerials(line.Serials);
+            var move = NewMove(reversal, nl, fact, hasPhoto, cameFrom);
+            move.WarehouseId = b.WarehouseId;
+            move.WarehouseName = Wh(b.WarehouseId);
+            move.Movement = LedgerMovement.Reversal;
+            move.Change = nl.Change;
+            move.QuantityBefore = qtyBefore;
+            move.QuantityAfter = b.Quantity;
+            move.UnitCost = nl.LandedUnitCost;
+            move.CostBefore = costBefore;
+            move.CostAfter = b.AvgCost;
+            move.Serials = serials;
+            move.Reason = $"Undoes {entry.Number}";
+            move.ReversesLineId = original.GetValueOrDefault(line.ProductId);
+            moves.Add(move);
+
+            if (reversal.Type == StockEntryType.Transfer && toQtyBefore is { } wasThere)
+            {
+                var toBal = Bal(line.ProductId, reversal.ToWarehouseId!.Value);
+                var inbound = NewMove(reversal, nl, fact, hasPhoto, cameFrom);
+                inbound.WarehouseId = toBal.WarehouseId;
+                inbound.WarehouseName = Wh(toBal.WarehouseId);
+                inbound.Movement = LedgerMovement.Reversal;
+                inbound.Change = line.Quantity;
+                inbound.QuantityBefore = wasThere;
+                inbound.QuantityAfter = toBal.Quantity;
+                inbound.UnitCost = nl.LandedUnitCost;
+                inbound.CostBefore = toCostBefore;
+                inbound.CostAfter = toBal.AvgCost;
+                inbound.Serials = serials;
+                inbound.Reason = $"Undoes {entry.Number}";
+                moves.Add(inbound);
+            }
         }
 
         await UndoSerialsAsync(entry, lines);
@@ -332,6 +423,8 @@ public class StockLedger : ITransientDependency
         await _entries.UpdateAsync(entry, autoSave: true);
         await _entries.UpdateAsync(reversal, autoSave: true);
         await SyncProductTotalsAsync(productIds);
+        foreach (var m in moves) m.StockEntryId = reversal.Id;
+        await _ledger.AppendAsync(moves);
         return reversal;
     }
 
@@ -360,7 +453,7 @@ public class StockLedger : ITransientDependency
         await _entries.InsertAsync(entry, autoSave: true);
         var line = new StockEntryLine { StockEntryId = entry.Id, ProductId = product.Id, Order = 1, CountedQuantity = counted };
         await _lines.InsertAsync(line, autoSave: true);
-        await PostAsync(entry, new List<StockEntryLine> { line }, userId, userName);
+        await PostAsync(entry, new List<StockEntryLine> { line }, userId, userName, cameFrom: "Product page → Stock box");
         product.StockQuantity = (await _balances.GetListAsync(b => b.ProductId == product.Id)).Sum(b => b.Quantity);
     }
 
@@ -417,11 +510,49 @@ public class StockLedger : ITransientDependency
         await _products.UpdateManyAsync(products, autoSave: true);
     }
 
-    private async Task<Dictionary<int, string>> ProductNamesAsync(List<int> ids)
+    private async Task<Dictionary<int, (string Name, string? Sku)>> ProductFactsAsync(List<int> ids)
     {
-        var q = (await _products.GetQueryableAsync()).Where(p => ids.Contains(p.Id)).Select(p => new { p.Id, p.Name });
-        return (await _async.ToListAsync(q)).ToDictionary(p => p.Id, p => p.Name ?? $"Product #{p.Id}");
+        var q = (await _products.GetQueryableAsync()).Where(p => ids.Contains(p.Id)).Select(p => new { p.Id, p.Name, p.Sku });
+        return (await _async.ToListAsync(q)).ToDictionary(p => p.Id, p => (p.Name ?? $"Product #{p.Id}", p.Sku));
     }
+
+    /// <summary>The newest ledger line per product for an entry, so a reversing line can point back at it.</summary>
+    private async Task<Dictionary<int, int?>> _ledgerLineIdsAsync(int stockEntryId)
+    {
+        var q = (await _ledgerLines.GetQueryableAsync()).Where(l => l.StockEntryId == stockEntryId).Select(l => new { l.Id, l.ProductId });
+        return (await _async.ToListAsync(q)).GroupBy(l => l.ProductId).ToDictionary(g => g.Key, g => (int?)g.Max(x => x.Id));
+    }
+
+    /// <summary>The parts of a ledger move that come from the entry rather than the balances.</summary>
+    private static LedgerMove NewMove(StockEntry entry, StockEntryLine line, (string Name, string? Sku) fact, bool hasPhoto, string? cameFrom)
+    {
+        var handCorrection = entry.Type == StockEntryType.Adjustment
+            || (entry.Type == StockEntryType.StockOut && entry.OutReason is StockOutReason.Damaged or StockOutReason.Lost);
+        return new LedgerMove
+        {
+            ProductId = line.ProductId, ProductName = fact.Name ?? $"Product #{line.ProductId}", Sku = fact.Sku,
+            Reason = string.IsNullOrWhiteSpace(entry.Reference) ? entry.Note : entry.Reference,
+            DocumentType = "Stock entry", DocumentNumber = entry.Number, StockEntryId = entry.Id,
+            CameFrom = cameFrom ?? "Stock entry screen", IsHandCorrection = handCorrection, HasPhoto = hasPhoto,
+        };
+    }
+
+    private static LedgerMovement MovementFor(StockEntry entry, bool toTarget) => entry.ReversesId != null ? LedgerMovement.Reversal : entry.Type switch
+    {
+        StockEntryType.StockIn => LedgerMovement.Received,
+        StockEntryType.Transfer => toTarget ? LedgerMovement.TransferredIn : LedgerMovement.TransferredOut,
+        StockEntryType.Adjustment => LedgerMovement.CountCorrection,
+        _ => entry.OutReason switch
+        {
+            StockOutReason.Sold => LedgerMovement.Sold,
+            StockOutReason.Installed => LedgerMovement.UsedOnJob,
+            StockOutReason.Damaged => LedgerMovement.Damaged,
+            StockOutReason.ReturnedToSupplier => LedgerMovement.ReturnedToSupplier,
+            StockOutReason.Lost => LedgerMovement.Lost,
+            StockOutReason.InternalUse => LedgerMovement.InternalUse,
+            _ => LedgerMovement.Other,
+        },
+    };
 
     public static List<string> SplitSerials(string? text) =>
         string.IsNullOrWhiteSpace(text) ? new() : text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();

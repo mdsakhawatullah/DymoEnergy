@@ -68,6 +68,8 @@ public class DymoEnergyPermissionDefinitionProvider : PermissionDefinitionProvid
         var stockPermission = myGroup.AddPermission(DymoEnergyPermissions.Stock.Default, L("Permission:Stock"));
         stockPermission.AddChild(DymoEnergyPermissions.Stock.Edit, L("Permission:Stock.Edit"));
         stockPermission.AddChild(DymoEnergyPermissions.Stock.Post, L("Permission:Stock.Post"));
+        var ledgerPermission = stockPermission.AddChild(DymoEnergyPermissions.Stock.Ledger, L("Permission:Stock.Ledger"));
+        ledgerPermission.AddChild(DymoEnergyPermissions.Stock.LedgerSettings, L("Permission:Stock.LedgerSettings"));
 
         var companiesPermission = myGroup.AddPermission(DymoEnergyPermissions.Companies.Default, L("Permission:Companies"));
         companiesPermission.AddChild(DymoEnergyPermissions.Companies.Create, L("Permission:Companies.Create"));

@@ -318,7 +318,8 @@ public class StockEntryAppService : ApplicationService, IStockEntryAppService
     {
         var entry = await _entries.GetAsync(id);
         var lines = (await _lines.GetListAsync(l => l.StockEntryId == id)).OrderBy(l => l.Order).ToList();
-        await _ledger.PostAsync(entry, lines, CurrentUser.Id, UserName());
+        var hasPhoto = await _attachments.AnyAsync(a => a.StockEntryId == id);
+        await _ledger.PostAsync(entry, lines, CurrentUser.Id, UserName(), hasPhoto, "Stock entry screen → Post");
         return await MapEntryAsync(entry);
     }
 
@@ -327,7 +328,7 @@ public class StockEntryAppService : ApplicationService, IStockEntryAppService
     {
         var entry = await _entries.GetAsync(id);
         var lines = (await _lines.GetListAsync(l => l.StockEntryId == id)).OrderBy(l => l.Order).ToList();
-        var reversal = await _ledger.ReverseAsync(entry, lines, CurrentUser.Id, UserName());
+        var reversal = await _ledger.ReverseAsync(entry, lines, CurrentUser.Id, UserName(), cameFrom: "Stock entry screen → Reverse");
         return await MapEntryAsync(reversal);
     }
 

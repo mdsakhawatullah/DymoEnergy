@@ -1,0 +1,123 @@
+@if (data; as d) {
+  <!-- ── Who can change stock ───────────────────────────────────────────── -->
+  <div class="lg-card ac-people">
+    <div class="lg-card__head">
+      <h2>Who can change stock</h2>
+      <span class="lg-small">{{ d.people.length }} {{ d.people.length === 1 ? 'person' : 'people' }}@if (d.machines.length) { · {{ d.machines.length }} {{ d.machines.length === 1 ? 'machine' : 'machines' }} }</span>
+    </div>
+    <div class="lg-wrap">
+      <table class="lg-table ac-table">
+        <thead><tr><th>Person</th><th>Role</th><th>What they may do</th><th>Last signed in</th><th>From</th><th>Lines</th><th>2-step</th></tr></thead>
+        <tbody>
+          @for (p of d.people; track p.id) {
+            <tr>
+              <td>
+                <span class="ac-person"><span class="ac-avatar">{{ initials(p) }}</span>
+                  <span><strong class="lg-block">{{ p.name }}</strong><span class="lg-small">{{ p.email }}</span></span>
+                </span>
+              </td>
+              <td><span class="lg-chip is-green">{{ p.role }}</span></td>
+              <td class="lg-small">{{ p.mayDo }}</td>
+              <td class="lg-small">{{ p.lastSignedIn ? (p.lastSignedIn | date: 'd MMM, HH:mm') : 'not seen in 30 days' }}</td>
+              <td class="lg-small"><span class="lg-mono lg-block">{{ p.lastIp || '—' }}</span>{{ p.lastDevice }}</td>
+              <td class="lg-small">{{ p.linesPosted | number }}</td>
+              <td><span class="lg-chip" [ngClass]="p.twoStep ? 'is-green' : 'is-red'">{{ p.twoStep ? '2-step on' : 'No 2-step' }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="lg-empty">No accounts found.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="lg-pager"><span class="lg-small">Roles and 2-step come from the accounts themselves. Change them under Administration → Identity management.</span></div>
+  </div>
+
+  <div class="lg-grid ac-bottom">
+    <div class="lg-main">
+      <!-- ── Sign-in attempts ─────────────────────────────────────────── -->
+      <div class="lg-card">
+        <div class="lg-card__head"><h2>Sign-in attempts</h2><span class="lg-small">last 30 days</span></div>
+        @for (a of d.attempts; track $index) {
+          <div class="ac-attempt">
+            <span class="ac-dot" [ngClass]="'is-' + a.tone"></span>
+            <div class="ac-attempt__text">
+              <strong>{{ a.who }} · {{ a.what }}</strong>
+              <span class="lg-small lg-block"><span class="lg-mono">{{ a.ip }}</span>@if (a.device) { · {{ a.device }} }</span>
+            </div>
+            <span class="lg-small ac-attempt__when">{{ a.time | date: 'd MMM, HH:mm' }}</span>
+            <span class="lg-chip" [ngClass]="a.tone === 'ok' ? 'is-green' : a.tone === 'blocked' ? 'is-red' : 'is-amber'">{{ a.result }}</span>
+          </div>
+        } @empty {
+          <div class="lg-empty">
+            @if (d.securityLogsAvailable) { No sign-in attempts in the last 30 days. }
+            @else { No sign-in history is being recorded yet. ABP writes it once security logging is switched on for the host. }
+          </div>
+        }
+      </div>
+
+      <!-- ── Machines ─────────────────────────────────────────────────── -->
+      <div class="lg-card">
+        <div class="lg-card__head"><h2>Machines writing to stock</h2><span class="lg-small">taken from the ledger itself</span></div>
+        @for (m of d.machines; track m.source) {
+          <div class="ac-machine">
+            <span class="ac-machine__tag">{{ m.name.slice(0, 3).toUpperCase() }}</span>
+            <div class="ac-machine__text"><strong>{{ m.name }}</strong><span class="lg-small lg-block">{{ m.detail }}</span></div>
+            <span class="lg-small">{{ m.lastUsed | date: 'd MMM' }}</span>
+          </div>
+        } @empty {
+          <div class="lg-empty">Nothing has written to the ledger yet.</div>
+        }
+      </div>
+    </div>
+
+    <!-- ── Rules that protect the ledger ──────────────────────────────── -->
+    @if (setting; as s) {
+      <div class="lg-side">
+        <div class="lg-card">
+          <div class="lg-card__head"><h2>Rules that protect the ledger</h2></div>
+          <div class="lg-pad">
+            <div class="lg-rule">
+              <div class="lg-rule__text"><strong>Ask for the password again</strong><span>Before any correction over {{ money(s.largeValueOver) }} of stock.</span></div>
+              <nz-switch [(ngModel)]="s.askPasswordAgain" [nzDisabled]="!canEdit"></nz-switch>
+            </div>
+            <div class="lg-rule">
+              <div class="lg-rule__text"><strong>Two people for big write-offs</strong><span>One posts, another approves. Both names stay on the line.</span></div>
+              <nz-switch [(ngModel)]="s.twoPeopleForBigWriteOffs" [nzDisabled]="!canEdit"></nz-switch>
+            </div>
+            <div class="lg-rule">
+              <div class="lg-rule__text">
+                <strong>2-step sign-in for everyone</strong>
+                <span>{{ withoutTwoStep ? withoutTwoStep + ' ' + (withoutTwoStep === 1 ? 'person still has' : 'people still have') + ' it switched off.' : 'Everyone has it switched on.' }}</span>
+              </div>
+              <nz-switch [(ngModel)]="s.requireTwoStep" [nzDisabled]="!canEdit"></nz-switch>
+            </div>
+            <div class="lg-rule">
+              <div class="lg-rule__text">
+                <strong>Only from shop and warehouse networks</strong><span>Installers on mobile data are allowed, counters are not.</span>
+                @if (s.onlyFromOfficeNetworks) {
+                  <div class="lg-rule__inline">
+                    <input class="se-input ac-nets" [(ngModel)]="s.allowedNetworks" [disabled]="!canEdit" maxlength="512" placeholder="103.108., 27.147." />
+                  </div>
+                }
+              </div>
+              <nz-switch [(ngModel)]="s.onlyFromOfficeNetworks" [nzDisabled]="!canEdit"></nz-switch>
+            </div>
+            <div class="lg-rule">
+              <div class="lg-rule__text"><strong>Email the owner about every reversal</strong><span>Sent the moment the line posts.</span></div>
+              <nz-switch [(ngModel)]="s.emailOwnerOnReversal" [nzDisabled]="!canEdit"></nz-switch>
+            </div>
+            @if (canEdit) {
+              <div class="ac-save"><button type="button" class="se-btn se-btn--sm se-btn--primary" [disabled]="saving" (click)="save()">{{ saving ? 'Saving…' : 'Save rules' }}</button></div>
+            }
+            <p class="lg-small ac-note">
+              These are recorded with every line so an auditor can see what was being asked for at the time. Enforcing the
+              password prompt, the network limit and the reversal email still needs the sign-in and mail settings wired up.
+            </p>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+  <nz-spin nzSimple class="lg-loading"></nz-spin>
+}

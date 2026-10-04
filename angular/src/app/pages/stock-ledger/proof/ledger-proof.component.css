@@ -1,0 +1,37 @@
+.pf-top { align-items: start; }
+.pf-h { font-size: 16px; font-weight: 700; margin: 0 0 10px; }
+.pf-sub { margin: 0 0 12px; }
+.pf-text { font-size: 14px; line-height: 1.6; margin: 0 0 18px; }
+
+.pf-seals { list-style: none; margin: 0 0 18px; padding: 0; }
+.pf-seal { position: relative; padding: 0 0 16px 20px; }
+.pf-seal::before { content: ''; position: absolute; left: 4px; top: 12px; bottom: 0; width: 2px; background: var(--se-soft, #F1F3EE); }
+.pf-seal:last-child::before { display: none; }
+.pf-seal__dot { position: absolute; left: 0; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #0E6B3F; }
+.pf-seal.is-first .pf-seal__dot { background: #9AA39C; }
+.pf-seal__head { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 0; font: inherit; font-size: 14px; color: inherit; cursor: pointer; }
+.pf-seal__head:hover strong { text-decoration: underline; }
+.pf-seal__when { float: right; }
+.pf-seal__hash { display: block; font-family: var(--de-font-mono, ui-monospace, monospace); font-size: 12px; color: var(--se-muted, #5F6B63); margin-top: 4px; overflow-wrap: anywhere; }
+
+.pf-check { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 10px; background: #E6F2EA; color: #0B5A34; }
+.pf-check > i { font-size: 18px; flex-shrink: 0; }
+.pf-check__text { flex: 1; min-width: 0; font-size: 14px; }
+.pf-check.is-bad { background: #FDECEA; color: #8A1C12; }
+.pf-check.is-idle { background: var(--se-inset, #F7F8F5); color: var(--se-text, #16201A); }
+
+.pf-carried { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 9px 16px; font-size: 13.5px; }
+.pf-carried li { display: flex; gap: 8px; align-items: flex-start; line-height: 1.4; }
+.pf-carried i { color: #0E6B3F; flex-shrink: 0; }
+
+.pf-dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 11px 16px; margin: 0 0 14px; font-size: 14px; align-items: center; }
+.pf-dl dt { color: var(--se-muted, #5F6B63); }
+.pf-dl dd { margin: 0; text-align: right; font-weight: 600; }
+.pf-years { width: 76px; }
+.pf-save { padding-bottom: 10px; }
+.pf-acts { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+.pf-footnote { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; font-size: 13.5px; color: var(--se-muted, #5F6B63); line-height: 1.55; }
+.pf-footnote > i { color: var(--se-accent, #0E6B3F); flex-shrink: 0; margin-top: 2px; }
+
+@media (max-width: 700px) { .pf-carried { grid-template-columns: 1fr; } }

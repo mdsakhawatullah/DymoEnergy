@@ -1,0 +1,76 @@
+<div class="lg-card">
+  <div class="mv-filters">
+    <label class="mv-search">
+      <i class="bi bi-search"></i>
+      <input type="search" [(ngModel)]="filter" (ngModelChange)="onSearch()" placeholder="Search product, serial, reference, user or IP" aria-label="Search the ledger" />
+    </label>
+    <select class="se-select mv-filter" [(ngModel)]="movement" (ngModelChange)="changed()" aria-label="What happened">
+      <option [ngValue]="null">Everything that happened</option>
+      @for (m of movements; track m.value) { <option [ngValue]="m.value">{{ m.label }}</option> }
+    </select>
+    <select class="se-select mv-filter" [(ngModel)]="warehouseId" (ngModelChange)="changed()" aria-label="Warehouse">
+      <option [ngValue]="null">All warehouses</option>
+      @for (w of warehouses; track w.id) { <option [ngValue]="w.id">{{ w.name }}</option> }
+    </select>
+    <select class="se-select mv-filter" [(ngModel)]="days" (ngModelChange)="changed()" aria-label="Period">
+      @for (r of ranges; track r.label) { <option [ngValue]="r.value">{{ r.label }}</option> }
+    </select>
+    <label class="mv-check"><input type="checkbox" [(ngModel)]="flaggedOnly" (ngModelChange)="changed()" /> Only flagged</label>
+  </div>
+
+  @if (page; as p) {
+    <div class="mv-count lg-small">{{ p.items.length }} of {{ p.totalCount | number }} lines</div>
+    <div class="lg-wrap">
+      <table class="lg-table mv-table">
+        <thead>
+          <tr>
+            <th>When</th><th>Product · where</th><th>What happened</th>
+            <th class="is-right">Change</th><th class="is-right">Before → after</th><th>Who</th><th>Line</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of p.items; track l.id) {
+            <tr class="lg-row-click" [class.is-flagged]="l.flags && !l.reviewed" (click)="openLine.emit(l.id)"
+              tabindex="0" (keydown.enter)="openLine.emit(l.id)" [attr.aria-label]="'Open ledger line ' + l.id">
+              <td class="lg-when"><b>{{ l.time | date: 'd MMM' }}</b><span class="lg-small">{{ l.time | date: 'HH:mm:ss' }}</span></td>
+              <td>
+                <strong class="lg-block">{{ l.productName }}</strong>
+                <span class="lg-small lg-mono">{{ l.sku }}</span><span class="lg-small"> · {{ l.warehouseName }}</span>
+              </td>
+              <td>
+                <span class="lg-chip" [ngClass]="'is-' + movementTone(l.movement)">{{ l.movementLabel }}</span>
+                @if (l.flags && !l.reviewed) {
+                  <span class="mv-flag" [ngClass]="'is-' + flagTone(l.flags)" [title]="l.flagLabels.join(' · ')"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                }
+              </td>
+              <td class="is-right"><strong [class.is-green]="l.change > 0" [class.is-red]="l.change < 0">{{ signed(l.change) }}</strong></td>
+              <td class="is-right lg-muted">{{ trail(l) }}</td>
+              <td><span class="lg-block">{{ l.userName }}</span><span class="lg-small lg-mono">{{ l.ipAddress }}</span></td>
+              <td class="lg-mono lg-muted">{{ l.id | number }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="lg-empty">
+              @if (loading) { <nz-spin nzSimple></nz-spin> }
+              @else if (failed) { Could not load the lines. <button type="button" class="se-link" (click)="load()">Try again</button> }
+              @else { No lines match. Stock entries write to the ledger the moment they are posted. }
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="lg-pager">
+      <span class="lg-small">Lines are never removed. Click any row to see everything behind it.</span>
+      @if (pageCount > 1) {
+        <nav class="lg-pages" aria-label="Pages">
+          @for (p2 of pages; track $index) {
+            @if (p2 === null) { <span class="lg-muted">…</span> }
+            @else { <button type="button" class="lg-page" [class.is-on]="p2 === pageIndex" [attr.aria-current]="p2 === pageIndex ? 'page' : null" (click)="goTo(p2)">{{ p2 }}</button> }
+          }
+        </nav>
+      }
+    </div>
+  } @else {
+    <nz-spin nzSimple class="lg-loading"></nz-spin>
+  }
+</div>

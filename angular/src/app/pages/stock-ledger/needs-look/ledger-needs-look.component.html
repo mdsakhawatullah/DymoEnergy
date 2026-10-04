@@ -1,0 +1,113 @@
+@if (data; as d) {
+  @if (d.openCount) {
+    <div class="nl-alert">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <span>
+        {{ d.openCount }} {{ d.openCount === 1 ? 'line is' : 'lines are' }} waiting on someone.
+        @if (d.oldestDays != null) { The oldest is {{ d.oldestDays }} {{ d.oldestDays === 1 ? 'day' : 'days' }} old — {{ d.oldestText }}. }
+      </span>
+    </div>
+  } @else {
+    <div class="nl-clear"><i class="bi bi-check-circle-fill"></i>Nothing is waiting. Every flagged line has been looked at.</div>
+  }
+
+  <div class="lg-card nl-list">
+    <div class="lg-card__head"><h2>Lines worth a second look</h2><span class="lg-small">the rules below decide what lands here</span></div>
+    @for (f of d.lines; track f.line.id) {
+      <div class="nl-row">
+        <span class="nl-icon" [ngClass]="'is-' + tone(f)"><i class="bi" [ngClass]="icon(f)"></i></span>
+        <div class="nl-when lg-small"><b class="lg-block">{{ f.line.time | date: 'd MMM' }}</b>{{ f.line.time | date: 'HH:mm:ss' }}</div>
+        <div class="nl-text">
+          <strong>{{ f.title }}</strong>
+          <span class="lg-small lg-block">{{ f.text }}</span>
+        </div>
+        <strong class="nl-change" [class.is-green]="f.line.change > 0" [class.is-red]="f.line.change < 0">{{ signed(f.line.change) }}</strong>
+        <div class="nl-who lg-small"><b class="lg-block">{{ f.line.userName }}</b><span class="lg-mono">{{ f.line.ipAddress }}</span></div>
+        <span class="nl-acts">
+          <button type="button" class="se-btn se-btn--sm" (click)="act(f)">{{ f.actionLabel }}</button>
+          <button type="button" class="se-btn se-btn--sm" [disabled]="busy.has(f.line.id)" (click)="markChecked(f)" title="Signing off never changes the line itself">Checked</button>
+        </span>
+      </div>
+    } @empty {
+      <div class="lg-empty">No line is waiting on anyone.</div>
+    }
+  </div>
+
+  <div class="lg-two nl-bottom">
+    <!-- ── What gets flagged ────────────────────────────────────────────── -->
+    @if (setting; as s) {
+      <div class="lg-card">
+        <div class="lg-card__head"><h2>What gets flagged</h2></div>
+        <div class="lg-pad">
+          <div class="lg-rule">
+            <div class="lg-rule__text"><strong>A correction with no reason typed</strong><span>Every hand correction must say why, in words.</span></div>
+            <nz-switch [(ngModel)]="s.flagNoReason" [nzDisabled]="!canEdit"></nz-switch>
+          </div>
+          <div class="lg-rule">
+            <div class="lg-rule__text"><strong>A correction with no photo</strong><span>Damage and count differences need a photo of the shelf.</span></div>
+            <nz-switch [(ngModel)]="s.flagNoPhoto" [nzDisabled]="!canEdit"></nz-switch>
+          </div>
+          <div class="lg-rule">
+            <div class="lg-rule__text">
+              <strong>Reversed within minutes</strong><span>Often means someone is trying numbers until they fit.</span>
+              <div class="lg-rule__inline" [class.is-off]="!s.flagQuicklyReversed">
+                within <nz-input-number [(ngModel)]="s.quicklyReversedMinutes" [nzMin]="1" [nzMax]="240" [nzDisabled]="!canEdit || !s.flagQuicklyReversed" class="nl-num"></nz-input-number> minutes
+              </div>
+            </div>
+            <nz-switch [(ngModel)]="s.flagQuicklyReversed" [nzDisabled]="!canEdit"></nz-switch>
+          </div>
+          <div class="lg-rule">
+            <div class="lg-rule__text">
+              <strong>Posted outside working hours</strong><span>Or from a network that is not a shop or warehouse.</span>
+              <div class="lg-rule__inline" [class.is-off]="!s.flagOutsideHours">
+                from <nz-input-number [(ngModel)]="s.workingFromHour" [nzMin]="0" [nzMax]="23" [nzDisabled]="!canEdit || !s.flagOutsideHours" class="nl-num"></nz-input-number>
+                to <nz-input-number [(ngModel)]="s.workingToHour" [nzMin]="1" [nzMax]="24" [nzDisabled]="!canEdit || !s.flagOutsideHours" class="nl-num"></nz-input-number> o’clock
+              </div>
+            </div>
+            <nz-switch [(ngModel)]="s.flagOutsideHours" [nzDisabled]="!canEdit"></nz-switch>
+          </div>
+          <div class="lg-rule">
+            <div class="lg-rule__text"><strong>Stock would go below zero</strong><span>Blocked and recorded, never silently allowed.</span></div>
+            <nz-switch [(ngModel)]="s.flagBelowZero" [nzDisabled]="!canEdit"></nz-switch>
+          </div>
+          <div class="lg-rule">
+            <div class="lg-rule__text">
+              <strong>A large value in one line</strong><span>Needs a second person to approve before it posts.</span>
+              <div class="lg-rule__inline" [class.is-off]="!s.flagLargeValue">
+                over <nz-input-number [(ngModel)]="s.largeValueOver" [nzMin]="0" [nzStep]="1000" nzPrefix="৳" [nzDisabled]="!canEdit || !s.flagLargeValue" class="nl-num nl-num--wide"></nz-input-number>
+              </div>
+            </div>
+            <nz-switch [(ngModel)]="s.flagLargeValue" [nzDisabled]="!canEdit"></nz-switch>
+          </div>
+          @if (canEdit) {
+            <div class="nl-save"><button type="button" class="se-btn se-btn--sm se-btn--primary" [disabled]="saving" (click)="save()">{{ saving ? 'Saving…' : 'Save these rules' }}</button></div>
+          } @else {
+            <p class="lg-small nl-save">Only someone with “Change ledger rules” can edit these.</p>
+          }
+          <p class="lg-small">Changing a rule only affects lines posted from now on. Lines already sealed keep the flags they were given.</p>
+        </div>
+      </div>
+    }
+
+    <!-- ── Who adjusts stock by hand ────────────────────────────────────── -->
+    <div class="lg-card">
+      <div class="lg-card__head"><h2>Who adjusts stock by hand</h2><span class="lg-small">last 90 days</span></div>
+      <div class="lg-pad">
+        <p class="lg-small nl-intro">A receive or a sale is normal. A hand-typed correction is the line to watch.</p>
+        @for (c of d.correctors; track $index) {
+          <div class="nl-person">
+            <div class="nl-person__name"><strong>{{ c.name }}</strong><span class="lg-small lg-block">{{ c.role || 'no role' }}</span></div>
+            <div class="nl-person__bar"><div class="lg-bar"><span [style.width.%]="c.percent"></span></div></div>
+            <strong class="nl-person__count">{{ c.count }}</strong>
+            <span class="nl-person__value lg-small">{{ money(c.value) }}</span>
+          </div>
+        } @empty {
+          <p class="lg-small">Nobody has corrected stock by hand in the last 90 days.</p>
+        }
+        @if (d.correctorNote) { <div class="nl-note">{{ d.correctorNote }}</div> }
+      </div>
+    </div>
+  </div>
+} @else {
+  <nz-spin nzSimple class="lg-loading"></nz-spin>
+}

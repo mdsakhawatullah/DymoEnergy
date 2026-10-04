@@ -102,6 +102,10 @@ public static class DymoEnergyPermissions
         public const string Edit    = Default + ".Edit";
         /// <summary>Post entries (changes product stock) and reverse posted ones.</summary>
         public const string Post    = Default + ".Post";
+        /// <summary>See the ledger, who has access and the proof tab.</summary>
+        public const string Ledger  = Default + ".Ledger";
+        /// <summary>Change what gets flagged, the rules and the keeping period.</summary>
+        public const string LedgerSettings = Ledger + ".Settings";
     }
 
     public static class Companies

@@ -1,0 +1,60 @@
+/* Shared by every ledger tab. The page root carries .se, so the tokens there apply. */
+:host { display: block; }
+
+.lg-card { background: #fff; border: 1px solid var(--se-border, #E3E6E0); border-radius: 12px; }
+.lg-card__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--se-soft, #F1F3EE); flex-wrap: wrap; }
+.lg-card__head h2 { font-size: 16px; font-weight: 700; margin: 0; }
+.lg-pad { padding: 18px 20px; }
+.lg-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+.lg-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.lg-side { display: flex; flex-direction: column; gap: 16px; }
+.lg-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+
+.lg-wrap { overflow-x: auto; }
+.lg-table { width: 100%; border-collapse: collapse; }
+.lg-table th { background: var(--se-inset, #F7F8F5); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--se-muted, #5F6B63); text-align: left; padding: 11px 14px; white-space: nowrap; }
+.lg-table td { padding: 12px 14px; border-top: 1px solid var(--se-soft, #F1F3EE); font-size: 14px; vertical-align: middle; }
+.lg-table .is-right { text-align: right; }
+.lg-table tbody tr:hover td { background: #FAFBF9; }
+.lg-table tr.is-flagged td { background: #FEFAF0; }
+.lg-table tr.is-flagged:hover td { background: #FDF5E3; }
+.lg-row-click { cursor: pointer; }
+
+.lg-chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 6px; padding: 2px 9px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.lg-chip.is-green { background: #E6F2EA; color: #0B5A34; }
+.lg-chip.is-red { background: #FDECEA; color: #B42318; }
+.lg-chip.is-blue { background: #E8EEFC; color: #1E40AF; }
+.lg-chip.is-amber { background: #FDF0D9; color: #9A5B00; }
+.lg-chip.is-grey { background: var(--se-soft, #F1F3EE); color: var(--se-muted, #5F6B63); }
+
+.lg-when { font-size: 13px; white-space: nowrap; }
+.lg-when b { display: block; font-weight: 600; }
+.lg-mono { font-family: var(--de-font-mono, ui-monospace, monospace); font-size: 12px; }
+.lg-muted { color: var(--se-muted, #5F6B63); }
+.lg-small { font-size: 12px; color: var(--se-muted, #5F6B63); }
+.lg-block { display: block; }
+.lg-empty { padding: 28px 20px; text-align: center; color: var(--se-muted, #5F6B63); font-size: 14px; }
+.lg-loading { display: block; padding: 50px 0; text-align: center; }
+.lg-warn { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px; background: #FDECEA; color: #B42318; font-size: 14px; }
+
+/* a rule with a switch, used by the flag and protection lists */
+.lg-rule { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid var(--se-soft, #F1F3EE); }
+.lg-rule:first-of-type { border-top: 0; }
+.lg-rule__text { flex: 1; min-width: 0; }
+.lg-rule__text strong { display: block; font-size: 14px; font-weight: 600; }
+.lg-rule__text span { display: block; font-size: 13px; color: var(--se-muted, #5F6B63); margin-top: 2px; }
+.lg-rule__inline { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; font-size: 13px; }
+
+/* bar for a share of something */
+.lg-bar { height: 8px; border-radius: 8px; background: var(--se-soft, #F1F3EE); overflow: hidden; }
+.lg-bar span { display: block; height: 100%; border-radius: 8px; background: var(--se-accent, #0E6B3F); }
+
+.lg-pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border-top: 1px solid var(--se-soft, #F1F3EE); flex-wrap: wrap; }
+.lg-pages { display: inline-flex; gap: 6px; align-items: center; }
+.lg-page { min-width: 32px; height: 32px; border-radius: 8px; border: 0; background: none; font: inherit; font-size: 14px; cursor: pointer; color: var(--se-text, #16201A); }
+.lg-page:hover { background: var(--se-soft, #F1F3EE); }
+.lg-page.is-on { background: var(--se-accent, #0E6B3F); color: #fff; font-weight: 700; }
+
+@media (max-width: 1200px) {
+  .lg-grid, .lg-two { grid-template-columns: 1fr; }
+}

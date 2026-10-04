@@ -96,6 +96,10 @@ public class DymoEnergyDbContext :
     public DbSet<StockEntryLine>       StockEntryLines       { get; set; }
     public DbSet<StockEntryAttachment> StockEntryAttachments { get; set; }
     public DbSet<StockSerial>          StockSerials          { get; set; }
+    public DbSet<StockLedgerLine>      StockLedgerLines      { get; set; }
+    public DbSet<StockLedgerReview>    StockLedgerReviews    { get; set; }
+    public DbSet<StockLedgerCheck>     StockLedgerChecks     { get; set; }
+    public DbSet<StockLedgerSetting>   StockLedgerSettings   { get; set; }
     public DbSet<UserSiteSetting>      UserSiteSettings      { get; set; }
     public DbSet<UserSiteSettingImage> UserSiteSettingImages { get; set; }
 
@@ -740,6 +744,68 @@ public class DymoEnergyDbContext :
             b.Property(x => x.Serial).IsRequired().HasMaxLength(StockConsts.SerialMaxLength);
             b.HasIndex(x => new { x.ProductId, x.Serial }).IsUnique();
             b.HasIndex(x => x.Serial);
+        });
+
+        /* ── Stock ledger ───────────────────────────────────────────────── */
+        builder.Entity<StockLedgerLine>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "StockLedgerLines", DymoEnergyConsts.DbSchema);
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.ProductName).IsRequired().HasMaxLength(LedgerConsts.MaxName);
+            b.Property(x => x.Sku).HasMaxLength(LedgerConsts.MaxShort);
+            b.Property(x => x.WarehouseName).IsRequired().HasMaxLength(LedgerConsts.MaxName);
+            b.Property(x => x.UnitCost).HasPrecision(18, 2);
+            b.Property(x => x.ValueBefore).HasPrecision(18, 2);
+            b.Property(x => x.ValueAfter).HasPrecision(18, 2);
+            b.Property(x => x.TimeZone).HasMaxLength(64);
+            b.Property(x => x.UserName).IsRequired().HasMaxLength(LedgerConsts.MaxName);
+            b.Property(x => x.UserEmail).HasMaxLength(LedgerConsts.MaxName);
+            b.Property(x => x.UserRole).HasMaxLength(LedgerConsts.MaxShort);
+            b.Property(x => x.ApprovedByName).HasMaxLength(LedgerConsts.MaxName);
+            b.Property(x => x.IpAddress).HasMaxLength(64);
+            b.Property(x => x.Device).HasMaxLength(LedgerConsts.MaxName);
+            b.Property(x => x.SessionId).HasMaxLength(64);
+            b.Property(x => x.CameFrom).HasMaxLength(LedgerConsts.MaxShort);
+            b.Property(x => x.Reason).HasMaxLength(LedgerConsts.MaxReason);
+            b.Property(x => x.DocumentType).HasMaxLength(64);
+            b.Property(x => x.DocumentNumber).HasMaxLength(LedgerConsts.MaxShort);
+            b.Property(x => x.Hash).IsRequired().HasMaxLength(LedgerConsts.HashLength);
+            b.Property(x => x.PreviousHash).IsRequired().HasMaxLength(LedgerConsts.HashLength);
+            b.Property(x => x.ServerName).HasMaxLength(64);
+            b.Property(x => x.RequestId).HasMaxLength(64);
+            b.HasIndex(x => x.Time);
+            b.HasIndex(x => new { x.ProductId, x.Id });
+            b.HasIndex(x => x.Flags);
+            b.HasIndex(x => x.StockEntryId);
+        });
+
+        builder.Entity<StockLedgerReview>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "StockLedgerReviews", DymoEnergyConsts.DbSchema);
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.UserName).IsRequired().HasMaxLength(LedgerConsts.MaxName);
+            b.Property(x => x.Action).IsRequired().HasMaxLength(16);
+            b.Property(x => x.Note).HasMaxLength(LedgerConsts.MaxReason);
+            b.HasIndex(x => x.LineId);
+        });
+
+        builder.Entity<StockLedgerCheck>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "StockLedgerChecks", DymoEnergyConsts.DbSchema);
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.StartedBy).IsRequired().HasMaxLength(16);
+            b.Property(x => x.UserName).HasMaxLength(LedgerConsts.MaxName);
+            b.HasIndex(x => x.Time);
+        });
+
+        builder.Entity<StockLedgerSetting>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "StockLedgerSettings", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.LargeValueOver).HasPrecision(18, 2);
+            b.Property(x => x.AllowedNetworks).HasMaxLength(512);
+            b.Property(x => x.LastExportBy).HasMaxLength(LedgerConsts.MaxName);
         });
 
         /* ── Quote Requests ─────────────────────────────────────────────── */

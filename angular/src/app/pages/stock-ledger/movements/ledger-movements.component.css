@@ -1,0 +1,12 @@
+.mv-filters { display: flex; gap: 10px; padding: 16px 18px; flex-wrap: wrap; align-items: center; }
+.mv-search { flex: 1; min-width: 260px; max-width: 340px; display: flex; align-items: center; gap: 8px; height: 42px; border: 1px solid var(--de-border-input, #D8DDD5); border-radius: 8px; padding: 0 12px; color: var(--se-muted, #5F6B63); }
+.mv-search:focus-within { border-color: var(--se-accent, #0E6B3F); box-shadow: 0 0 0 3px rgba(14, 107, 63, 0.12); }
+.mv-search input { border: 0; outline: none; flex: 1; font: inherit; font-size: 14px; background: transparent; color: var(--se-text, #16201A); min-width: 0; }
+.mv-filter { width: auto; min-width: 170px; }
+.mv-check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap; cursor: pointer; }
+.mv-count { padding: 0 20px 10px; }
+.mv-table { min-width: 940px; }
+.mv-flag { margin-left: 8px; font-size: 12px; vertical-align: middle; }
+.mv-flag.is-red { color: #B42318; }
+.mv-flag.is-amber { color: #D97706; }
+.mv-flag.is-grey { color: #9AA39C; }

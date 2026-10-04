@@ -1,12 +1,110 @@
-<div class="card">
-  <div class="card-header">
-    <div class="row">
-      <div class="col col-md-6">
-        <h5 class="card-title">{{ '::Menu:StockLedger' | abpLocalization }}</h5>
-      </div>
+<div class="se sl">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="se-head">
+    <div>
+      <h1 class="se-title">Stock ledger</h1>
+      <div class="se-sub">Every change to every quantity, with the person, the machine and the moment behind it.</div>
+    </div>
+    <div class="se-head__actions">
+      <button type="button" class="se-btn" [disabled]="exporting" (click)="export()"><i class="bi bi-download"></i>{{ exporting ? 'Exporting…' : 'Export for auditor' }}</button>
+      <button type="button" class="se-btn" [disabled]="verifying" (click)="verify()"><i class="bi bi-shield-check"></i>{{ verifying ? 'Checking…' : 'Verify the chain' }}</button>
     </div>
   </div>
-  <div class="card-body">
-    <p class="text-muted">Stock Ledger page — coming soon.</p>
+
+  <!-- ── Promise ────────────────────────────────────────────────────────── -->
+  <div class="sl-promise" [class.is-bad]="altered">
+    <i class="bi" [ngClass]="altered ? 'bi-exclamation-octagon' : 'bi-shield-check'"></i>
+    <p>
+      Nothing here can be edited or deleted — not by an admin, not by the system. A mistake is fixed by posting a
+      <strong>reversing line</strong>, so both the error and the correction stay visible.
+      @if (header?.lastCheckAt) {
+        The chain was last {{ checkedAgo }} over all {{ header?.lastCheckLines | number }} lines.
+      } @else {
+        The chain has not been checked yet — press <strong>Verify the chain</strong> to check every seal now.
+      }
+    </p>
+    <span class="se-status" [ngClass]="altered ? 'is-reversed' : 'is-posted'">{{ altered ? 'Needs attention' : 'Nothing altered' }}</span>
   </div>
+
+  @if (forbidden) {
+    <div class="sl-forbidden">
+      <i class="bi bi-lock"></i>
+      <div>
+        <strong>Your account cannot see the stock ledger yet.</strong>
+        <p>
+          The ledger permissions are new, so no role has them yet. Open
+          <strong>Administration → Identity management → Roles</strong>, edit your role, and under
+          <strong>Permissions → Stock entries</strong> tick <strong>See the stock ledger</strong>
+          (and <strong>Change ledger rules and keeping</strong> if you want to edit the rules). Sign out and in again afterwards.
+        </p>
+      </div>
+      <button type="button" class="se-btn se-btn--sm" (click)="load()">Try again</button>
+    </div>
+  } @else {
+    @if (header; as h) {
+    <!-- ── Numbers ──────────────────────────────────────────────────────── -->
+    <div class="sl-kpis">
+      <div class="se-card sl-kpi sl-kpi--main">
+        <span class="se-muted">Lines posted today</span>
+        <strong class="sl-kpi__big">{{ h.linesToday | number }}</strong>
+        <span class="se-small">
+          {{ h.peopleToday }} {{ h.peopleToday === 1 ? 'person' : 'people' }}@if (h.machinesToday) { and {{ h.machinesToday }} {{ h.machinesToday === 1 ? 'machine' : 'machines' }} }
+          @if (h.flaggedOpen) { · {{ h.flaggedOpen }} needs a look }
+        </span>
+      </div>
+      <div class="sl-kpis__cards">
+        <div class="se-card sl-mini">
+          <span class="sl-mini__label"><span class="sl-dot" style="background:#0E6B3F"></span>Stock went in</span>
+          <strong class="is-green">{{ signed(h.inUnits) }} units</strong>
+          <span class="se-small">across {{ h.inProducts }} {{ h.inProducts === 1 ? 'product' : 'products' }}</span>
+        </div>
+        <div class="se-card sl-mini">
+          <span class="sl-mini__label"><span class="sl-dot" style="background:#2563EB"></span>Stock went out</span>
+          <strong class="is-blue">{{ signed(h.outUnits) }} units</strong>
+          <span class="se-small">sales, jobs and damage</span>
+        </div>
+        <button type="button" class="se-card sl-mini is-click" [class.is-active]="tab === 'needs'" (click)="tab = 'needs'">
+          <span class="sl-mini__label"><span class="sl-dot" style="background:#D97706"></span>Hand corrections</span>
+          <strong class="is-amber">{{ h.handCorrections | number }}</strong>
+          <span class="se-small">the lines to watch</span>
+        </button>
+        <button type="button" class="se-card sl-mini is-click" [class.is-active]="tab === 'needs'" (click)="tab = 'needs'">
+          <span class="sl-mini__label"><span class="sl-dot" style="background:#B42318"></span>Flagged</span>
+          <strong [class.is-red]="h.flaggedOpen > 0">{{ h.flaggedOpen | number }}</strong>
+          <span class="se-small">{{ h.oldestFlaggedDays != null ? 'oldest is ' + h.oldestFlaggedDays + ' days old' : 'nothing waiting' }}</span>
+        </button>
+      </div>
+    </div>
+    } @else if (failed) {
+      <div class="sl-banner is-bad"><i class="bi bi-x-circle"></i>Could not load the ledger. <button type="button" class="se-link" (click)="load()">Try again</button></div>
+    }
+  }
+
+  <!-- ── Tabs ───────────────────────────────────────────────────────────── -->
+  @if (!forbidden) {
+  <div class="sl-tabs" role="tablist">
+    @for (t of tabs; track t.key) {
+      <button type="button" role="tab" class="sl-tab" [class.is-active]="tab === t.key" [attr.aria-selected]="tab === t.key" (click)="tab = t.key">
+        <i class="bi" [ngClass]="t.icon"></i>{{ t.label }}
+        @if (t.key === 'needs' && header?.flaggedOpen) { <span class="sl-count">{{ header?.flaggedOpen }}</span> }
+      </button>
+    }
+  </div>
+
+  }
+
+  @if (!forbidden) {
+  @switch (tab) {
+    @case ('movements') { <app-ledger-movements (openLine)="openLine($event)" /> }
+    @case ('product') { <app-ledger-product (openLine)="openLine($event)" /> }
+    @case ('needs') { <app-ledger-needs-look [canEdit]="canEditSettings" (openLine)="openLine($event)" (changed)="load()" /> }
+    @case ('access') { <app-ledger-access [canEdit]="canEditSettings" /> }
+    @case ('proof') { <app-ledger-proof [canEdit]="canEditSettings" [lastResult]="checkResult" [verifying]="verifying"
+        (verify)="verify()" (export)="export()" (openLine)="openLine($event)" /> }
+  }
+  }
 </div>
+
+@if (lineId) {
+  <app-ledger-line-drawer [lineId]="lineId" (closed)="lineId = null" (openLine)="lineId = $event" (reviewed)="onReviewed()" />
+}

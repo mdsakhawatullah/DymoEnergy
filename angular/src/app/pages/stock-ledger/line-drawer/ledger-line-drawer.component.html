@@ -1,0 +1,159 @@
+<nz-drawer [nzVisible]="true" nzWidth="min(700px, 100vw)" [nzTitle]="head" [nzFooter]="foot" (nzOnClose)="closed.emit()">
+  <ng-template #head>
+    <div class="ld-head">
+      <div>
+        <strong class="ld-head__title">Ledger line <span class="lg-mono">LED-{{ lineId | number: '5.0-0' }}</span></strong>
+        @if (detail; as d) { <span class="lg-small lg-block">{{ d.time | date: 'EEEE d MMMM y, HH:mm:ss' }} ({{ d.timeZone }})</span> }
+      </div>
+      <span class="ld-head__nav">
+        <button type="button" class="se-icon" [disabled]="!detail?.previousLineId" (click)="openLine.emit(detail!.previousLineId!)" aria-label="Previous line" title="Previous line"><i class="bi bi-chevron-left"></i></button>
+        <button type="button" class="se-icon" [disabled]="!detail?.nextLineId" (click)="openLine.emit(detail!.nextLineId!)" aria-label="Next line" title="Next line"><i class="bi bi-chevron-right"></i></button>
+      </span>
+    </div>
+  </ng-template>
+
+  <div *nzDrawerContent class="se ld">
+    @if (detail; as d) {
+      <!-- ── What moved ─────────────────────────────────────────────────── -->
+      <section class="lg-card lg-pad ld-what">
+        <div class="ld-what__top">
+          <span class="lg-chip" [ngClass]="'is-' + movementTone(d.line.movement)">{{ d.line.movementLabel }}</span>
+          <strong>{{ d.line.productName }}</strong>
+          <span class="lg-mono lg-small">{{ d.line.sku }}</span>
+        </div>
+        <div class="ld-numbers">
+          <div><span class="lg-small">Before</span><strong>{{ d.line.quantityBefore | number }}</strong></div>
+          <i class="bi bi-arrow-right lg-muted"></i>
+          <div><span class="lg-small">After</span><strong>{{ d.line.quantityAfter | number }}</strong></div>
+          <div class="ld-numbers__change">
+            <span class="lg-small">Change</span>
+            <strong [class.is-green]="d.line.change > 0" [class.is-red]="d.line.change < 0">{{ signed(d.line.change) }}</strong>
+          </div>
+        </div>
+        <p class="ld-reason">
+          @if (d.reason) { Reason typed in: “{{ d.reason }}” } @else { <span class="is-amber">Nothing was typed in to explain this line.</span> }
+        </p>
+        <span class="lg-small">{{ d.warehouseName }} · {{ money(d.unitCost) }} a unit</span>
+      </section>
+
+      <!-- ── Who did it ─────────────────────────────────────────────────── -->
+      <section class="lg-card lg-pad">
+        <h3 class="ld-h">Who did it</h3>
+        <div class="ld-person">
+          <span class="ld-avatar">{{ d.line.userName.slice(0, 2).toUpperCase() }}</span>
+          <div><strong>{{ d.line.userName }}</strong><span class="lg-small lg-block">{{ d.userEmail }}</span></div>
+          @if (d.userRole) { <span class="lg-chip is-green">{{ d.userRole }}</span> }
+        </div>
+        <dl class="ld-dl">
+          @if (d.signedInAt) { <dt>Signed in at</dt><dd>{{ d.signedInAt | date: 'd MMM, HH:mm:ss' }}@if (d.signedInText) { — {{ d.signedInText }} }</dd> }
+          <dt>IP address</dt><dd class="lg-mono">{{ d.ipAddress || 'not recorded' }}</dd>
+          <dt>Device</dt><dd>{{ d.device || 'not recorded' }}</dd>
+          @if (d.sessionId) { <dt>Session</dt><dd class="lg-mono">{{ d.sessionId }}</dd> }
+          <dt>2-step sign-in</dt>
+          <dd [class.is-green]="d.twoStepUsed" [class.is-amber]="!d.twoStepUsed">{{ d.twoStepUsed ? 'Yes' : 'Not used for this sign-in' }}</dd>
+          <dt>Came from</dt><dd>{{ d.cameFrom || d.sourceLabel }}</dd>
+          <dt>Approved by</dt>
+          <dd [class.is-amber]="d.neededApproval && !d.approvedByName">
+            {{ d.approvedByName || (d.neededApproval ? 'Nobody — this line is over the two-person limit' : 'Nobody — under the two-person limit') }}
+          </dd>
+        </dl>
+      </section>
+
+      <!-- ── Field by field ─────────────────────────────────────────────── -->
+      <section class="lg-card">
+        <div class="lg-card__head"><h2>What changed, field by field</h2></div>
+        <div class="lg-wrap">
+          <table class="lg-table">
+            <thead><tr><th>Field</th><th class="is-right">Was</th><th class="is-right">Became</th></tr></thead>
+            <tbody>
+              @for (c of d.changes; track $index) {
+                <tr>
+                  <td>{{ c.field }}</td>
+                  <td class="is-right lg-muted">{{ c.was }}</td>
+                  <td class="is-right"><strong [class.is-green]="c.changed">{{ c.became }}</strong></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (d.serials.length) {
+          <div class="ld-serials">
+            <span class="lg-small lg-block">Serial numbers touched</span>
+            @for (s of d.serials; track s) { <span class="lg-mono ld-serial">{{ s }}</span> }
+          </div>
+        }
+      </section>
+
+      <!-- ── Paper trail ────────────────────────────────────────────────── -->
+      <section class="lg-card">
+        <div class="lg-card__head"><h2>Paper trail</h2></div>
+        @for (p of d.paper; track $index) {
+          <div class="ld-paper">
+            <i class="bi" [ngClass]="paperIcon(p)"></i>
+            <div class="ld-paper__text"><strong>{{ p.title }}</strong>@if (p.detail) { <span class="lg-small lg-block">{{ p.detail }}</span> }</div>
+            @if (p.link !== 'none') { <button type="button" class="se-link" (click)="follow(p)">Open</button> }
+          </div>
+        } @empty {
+          <div class="lg-empty">Nothing else is attached to this line.</div>
+        }
+      </section>
+
+      <!-- ── Reviews ────────────────────────────────────────────────────── -->
+      @if (d.reviews.length) {
+        <section class="lg-card">
+          <div class="lg-card__head"><h2>Who looked at this</h2></div>
+          @for (r of d.reviews; track $index) {
+            <div class="ld-paper">
+              <i class="bi bi-eye"></i>
+              <div class="ld-paper__text">
+                <strong>{{ r.userName }} {{ r.action === 'asked' ? 'asked about it' : r.action === 'reversed' ? 'reversed it' : 'checked it' }}</strong>
+                <span class="lg-small lg-block">{{ r.time | date: 'd MMM y, HH:mm' }}@if (r.note) { — “{{ r.note }}” }</span>
+              </div>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- ── Seal ───────────────────────────────────────────────────────── -->
+      <section class="lg-card lg-pad">
+        <div class="ld-seal__head">
+          <h3 class="ld-h">Seal</h3>
+          <span class="se-status" [ngClass]="d.sealOk ? 'is-posted' : 'is-reversed'">
+            <i class="bi" [ngClass]="d.sealOk ? 'bi-check-lg' : 'bi-exclamation-triangle'"></i>
+            {{ d.sealOk ? 'Unchanged since it was posted' : 'Does not match — this line was altered' }}
+          </span>
+        </div>
+        <span class="lg-small lg-block">This line’s fingerprint</span>
+        <code class="ld-hash" (click)="copy(d.hash, 'Fingerprint')" title="Click to copy">{{ d.hash }}</code>
+        <span class="lg-small lg-block">Fingerprint of the line before it</span>
+        <code class="ld-hash" (click)="copy(d.previousHash, 'Previous fingerprint')" title="Click to copy">{{ d.previousHash }}</code>
+        <span class="lg-small lg-block ld-written">
+          Written by {{ d.serverName || 'the server' }}@if (d.requestId) { · request <span class="lg-mono">{{ d.requestId }}</span> }
+        </span>
+      </section>
+    } @else if (failed) {
+      <div class="lg-warn"><i class="bi bi-x-circle"></i>Could not load this line. <button type="button" class="se-link" (click)="load()">Try again</button></div>
+    } @else {
+      <nz-spin nzSimple class="lg-loading"></nz-spin>
+    }
+  </div>
+
+  <ng-template #foot>
+    <div class="ld-foot">
+      <span class="lg-small">This line cannot be edited or removed.</span>
+      <span class="ld-foot__acts">
+        @if (noteOpen) {
+          <input class="se-input ld-note" [(ngModel)]="note" maxlength="512" placeholder="What should be looked at?" (keyup.enter)="saveNote()" />
+          <button type="button" class="se-btn se-btn--sm" (click)="noteOpen = false">Cancel</button>
+          <button type="button" class="se-btn se-btn--sm se-btn--primary" [disabled]="saving" (click)="saveNote()">Save note</button>
+        } @else {
+          @if (detail && !detail.line.reviewed && detail.line.flags) {
+            <button type="button" class="se-btn se-btn--sm" [disabled]="saving" (click)="markChecked()">Mark as checked</button>
+          }
+          <button type="button" class="se-btn se-btn--sm" (click)="noteOpen = true">Flag for review</button>
+          <button type="button" class="se-btn se-btn--sm se-btn--primary" (click)="reverse()">Post a reversing line</button>
+        }
+      </span>
+    </div>
+  </ng-template>
+</nz-drawer>

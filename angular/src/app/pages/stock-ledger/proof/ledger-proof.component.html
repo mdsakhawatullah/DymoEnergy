@@ -1,0 +1,95 @@
+@if (data; as d) {
+  <div class="lg-two pf-top">
+    <!-- ── The chain ────────────────────────────────────────────────────── -->
+    <div class="lg-card lg-pad">
+      <h2 class="pf-h">How you know nobody edited the past</h2>
+      <p class="pf-text">
+        Each line is sealed with a fingerprint made from its own contents <em>and</em> the fingerprint of the line before
+        it. Change one old quantity and every fingerprint after it stops matching, which is what the check below looks for.
+      </p>
+
+      <ol class="pf-seals">
+        @for (s of d.seals; track s.lineId) {
+          <li class="pf-seal" [class.is-first]="s.isFirst">
+            <span class="pf-seal__dot"></span>
+            <button type="button" class="pf-seal__head" (click)="openLine.emit(s.lineId)">
+              <strong>Line {{ s.lineId | number }}</strong><span class="lg-small"> · {{ s.title }}</span>
+              <span class="lg-small pf-seal__when">{{ s.time | date: 'd MMM, HH:mm:ss' }}</span>
+            </button>
+            <code class="pf-seal__hash">
+              @if (s.isFirst) { {{ shortHash(s.previousHash) }} … {{ shortHash(s.hash) }} ← the first seal }
+              @else { {{ shortHash(s.previousHash) }} … {{ shortHash(s.hash) }} ← seals the line below }
+            </code>
+          </li>
+        } @empty {
+          <li class="lg-small">No lines yet, so there is nothing to seal.</li>
+        }
+      </ol>
+
+      @if (check; as c) {
+        <div class="pf-check" [class.is-bad]="!c.ok">
+          <i class="bi" [ngClass]="c.ok ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill'"></i>
+          <div class="pf-check__text">
+            <strong>{{ c.message }}</strong>
+            <span class="lg-small lg-block">Checked {{ checkedAgo }} in {{ c.durationMs }} ms over {{ c.linesChecked | number }} lines.</span>
+            @if (!c.ok && c.firstBadLineId) {
+              <button type="button" class="se-link" (click)="openLine.emit(c.firstBadLineId!)">Open line {{ c.firstBadLineId | number }}</button>
+            }
+          </div>
+          <button type="button" class="se-btn se-btn--sm" [disabled]="verifying" (click)="verify.emit()">{{ verifying ? 'Checking…' : 'Run it now' }}</button>
+        </div>
+      } @else {
+        <div class="pf-check is-idle">
+          <i class="bi bi-shield-exclamation"></i>
+          <div class="pf-check__text"><strong>The chain has not been checked yet.</strong><span class="lg-small lg-block">Checking reads every line and recomputes its seal.</span></div>
+          <button type="button" class="se-btn se-btn--sm" [disabled]="verifying" (click)="verify.emit()">{{ verifying ? 'Checking…' : 'Run it now' }}</button>
+        </div>
+      }
+    </div>
+
+    <div class="lg-side">
+      <!-- ── What every line carries ──────────────────────────────────── -->
+      <div class="lg-card lg-pad">
+        <h2 class="pf-h">What every line always carries</h2>
+        <p class="lg-small pf-sub">Written by the server, not the browser — so none of it can be faked from the form.</p>
+        <ul class="pf-carried">
+          @for (c of carried; track c) { <li><i class="bi bi-check-lg"></i>{{ c }}</li> }
+        </ul>
+      </div>
+
+      <!-- ── Keeping ──────────────────────────────────────────────────── -->
+      @if (setting; as s) {
+        <div class="lg-card lg-pad">
+          <h2 class="pf-h">Keeping and handing over</h2>
+          <dl class="pf-dl">
+            <dt>Lines in the ledger</dt><dd>{{ d.totalLines | number }}</dd>
+            <dt>Keep lines for</dt>
+            <dd>
+              @if (canEdit) {
+                <nz-input-number [(ngModel)]="s.keepYears" [nzMin]="1" [nzMax]="50" class="pf-years"></nz-input-number> years
+              } @else { {{ s.keepYears }} years }
+            </dd>
+            <dt>Can anything be deleted</dt><dd class="is-green">No — not by any role</dd>
+            <dt>Auditor export</dt><dd>CSV of every line</dd>
+            <dt>Last export</dt><dd>{{ d.lastExportAt ? (d.lastExportAt | date: 'd MMM y') : 'never' }}@if (d.lastExportBy) { by {{ d.lastExportBy }} }</dd>
+          </dl>
+          @if (canEdit) {
+            <div class="pf-save"><button type="button" class="se-btn se-btn--sm se-btn--primary" [disabled]="saving" (click)="save()">{{ saving ? 'Saving…' : 'Save keeping period' }}</button></div>
+          }
+          <p class="lg-small">Confirm the keeping period with the client’s accountant — tax and company rules may ask for longer.</p>
+          <div class="pf-acts">
+            <button type="button" class="se-btn se-btn--sm" (click)="export.emit()"><i class="bi bi-download"></i>Export CSV</button>
+            <button type="button" class="se-btn se-btn--sm" (click)="print()"><i class="bi bi-printer"></i>Print this page</button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="lg-card lg-pad pf-footnote">
+    <i class="bi bi-info-circle"></i>
+    <span>The ledger is the record of what moved. Product pages and reports read today’s quantity from the stock balances, which only ever change at the same moment a ledger line is written.</span>
+  </div>
+} @else {
+  <nz-spin nzSimple class="lg-loading"></nz-spin>
+}

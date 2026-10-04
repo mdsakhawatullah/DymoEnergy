@@ -136,6 +136,8 @@
     "Permission:Stock": "Stock entries",
     "Permission:Stock.Edit": "Create and edit draft stock entries",
     "Permission:Stock.Post": "Post and reverse stock entries",
+    "Permission:Stock.Ledger": "See the stock ledger",
+    "Permission:Stock.LedgerSettings": "Change ledger rules and keeping",
 
     "Enum:CompanyStatus.1": "Active",
     "Enum:CompanyStatus.2": "Inactive",

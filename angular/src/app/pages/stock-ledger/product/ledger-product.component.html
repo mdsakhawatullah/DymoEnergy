@@ -1,0 +1,124 @@
+@if (options.length === 0) {
+  <div class="lg-card lg-empty">No product has moved yet. Post a stock entry and its lines appear here.</div>
+} @else {
+  <!-- ── Picker ───────────────────────────────────────────────────────── -->
+  <div class="lg-card lg-pad pr-pick">
+    <span class="pr-pick__icon"><i class="bi bi-box-seam"></i></span>
+    <div class="pr-pick__text">
+      <strong>{{ data?.product?.name || 'Choose a product' }}</strong>
+      <span class="lg-small lg-block">
+        <span class="lg-mono">{{ data?.product?.sku }}</span>
+        @if (data?.tracksSerials) { · tracked by serial number }
+      </span>
+    </div>
+    <select class="se-select pr-select" [(ngModel)]="productId" (ngModelChange)="load()" aria-label="Product">
+      @for (o of options; track o.id) { <option [ngValue]="o.id">{{ o.name }}</option> }
+    </select>
+    <select class="se-select pr-range" [(ngModel)]="days" (ngModelChange)="load()" aria-label="Period">
+      @for (r of ranges; track r.value) { <option [ngValue]="r.value">{{ r.label }}</option> }
+    </select>
+  </div>
+
+  @if (data; as d) {
+    <!-- ── Numbers ────────────────────────────────────────────────────── -->
+    <div class="pr-kpis">
+      <div class="lg-card lg-pad pr-kpi">
+        <span class="lg-small">In stock now</span>
+        <strong>{{ d.inStockNow | number }}</strong>
+        <span class="lg-small">{{ d.whereText || 'nothing on any shelf' }}</span>
+      </div>
+      <div class="lg-card lg-pad pr-kpi">
+        <span class="lg-small">Lines in {{ days }} days</span>
+        <strong>{{ d.linesInRange | number }}</strong>
+        <span class="lg-small">{{ d.movesIn }} in, {{ d.movesOut }} out</span>
+      </div>
+      <div class="lg-card lg-pad pr-kpi">
+        <span class="lg-small">Hand corrections</span>
+        <strong [class.is-amber]="d.handCorrections > 0">{{ d.handCorrections | number }}</strong>
+        <span class="lg-small">{{ d.handCorrectionsBy ? 'all by ' + d.handCorrectionsBy : 'none in this period' }}</span>
+      </div>
+      <div class="lg-card lg-pad pr-kpi">
+        <span class="lg-small">Stock value</span>
+        <strong class="is-green">{{ lakh(d.stockValue) }}</strong>
+        <span class="lg-small">at {{ money(d.averageCost) }} a unit on average</span>
+      </div>
+    </div>
+
+    <!-- ── Chart ──────────────────────────────────────────────────────── -->
+    <div class="lg-card">
+      <div class="lg-card__head"><h2>How the balance moved</h2><span class="lg-small">last {{ days }} days · all warehouses</span></div>
+      <div class="pr-chart">
+        <svg [attr.viewBox]="'0 0 ' + width + ' ' + height" class="pr-svg" role="img"
+          [attr.aria-label]="'Stock balance over the last ' + days + ' days, now ' + d.inStockNow + ' units'">
+          <path [attr.d]="areaPath" fill="rgba(14,107,63,0.08)" />
+          <path [attr.d]="linePath" fill="none" stroke="#0E6B3F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+          @for (p of dots; track $index) {
+            <circle [attr.cx]="p.x" [attr.cy]="p.y" r="4" [attr.fill]="dotColour(p)"><title>{{ dotTitle(p) }}</title></circle>
+          }
+        </svg>
+      </div>
+      <div class="pr-legend lg-small">
+        <span><span class="pr-dot" style="background:#0E6B3F"></span>stock coming in</span>
+        <span><span class="pr-dot" style="background:#D97706"></span>going out</span>
+        <span><span class="pr-dot" style="background:#2563EB"></span>both on one day</span>
+        <span class="pr-legend__note">{{ lowestText }}</span>
+      </div>
+    </div>
+
+    <div class="lg-two">
+      <!-- ── This product's lines ─────────────────────────────────────── -->
+      <div class="lg-card">
+        <div class="lg-card__head"><h2>This product’s lines</h2><span class="lg-small">newest first</span></div>
+        <div class="lg-wrap">
+          <table class="lg-table">
+            <thead><tr><th>When</th><th>What happened</th><th class="is-right">Change</th><th class="is-right">Before → after</th><th>Who</th></tr></thead>
+            <tbody>
+              @for (l of d.lines; track l.id) {
+                <tr class="lg-row-click" [class.is-flagged]="l.flags && !l.reviewed" (click)="openLine.emit(l.id)"
+                  tabindex="0" (keydown.enter)="openLine.emit(l.id)">
+                  <td class="lg-when"><b>{{ l.time | date: 'd MMM' }}</b><span class="lg-small">{{ l.time | date: 'HH:mm' }}</span></td>
+                  <td><span class="lg-chip" [ngClass]="'is-' + movementTone(l.movement)">{{ l.movementLabel }}</span></td>
+                  <td class="is-right"><strong [class.is-green]="l.change > 0" [class.is-red]="l.change < 0">{{ signed(l.change) }}</strong></td>
+                  <td class="is-right lg-muted">{{ l.quantityBefore }} → {{ l.quantityAfter }}</td>
+                  <td class="lg-small">{{ l.userName }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="lg-empty">No lines for this product.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── What it cost ─────────────────────────────────────────────── -->
+      <div class="lg-card">
+        <div class="lg-card__head"><h2>What the stock cost</h2></div>
+        <div class="lg-pad">
+          <p class="lg-small pr-note">
+            Stock is valued at <strong>average cost</strong>: every receipt blends into one cost per unit, so a sale takes
+            {{ money(d.averageCost) }} off the value whichever shipment it came from.
+          </p>
+          @for (r of d.receipts; track r.lineId; let i = $index) {
+            <div class="pr-layer">
+              <span class="pr-layer__n">{{ i + 1 }}</span>
+              <div class="pr-layer__text">
+                <strong>{{ r.title }}</strong>
+                @if (r.detail) { <span class="lg-small lg-block lg-mono">{{ r.detail }}</span> }
+              </div>
+              <span class="pr-layer__qty">{{ r.quantity }}</span>
+              <span class="pr-layer__cost">{{ money(r.unitCost) }} each</span>
+            </div>
+          } @empty {
+            <p class="lg-small">Nothing has been received for this product yet.</p>
+          }
+          <div class="pr-total">
+            <span>Stock value now</span>
+            <strong>{{ money(d.stockValue) }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <nz-spin nzSimple class="lg-loading"></nz-spin>
+  }
+}
