@@ -229,6 +229,8 @@ public class ProductAppService : ApplicationService, IProductAppService
         p.StockQuantity = input.StockQuantity;
         p.PrimaryImage  = input.PrimaryImage;
         p.Description   = input.Description;
+        p.Specifications = input.Specifications;
+        p.Download      = input.Download;
         p.MetaTitle     = input.MetaTitle;
         p.MetaDescription = input.MetaDescription;
         p.MetaKeywords  = input.MetaKeywords;
@@ -288,6 +290,8 @@ public class ProductAppService : ApplicationService, IProductAppService
         StockQuantity       = p.StockQuantity,
         PrimaryImage        = p.PrimaryImage,
         Description         = p.Description,
+        Specifications      = p.Specifications,
+        Download            = p.Download,
         MetaTitle           = p.MetaTitle,
         MetaDescription     = p.MetaDescription,
         MetaKeywords        = p.MetaKeywords,

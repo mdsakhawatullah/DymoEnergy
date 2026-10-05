@@ -9,6 +9,15 @@ export class ImageUploadService {
 
   constructor(private http: HttpClient) {}
 
+  private readonly pdfUrl = `${environment.apis['default'].url}/api/app/product-files/upload`;
+
+  /** Uploads a product PDF (datasheet / manual) and returns its public URL. */
+  uploadProductPdf(file: File): Observable<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(this.pdfUrl, formData).pipe(map(res => res.url));
+  }
+
   uploadImage(file: File, folder = 'DymoEnergy'): Observable<string> {
     const formData = new FormData();
     formData.append('file', file);

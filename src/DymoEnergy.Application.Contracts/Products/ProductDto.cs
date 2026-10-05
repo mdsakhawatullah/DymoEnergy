@@ -31,6 +31,8 @@ public class ProductDto : FullAuditedEntityDto<int>
     public int     StockQuantity     { get; set; }
     public string? PrimaryImage      { get; set; }
     public string? Description       { get; set; }
+    public string? Specifications    { get; set; }
+    public string? Download          { get; set; }
     public string? MetaTitle         { get; set; }
     public string? MetaDescription   { get; set; }
     public string? MetaKeywords      { get; set; }

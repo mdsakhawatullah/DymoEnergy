@@ -31,6 +31,11 @@ public class Product : FullAuditedAggregateRoot<int>
     public string?  PrimaryImage { get; set; } 
     public string?  Description  { get; set; }
 
+    /// <summary>Technical specifications, one per line as "Label: Value".</summary>
+    public string?  Specifications { get; set; }
+    /// <summary>URL of the downloadable PDF (datasheet / manual).</summary>
+    public string?  Download { get; set; }
+
     // ── SEO ───────────────────────────────────────────────────────────────
     public string? MetaTitle { get; set; }
     public string? MetaDescription { get; set; }

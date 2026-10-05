@@ -8,7 +8,7 @@
     </button>
     <div class="pe-head__text">
       <h2>{{ isEdit ? 'Edit product' : 'Create product' }}</h2>
-      <p>Fill the 4 sections, then save. Only name, category and price are required.</p>
+      <p>Fill the 5 sections, then save. Only name, category and price are required.</p>
     </div>
     <span class="pe-status" [class.pe-status--live]="isLive">
       <i></i>{{ statusLabel }}
@@ -224,10 +224,48 @@
         <p class="pe-help">Drag to reorder. A clear photo on a white background sells best.</p>
       </section>
 
-      <!-- ④ Visibility -->
-      <section class="pe-sec" id="pe-visibility">
+            <!-- ④ Description, specifications & PDF -->
+      <section class="pe-sec" id="pe-details">
         <div class="pe-sec__head">
           <span class="pe-num">4</span>
+          <h3>Description &amp; specs</h3>
+          <span class="pe-sec__hint">Shown on the product page tabs</span>
+        </div>
+
+        <label class="pe-label" for="pe-desc">Full description <span class="pe-opt">(Overview tab)</span></label>
+        <textarea id="pe-desc" class="pe-input pe-textarea" formControlName="description" rows="6"
+                  placeholder="What it is, who it suits, what's in the box, warranty…"></textarea>
+        <p class="pe-help">Blank lines start a new paragraph.</p>
+
+        <div class="pe-label-row">
+          <label class="pe-label" for="pe-specs">Specifications <span class="pe-opt">(Specifications tab)</span></label>
+          <span class="pe-count">{{ specCount }} {{ specCount === 1 ? 'row' : 'rows' }}</span>
+        </div>
+        <textarea id="pe-specs" class="pe-input pe-textarea pe-textarea--mono" formControlName="specifications" rows="8"
+                  placeholder="Maximum power: 550 W&#10;Efficiency: 21.3%&#10;Dimensions: 2278 × 1134 × 35 mm&#10;Warranty: 25 years"></textarea>
+        <p class="pe-help">One per line as <b>Label: Value</b>. Each line becomes a row in the specifications table.</p>
+
+        <div class="pe-label">PDF download <span class="pe-opt">(Downloads tab)</span></div>
+        <input id="pe-pdf" type="file" accept="application/pdf,.pdf" hidden (change)="onPdfPicked($event)" />
+        @if (form.value.download) {
+          <div class="pe-pdf">
+            <span class="pe-pdf__badge">PDF</span>
+            <span class="pe-pdf__text"><b>Product PDF attached</b><small>Customers can read it on the page or download it.</small></span>
+            <a class="pe-btn pe-btn--ghost" [href]="form.value.download" target="_blank" rel="noopener">View</a>
+            <button type="button" class="pe-btn pe-btn--ghost" [disabled]="pdfUploading" (click)="pickPdf()">Replace</button>
+            <button type="button" class="pe-btn pe-btn--ghost" (click)="removePdf()">Remove</button>
+          </div>
+        } @else {
+          <button type="button" class="pe-drop pe-drop--pdf" [disabled]="pdfUploading" (click)="pickPdf()">
+            @if (pdfUploading) { <b>Uploading…</b> } @else { <b>+ Upload PDF</b><span>Datasheet, manual or brochure · up to 15 MB</span> }
+          </button>
+        }
+      </section>
+
+<!-- ④ Visibility -->
+      <section class="pe-sec" id="pe-visibility">
+        <div class="pe-sec__head">
+          <span class="pe-num">5</span>
           <h3>Visibility</h3>
           <span class="pe-sec__hint">Where it shows up</span>
         </div>
@@ -284,14 +322,10 @@
         <button type="button" class="pe-more" (click)="showMore = !showMore" [attr.aria-expanded]="showMore">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" [style.transform]="showMore ? 'rotate(90deg)' : ''"><path d="M9 6l6 6-6 6"/></svg>
-          More details <span class="pe-opt">— description, display order, SEO</span>
+          More details <span class="pe-opt">— display order, SEO</span>
         </button>
 
         @if (showMore) {
-          <label class="pe-label" for="pe-desc">Full description</label>
-          <textarea id="pe-desc" class="pe-input pe-textarea" formControlName="description" rows="5"
-                    placeholder="Specs, warranty, what's in the box…"></textarea>
-
           <div class="pe-grid2">
             <div>
               <label class="pe-label" for="pe-order">Display order</label>

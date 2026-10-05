@@ -8,7 +8,7 @@ import { CategoryService } from '../../../proxy/categories/category.service';
 import { SelectListDto } from '../../../proxy/categories/models';
 import { ImageUploadService } from '../../../proxy/image-upload/image-upload.service';
 
-type SectionKey = 'basic' | 'pricing' | 'photos' | 'visibility';
+type SectionKey = 'basic' | 'pricing' | 'photos' | 'details' | 'visibility';
 
 /** A photo slot: `id` is set for gallery images that already exist on the server. */
 interface Photo {
@@ -18,6 +18,7 @@ interface Photo {
 
 const MAX_PHOTOS    = 8;
 const MAX_BYTES     = 2 * 1024 * 1024;
+const PDF_MAX_BYTES = 15 * 1024 * 1024;
 const LOW_STOCK     = 10;
 const SUMMARY_MAX   = 160;
 const ACCEPTED      = ['image/jpeg', 'image/png', 'image/webp'];
@@ -52,6 +53,7 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
 
   photos: Photo[] = [];
   uploading = 0;
+  pdfUploading = false;
   dragIndex: number | null = null;
   dropActive = false;
 
@@ -66,6 +68,7 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
     { key: 'basic',      label: 'Basic info' },
     { key: 'pricing',    label: 'Pricing & inventory' },
     { key: 'photos',     label: 'Photos' },
+    { key: 'details',    label: 'Description & specs' },
     { key: 'visibility', label: 'Visibility' },
   ];
 
@@ -183,6 +186,8 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
       weight:          this.parseWeight(p.weight),
       stockQuantity:   p.stockQuantity,
       description:     p.description,
+      specifications:  p.specifications,
+      download:        p.download,
       status:          p.status,
       isActive:        p.isActive,
       isFeatured:      p.isFeatured,
@@ -219,6 +224,8 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
       weight:          [null, Validators.min(0)],
       stockQuantity:   [0, Validators.min(0)],
       description:     [null],
+      specifications:  [null],
+      download:        [null],
       status:          [2],
       isActive:        [true],
       isFeatured:      [false],
@@ -250,6 +257,7 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
       case 'basic':      return !!v.name?.trim() && !!v.categoryId;
       case 'pricing':    return (v.price ?? 0) > 0 && !this.discountInvalid;
       case 'photos':     return this.photos.length > 0;
+      case 'details':    return !!(v.description?.trim() || v.specifications?.trim() || v.download);
       case 'visibility': return true;
     }
   }
@@ -425,6 +433,49 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
     this.photos = next;
   }
 
+  // ── Description, specifications & PDF ──────────────────────────────────────
+  /** How many "Label: Value" lines the specifications box holds. */
+  get specCount(): number {
+    return (this.form.value.specifications ?? '').split('\n').filter((l: string) => l.includes(':') && l.split(':')[1].trim()).length;
+  }
+
+  pickPdf(): void {
+    document.getElementById('pe-pdf')?.click();
+  }
+
+  onPdfPicked(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      this.message.error('Use a PDF file.');
+      return;
+    }
+    if (file.size > PDF_MAX_BYTES) {
+      this.message.error('The PDF is over 15 MB.');
+      return;
+    }
+
+    this.pdfUploading = true;
+    this.imageUploadSvc.uploadProductPdf(file).subscribe({
+      next: url => {
+        this.form.get('download')!.setValue(url);
+        this.pdfUploading = false;
+        this.message.success('PDF uploaded.');
+      },
+      error: () => {
+        this.pdfUploading = false;
+        this.message.error('Could not upload the PDF.');
+      },
+    });
+  }
+
+  removePdf(): void {
+    this.form.get('download')!.setValue(null);
+  }
+
   // ── Visibility ─────────────────────────────────────────────────────────────
   setLive(live: boolean): void {
     this.form.patchValue({ isActive: live, status: live ? 2 : 1 });
@@ -459,6 +510,8 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
       ...v,
       name:          v.name?.trim(),
       slug:          this.slugify(v.slug || v.name || ''),
+      specifications: v.specifications?.trim() || null,
+      download:      v.download || null,
       discountPrice: this.hasDiscount ? this.discount : null,
       weight:        v.weight ? `${v.weight} kg` : null,
       primaryImage:  this.photos[0]?.url ?? null,

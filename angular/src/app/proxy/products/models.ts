@@ -29,6 +29,8 @@ export interface ProductDto {
   stockQuantity: number;
   primaryImage?: string;
   description?: string;
+  specifications?: string;
+  download?: string;
   metaTitle?: string;
   metaDescription?: string;
   metaKeywords?: string;
@@ -90,6 +92,8 @@ export interface CreateUpdateProductDto {
   stockQuantity: number;
   primaryImage?: string;
   description?: string;
+  specifications?: string;
+  download?: string;
   metaTitle?: string;
   metaDescription?: string;
   metaKeywords?: string;

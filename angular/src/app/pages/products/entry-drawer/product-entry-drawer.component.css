@@ -607,3 +607,26 @@
 .pe-newcat__cancel { border: 1px solid var(--de-border-input, #D8DDD5); background: #fff; color: var(--de-text, #16201A); }
 .pe-newcat__cancel:hover { background: var(--de-surface-muted, #F7F8F5); }
 .pe-newcat .pe-hint { margin: 8px 0 0; }
+
+/* ── Description, specs & PDF ───────────────────────────────────────────── */
+.pe-textarea--mono { font-family: var(--de-font-mono); font-size: 13px; line-height: 1.6; }
+
+.pe-pdf {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--de-border);
+  border-radius: 10px;
+  background: var(--de-surface-muted);
+}
+.pe-pdf__badge {
+  width: 36px; height: 44px; flex-shrink: 0; border-radius: 6px;
+  background: var(--de-danger-bg); color: var(--de-danger-fg);
+  font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.pe-pdf__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pe-pdf__text b { font-size: 14px; font-weight: 600; }
+.pe-pdf__text small { font-size: 12.5px; color: var(--de-text-muted); }
+.pe-drop--pdf { grid-column: auto; width: 100%; min-height: 84px; }
