@@ -42,6 +42,13 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
   showMore   = false;
 
   categoryOptions: SelectListDto[] = [];
+  /** Chosen in the category dropdown to make one on the spot. */
+  readonly NEW_CATEGORY = -1;
+  newCategoryOpen = false;
+  newCategoryName = '';
+  savingCategory = false;
+  /** What the dropdown was on before "New category" was picked, to go back to on cancel. */
+  private categoryBefore: number | null = null;
 
   photos: Photo[] = [];
   uploading = 0;
@@ -76,6 +83,60 @@ export class ProductEntryDrawerComponent implements OnChanges, OnInit {
     this.categorySvc.getSelectList().subscribe({
       next: items => this.categoryOptions = items,
       error: () => this.message.warning('Could not load categories.'),
+    });
+
+    this.form.get('categoryId')!.valueChanges.subscribe(value => {
+      if (value === this.NEW_CATEGORY) this.openNewCategory();
+      else {
+        this.categoryBefore = value ?? null;
+        this.newCategoryOpen = false;
+      }
+    });
+  }
+
+  // ── Making a category without leaving the drawer ────────────────────────
+
+  /** "+ New category" is not a real choice: put the dropdown back and open the small form. */
+  private openNewCategory(): void {
+    this.form.get('categoryId')!.setValue(this.categoryBefore, { emitEvent: false });
+    this.newCategoryOpen = true;
+    this.newCategoryName = '';
+    setTimeout(() => document.getElementById('pe-newcat')?.focus());
+  }
+
+  cancelNewCategory(): void {
+    this.newCategoryOpen = false;
+    this.newCategoryName = '';
+  }
+
+  createCategory(): void {
+    const name = this.newCategoryName.trim();
+    if (!name) { this.message.warning('Give the category a name.'); return; }
+    if (this.categoryOptions.some(c => c.displayText.trim().toLowerCase() === name.toLowerCase())) {
+      this.message.warning('There is already a category called "' + name + '".');
+      return;
+    }
+
+    this.savingCategory = true;
+    this.categorySvc.create({
+      name, slug: this.slugify(name), isPublished: true, isFeatured: false,
+      displayOrder: 0, layoutType: 1, overlayOpacity: 0.4, images: [],
+    }).subscribe({
+      next: created => {
+        this.savingCategory = false;
+        this.newCategoryOpen = false;
+        this.newCategoryName = '';
+        // Show it straight away, then re-read the list so the order matches the rest of the app.
+        this.categoryOptions = [...this.categoryOptions, { value: created.id, displayText: created.name ?? name }];
+        this.form.get('categoryId')!.setValue(created.id);
+        this.categoryBefore = created.id;
+        this.message.success('"' + (created.name ?? name) + '" added. It is published and ready to sell under.');
+        this.categorySvc.getSelectList().subscribe({ next: items => (this.categoryOptions = items) });
+      },
+      error: () => {
+        this.savingCategory = false;
+        this.message.error('Could not add the category. Check you have permission to create one.');
+      },
     });
   }
 

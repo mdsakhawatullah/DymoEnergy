@@ -1,0 +1,123 @@
+<nz-drawer [nzVisible]="true" nzWidth="min(560px, 100vw)" [nzTitle]="isNew ? 'New customer' : 'Edit customer'"
+  (nzOnClose)="closed.emit()" [nzFooter]="foot">
+  <div *nzDrawerContent class="ce">
+    @if (loading) {
+      <nz-spin nzSimple class="ce-loading"></nz-spin>
+    } @else {
+      <!-- ── Who ──────────────────────────────────────────────────────── -->
+      <label class="ce-label" for="ce-name">Name</label>
+      <input id="ce-name" class="ce-input" [class.is-err]="nameInvalid" [(ngModel)]="m.name" maxlength="256" placeholder="e.g. Md. Sakhawat Ullah" />
+      @if (nameInvalid) { <p class="ce-err">Type the name they are known by.</p> }
+
+      <div class="ce-two">
+        <div>
+          <label class="ce-label" for="ce-phone">Phone</label>
+          <input id="ce-phone" class="ce-input" [(ngModel)]="m.phone" maxlength="32" placeholder="01712345678" />
+          @if (phoneOdd) { <p class="ce-hint is-amber">This does not look like a Bangladeshi mobile number, so past orders will not match it.</p> }
+          @else { <p class="ce-hint">Used to find their past orders, however it was typed before.</p> }
+        </div>
+        <div>
+          <label class="ce-label" for="ce-email">Email <span class="ce-opt">(optional)</span></label>
+          <input id="ce-email" class="ce-input" type="email" [(ngModel)]="m.email" maxlength="256" />
+        </div>
+      </div>
+
+      <!-- ── What kind ────────────────────────────────────────────────── -->
+      <span class="ce-label">Kind of customer</span>
+      <div class="ce-types">
+        @for (t of types; track t.value) {
+          <button type="button" class="ce-type" [class.is-on]="m.type === t.value" (click)="m.type = t.value">
+            <strong>{{ t.label }}</strong><span>{{ t.hint }}</span>
+          </button>
+        }
+      </div>
+
+      @if (needsCompany) {
+        <div class="ce-two">
+          <div>
+            <label class="ce-label" for="ce-company">Company name</label>
+            <input id="ce-company" class="ce-input" [(ngModel)]="m.companyName" maxlength="256" />
+          </div>
+          <div>
+            <label class="ce-label" for="ce-tax">BIN / tax number <span class="ce-opt">(optional)</span></label>
+            <input id="ce-tax" class="ce-input" [(ngModel)]="m.taxId" maxlength="64" />
+          </div>
+        </div>
+      }
+
+      <!-- ── Where ────────────────────────────────────────────────────── -->
+      <label class="ce-label" for="ce-address">Address <span class="ce-opt">(optional)</span></label>
+      <input id="ce-address" class="ce-input" [(ngModel)]="m.address" maxlength="512" placeholder="House, road" />
+      <div class="ce-three">
+        <div><label class="ce-label" for="ce-area">Area</label><input id="ce-area" class="ce-input" [(ngModel)]="m.area" maxlength="128" placeholder="Agrabad" /></div>
+        <div><label class="ce-label" for="ce-city">City</label><input id="ce-city" class="ce-input" [(ngModel)]="m.city" maxlength="128" placeholder="Chattogram" /></div>
+        <div><label class="ce-label" for="ce-district">District</label><input id="ce-district" class="ce-input" [(ngModel)]="m.district" maxlength="128" /></div>
+      </div>
+
+      <!-- ── Terms ────────────────────────────────────────────────────── -->
+      <div class="ce-two">
+        <div>
+          <label class="ce-label" for="ce-credit">Credit limit</label>
+          <nz-input-number id="ce-credit" class="ce-num" [(ngModel)]="m.creditLimit" [nzMin]="0" [nzStep]="5000" nzPrefix="৳"></nz-input-number>
+          <p class="ce-hint">{{ m.creditLimit ? 'Warned when they owe more than this.' : 'Zero means cash only.' }}</p>
+        </div>
+        <div>
+          <label class="ce-label" for="ce-terms">Days to pay</label>
+          <nz-input-number id="ce-terms" class="ce-num" [(ngModel)]="m.paymentTermDays" [nzMin]="0" [nzMax]="365"></nz-input-number>
+          <p class="ce-hint">{{ m.paymentTermDays ? 'Invoices fall due after ' + m.paymentTermDays + ' days.' : 'Payable on delivery.' }}</p>
+        </div>
+      </div>
+
+      <!-- ── Rest ─────────────────────────────────────────────────────── -->
+      <div class="ce-two">
+        <div>
+          <label class="ce-label" for="ce-status">Status</label>
+          <select id="ce-status" class="ce-input" [(ngModel)]="m.status">
+            @for (s of statuses; track s.value) { <option [ngValue]="s.value">{{ s.label }}</option> }
+          </select>
+        </div>
+        <div>
+          <label class="ce-label" for="ce-source">How they found us</label>
+          <select id="ce-source" class="ce-input" [(ngModel)]="m.source">
+            @for (s of sources; track s.value) { <option [ngValue]="s.value">{{ s.label }}</option> }
+          </select>
+        </div>
+      </div>
+
+      <div class="ce-two">
+        <div>
+          <label class="ce-label" for="ce-owner">Looked after by <span class="ce-opt">(optional)</span></label>
+          <input id="ce-owner" class="ce-input" [(ngModel)]="m.assignedTo" maxlength="256" />
+        </div>
+        <div>
+          <label class="ce-label" for="ce-tags">Tags <span class="ce-opt">(optional)</span></label>
+          <input id="ce-tags" class="ce-input" [(ngModel)]="m.tags" maxlength="512" placeholder="solar pump, repeat" />
+        </div>
+      </div>
+
+      <label class="ce-label" for="ce-note">Note <span class="ce-opt">(optional)</span></label>
+      <textarea id="ce-note" class="ce-input ce-area" rows="3" [(ngModel)]="m.note" maxlength="2000"
+        placeholder="Anything the team should know before calling them."></textarea>
+
+      <label class="ce-check">
+        <nz-switch nzSize="small" [(ngModel)]="m.linkMatchingOrders"></nz-switch>
+        <span>
+          <strong>Attach past orders with this phone number</strong>
+          <span class="ce-hint">
+            @if (!isNew && linkedCount) { {{ linkedCount }} {{ linkedCount === 1 ? 'order is' : 'orders are' }} waiting to be attached. }
+            @else { Their history, spend and balance then show up here. }
+          </span>
+        </span>
+      </label>
+    }
+  </div>
+
+  <ng-template #foot>
+    <div class="ce-foot">
+      <button type="button" class="ce-btn" (click)="closed.emit()">Cancel</button>
+      <button type="button" class="ce-btn ce-btn--primary" [disabled]="saving || loading" (click)="save()">
+        {{ saving ? 'Saving…' : isNew ? 'Add customer' : 'Save changes' }}
+      </button>
+    </div>
+  </ng-template>
+</nz-drawer>

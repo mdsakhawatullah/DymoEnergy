@@ -137,9 +137,9 @@ function configureRoutes() {
     { path: '/products',       name: '::Menu:Product',       parentName: '::Menu:InventoryProcurement', order: 1, layout: APP, breadcrumbText: '::Menu:Product' },
     { path: '/stock-entries',  name: '::Menu:StockEntry',    parentName: '::Menu:InventoryProcurement', order: 2, layout: APP, breadcrumbText: '::Menu:StockEntry' },
     { path: '/stock-ledger',   name: '::Menu:StockLedger',   parentName: '::Menu:InventoryProcurement', order: 3, layout: APP, breadcrumbText: '::Menu:StockLedger' },
-    { path: '/suppliers',      name: '::Menu:Suppliers',     parentName: '::Menu:InventoryProcurement', order: 4, layout: APP, breadcrumbText: '::Menu:Suppliers' },
-    { path: '/purchase-orders', name: '::Menu:PurchaseOrders', parentName: '::Menu:InventoryProcurement', order: 5, layout: APP, breadcrumbText: '::Menu:PurchaseOrders' },
-    { path: '/quotes-deliveries', name: '::Menu:QuotesDeliveries', parentName: '::Menu:InventoryProcurement', order: 6, layout: APP, breadcrumbText: '::Menu:QuotesDeliveries' },
+    //{ path: '/suppliers',      name: '::Menu:Suppliers',     parentName: '::Menu:InventoryProcurement', order: 4, layout: APP, breadcrumbText: '::Menu:Suppliers' },
+    // { path: '/purchase-orders', name: '::Menu:PurchaseOrders', parentName: '::Menu:InventoryProcurement', order: 5, layout: APP, breadcrumbText: '::Menu:PurchaseOrders' },
+    //{ path: '/quotes-deliveries', name: '::Menu:QuotesDeliveries', parentName: '::Menu:InventoryProcurement', order: 6, layout: APP, breadcrumbText: '::Menu:QuotesDeliveries' },
 
     // ══ FINANCE ═════════════════════════════════════════════════════════════
     { path: 'section-finance', name: '::Menu:SectionFinance', iconClass: SECTION, order: 30, layout: APP },

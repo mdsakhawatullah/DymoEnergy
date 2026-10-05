@@ -578,3 +578,32 @@
   .pe-foot   { flex-direction: column; align-items: stretch; }
   .pe-foot__actions { justify-content: flex-end; }
 }
+
+/* ── Making a category from inside the drawer ───────────────────────────── */
+.pe-newcat {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--de-border, #E3E6E0);
+  border-radius: var(--de-radius-control, 8px);
+  background: var(--de-surface-muted, #F7F8F5);
+}
+.pe-newcat .pe-label { margin-top: 0; }
+.pe-newcat__row { display: flex; gap: 8px; align-items: center; }
+.pe-newcat__row .pe-input { flex: 1; min-width: 0; }
+.pe-newcat__save,
+.pe-newcat__cancel {
+  height: var(--de-control-h, 40px);
+  padding: 0 14px;
+  border-radius: var(--de-radius-control, 8px);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pe-newcat__save { border: 1px solid var(--de-primary, #0E6B3F); background: var(--de-primary, #0E6B3F); color: #fff; }
+.pe-newcat__save:hover:not([disabled]) { filter: brightness(0.93); }
+.pe-newcat__save[disabled] { opacity: 0.6; cursor: default; }
+.pe-newcat__cancel { border: 1px solid var(--de-border-input, #D8DDD5); background: #fff; color: var(--de-text, #16201A); }
+.pe-newcat__cancel:hover { background: var(--de-surface-muted, #F7F8F5); }
+.pe-newcat .pe-hint { margin: 8px 0 0; }

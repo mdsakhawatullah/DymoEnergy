@@ -1,12 +1,153 @@
-<div class="card">
-  <div class="card-header">
-    <div class="row">
-      <div class="col col-md-6">
-        <h5 class="card-title">{{ '::Menu:Customer' | abpLocalization }}</h5>
-      </div>
+<div class="cu">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="pg-head">
+    <div>
+      <h1 class="pg-title">Customers</h1>
+      <p class="pg-sub">
+        @if (overview; as o) {
+          {{ o.total | number }} {{ o.total === 1 ? 'customer' : 'customers' }} · {{ o.buyingThisMonth | number }} bought this month
+          @if (o.owedCount) { · <span class="is-amber">{{ o.owedCount }} still owe you money</span> }
+        } @else { Everyone who has bought from you, and what they still owe. }
+      </p>
+    </div>
+    <div class="pg-actions">
+      <button type="button" class="btn-ghost" [disabled]="exporting" (click)="export()"><i class="bi bi-download"></i>{{ exporting ? 'Exporting…' : 'Export CSV' }}</button>
+      @if (canCreate) { <button type="button" class="btn-solid" (click)="create()"><i class="bi bi-plus-lg"></i>New customer</button> }
     </div>
   </div>
-  <div class="card-body">
-    <p class="text-muted">Customers page — coming soon.</p>
-  </div>
+
+  <!-- ── Build from past orders ─────────────────────────────────────────── -->
+  @if (overview && overview.wouldCreate > 0 && !importDismissed && canCreate) {
+    <div class="cu-import">
+      <i class="bi bi-people"></i>
+      <div class="cu-import__text">
+        <strong>{{ overview.wouldCreate | number }} {{ overview.wouldCreate === 1 ? 'customer is' : 'customers are' }} hiding in your past orders.</strong>
+        <span>{{ overview.unlinkedOrders | number }} {{ overview.unlinkedOrders === 1 ? 'order has' : 'orders have' }} a phone number but nobody behind it. Build the records once and their history, spend and balance all come with them.</span>
+      </div>
+      <button type="button" class="btn-solid" [disabled]="importing" (click)="importFromOrders()">{{ importing ? 'Building…' : 'Build them' }}</button>
+      <button type="button" class="cu-import__x" (click)="importDismissed = true" aria-label="Hide this">&times;</button>
+    </div>
+  }
+
+  <!-- ── KPIs ───────────────────────────────────────────────────────────── -->
+  @if (overview; as o) {
+    <section class="kpi-grid" aria-label="Customer summary">
+      <div class="kpi">
+        <div class="kpi__top"><span class="kpi__chip kpi__chip--green"><i class="bi bi-people"></i></span><span class="kpi__label">Customers</span></div>
+        <div class="kpi__value">{{ o.total | number }}</div>
+        <div class="kpi__note">{{ o.newThisMonth | number }} added this month</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top"><span class="kpi__chip kpi__chip--amber"><i class="bi bi-cash-coin"></i></span><span class="kpi__label">Money owed to you</span></div>
+        <div class="kpi__value" [class.is-amber]="o.owedTotal > 0">{{ money(o.owedTotal) }}</div>
+        <div class="kpi__note">{{ o.owedCount ? 'across ' + o.owedCount + ' ' + (o.owedCount === 1 ? 'customer' : 'customers') : 'everyone is paid up' }}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top"><span class="kpi__chip kpi__chip--blue"><i class="bi bi-arrow-repeat"></i></span><span class="kpi__label">Buy again</span></div>
+        <div class="kpi__value">{{ o.repeatPercent }}%</div>
+        <div class="kpi__note">{{ o.repeatCount | number }} have ordered more than once</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top"><span class="kpi__chip kpi__chip--grey"><i class="bi bi-moon"></i></span><span class="kpi__label">Gone quiet</span></div>
+        <div class="kpi__value">{{ o.quietCount | number }}</div>
+        <div class="kpi__note">nothing bought in 6 months</div>
+      </div>
+    </section>
+  }
+
+  <!-- ── List ───────────────────────────────────────────────────────────── -->
+  <section class="cu-card">
+    <div class="cu-tabs" role="tablist">
+      @for (t of tabs; track t.key) {
+        <button type="button" role="tab" class="cu-tab" [class.is-active]="tab === t.key" [attr.aria-selected]="tab === t.key" (click)="setTab(t.key)">
+          {{ t.label }}@if (page) { <span class="cu-count">{{ count(t.key) }}</span> }
+        </button>
+      }
+    </div>
+
+    <div class="cu-filters">
+      <label class="cu-search">
+        <i class="bi bi-search"></i>
+        <input type="search" [(ngModel)]="filter" (ngModelChange)="onSearch()" placeholder="Search name, phone, email, company or tag" aria-label="Search customers" />
+      </label>
+      <select class="cu-select" [(ngModel)]="city" (ngModelChange)="changed()" aria-label="City">
+        <option [ngValue]="null">All cities</option>
+        @for (c of overview?.cities ?? []; track c) { <option [ngValue]="c">{{ c }}</option> }
+      </select>
+      <select class="cu-select" [(ngModel)]="sorting" (ngModelChange)="changed()" aria-label="Sort by">
+        @for (s of sorts; track s.value) { <option [ngValue]="s.value">{{ s.label }}</option> }
+      </select>
+    </div>
+
+    <div class="cu-wrap">
+      <table class="cu-table">
+        <thead>
+          <tr>
+            <th>Customer</th><th>Type</th><th>Where</th>
+            <th class="is-right">Orders</th><th class="is-right">Spent</th><th class="is-right">Owes</th>
+            <th>Last order</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of page?.items ?? []; track c.id) {
+            <tr class="cu-row" (click)="openId = c.id" tabindex="0" (keydown.enter)="openId = c.id" [attr.aria-label]="'Open ' + c.name">
+              <td>
+                <span class="cu-person">
+                  <span class="cu-avatar" [class.is-blocked]="c.status === Status.Blocked">{{ initials(c) }}</span>
+                  <span class="cu-person__text">
+                    <strong class="cu-block">{{ c.name }}
+                      @if (c.status === Status.Blocked) { <span class="cu-chip is-red">Blocked</span> }
+                      @else if (c.status === Status.Inactive) { <span class="cu-chip is-grey">Inactive</span> }
+                    </strong>
+                    <span class="cu-small">{{ c.phone || c.email || 'no contact saved' }}</span>
+                  </span>
+                </span>
+              </td>
+              <td>
+                <span class="cu-chip" [ngClass]="c.type === Type.Household ? 'is-grey' : 'is-blue'">{{ typeLabel(c.type) }}</span>
+                @if (c.companyName) { <span class="cu-small cu-block">{{ c.companyName }}</span> }
+              </td>
+              <td class="cu-small">{{ c.where || '—' }}</td>
+              <td class="is-right">{{ c.orders | number }}</td>
+              <td class="is-right"><strong>{{ c.totalSpent ? money(c.totalSpent) : '—' }}</strong></td>
+              <td class="is-right"><strong [class.is-amber]="c.owed > 0">{{ c.owed ? money(c.owed) : '—' }}</strong></td>
+              <td class="cu-small" [class.is-muted]="(c.quietDays ?? 0) > 180">{{ lastOrderText(c) }}</td>
+              <td class="is-right"><i class="bi bi-chevron-right cu-go"></i></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8" class="cu-empty">
+              @if (loading) { <nz-spin nzSimple></nz-spin> }
+              @else if (failed) { Could not load the customers. <button type="button" class="cu-link" (click)="load()">Try again</button> }
+              @else if (filter || city || tab !== 'all') { Nobody matches. Clear the search or pick another tab. }
+              @else if (overview && overview.wouldCreate > 0) { No customers yet — but {{ overview.wouldCreate }} are waiting in your past orders. Use <strong>Build them</strong> above. }
+              @else { No customers yet. @if (canCreate) { <button type="button" class="cu-link" (click)="create()">Add the first one</button> } }
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (page && page.totalCount) {
+      <div class="cu-foot">
+        <span class="cu-small">Showing <strong>{{ page.items.length }}</strong> of {{ page.totalCount | number }} · click anyone to see their history</span>
+        @if (pageCount > 1) {
+          <nav class="cu-pages" aria-label="Pages">
+            @for (p of pages; track $index) {
+              @if (p === null) { <span class="cu-gap">…</span> }
+              @else { <button type="button" class="cu-page" [class.is-on]="p === pageIndex" [attr.aria-current]="p === pageIndex ? 'page' : null" (click)="goTo(p)">{{ p }}</button> }
+            }
+          </nav>
+        }
+      </div>
+    }
+  </section>
 </div>
+
+@if (openId) {
+  <app-customer-drawer [customerId]="openId" [canEdit]="canEdit" [canDelete]="canDelete"
+    (closed)="openId = null" (edit)="edit($event)" (changed)="refresh()" />
+}
+
+@if (editId !== null) {
+  <app-customer-entry-drawer [customerId]="editId" (closed)="editId = null" (saved)="saved()" />
+}

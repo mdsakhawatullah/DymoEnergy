@@ -86,8 +86,22 @@
           @for (c of categoryOptions; track c.value) {
             <option [ngValue]="c.value">{{ c.displayText }}</option>
           }
+          <option [ngValue]="NEW_CATEGORY">+ New category…</option>
         </select>
-        @if (invalid('categoryId')) { <p class="pe-err">Pick the category it's sold under.</p> }
+        @if (invalid('categoryId') && !newCategoryOpen) { <p class="pe-err">Pick the category it's sold under.</p> }
+
+        @if (newCategoryOpen) {
+          <div class="pe-newcat">
+            <label class="pe-label" for="pe-newcat">New category name</label>
+            <div class="pe-newcat__row">
+              <input id="pe-newcat" class="pe-input" [(ngModel)]="newCategoryName" [ngModelOptions]="{ standalone: true }"
+                     maxlength="128" placeholder="e.g. Charge Controllers" (keyup.enter)="createCategory()" (keyup.escape)="cancelNewCategory()" />
+              <button type="button" class="pe-newcat__save" [disabled]="savingCategory" (click)="createCategory()">{{ savingCategory ? 'Adding…' : 'Add' }}</button>
+              <button type="button" class="pe-newcat__cancel" (click)="cancelNewCategory()">Cancel</button>
+            </div>
+            <p class="pe-hint">Added as a published category with just a name. Give it a picture and description later on the Categories page.</p>
+          </div>
+        }
 
         <div class="pe-label-row">
           <label class="pe-label" for="pe-summary">Summary</label>

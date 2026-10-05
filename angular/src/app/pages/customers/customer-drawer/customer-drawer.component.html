@@ -1,0 +1,139 @@
+<nz-drawer [nzVisible]="true" nzWidth="min(720px, 100vw)" [nzTitle]="head" (nzOnClose)="closed.emit()">
+  <ng-template #head>
+    <span class="cd-title">{{ customer?.name || 'Customer' }}</span>
+  </ng-template>
+
+  <div *nzDrawerContent class="cd">
+    @if (customer; as c) {
+      <!-- ── Who they are ───────────────────────────────────────────────── -->
+      <section class="cd-card cd-who">
+        <span class="cd-avatar" [class.is-blocked]="c.status === Status.Blocked">{{ initials }}</span>
+        <div class="cd-who__text">
+          <div class="cd-who__name">
+            <strong>{{ c.name }}</strong>
+            <span class="cd-chip" [ngClass]="c.type === Type.Household ? 'is-grey' : 'is-blue'">{{ typeLabel }}</span>
+            @if (c.status === Status.Blocked) { <span class="cd-chip is-red">Blocked</span> }
+            @else if (c.status === Status.Inactive) { <span class="cd-chip is-grey">Inactive</span> }
+          </div>
+          @if (c.companyName) { <span class="cd-small cd-block">{{ c.companyName }}@if (c.taxId) { · BIN {{ c.taxId }} }</span> }
+          <div class="cd-contact">
+            @if (c.phone) { <a [href]="'tel:' + c.phone"><i class="bi bi-telephone"></i>{{ c.phone }}</a> }
+            @if (c.email) { <a [href]="'mailto:' + c.email"><i class="bi bi-envelope"></i>{{ c.email }}</a> }
+          </div>
+          @if (whereText) { <span class="cd-small cd-block"><i class="bi bi-geo-alt"></i> {{ whereText }}</span> }
+          @if (c.tags.length) {
+            <div class="cd-tags">@for (t of c.tags; track t) { <span class="cd-tag">{{ t }}</span> }</div>
+          }
+        </div>
+        @if (canEdit) { <button type="button" class="cd-btn" (click)="edit.emit(c.id)"><i class="bi bi-pencil"></i>Edit</button> }
+      </section>
+
+      @if (c.overCreditBy > 0) {
+        <div class="cd-alert is-red">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          Owes {{ money(c.owed) }} against a {{ money(c.creditLimit) }} limit — {{ money(c.overCreditBy) }} over. Take payment before selling more on terms.
+        </div>
+      }
+      @if (c.looseOrders > 0 && canEdit) {
+        <div class="cd-alert is-amber">
+          <i class="bi bi-link-45deg"></i>
+          <span>{{ c.looseOrders }} {{ c.looseOrders === 1 ? 'order carries' : 'orders carry' }} this phone number but {{ c.looseOrders === 1 ? 'is' : 'are' }} not attached yet.</span>
+          <button type="button" class="cd-btn" [disabled]="busy" (click)="linkMatching()">{{ busy ? 'Attaching…' : 'Attach them' }}</button>
+        </div>
+      }
+
+      <!-- ── What they are worth ────────────────────────────────────────── -->
+      <section class="cd-stats">
+        <div><span class="cd-small">Orders</span><strong>{{ c.orderCount | number }}</strong></div>
+        <div><span class="cd-small">Spent</span><strong>{{ money(c.totalSpent) }}</strong></div>
+        <div><span class="cd-small">Average order</span><strong>{{ money(c.averageOrder) }}</strong></div>
+        <div><span class="cd-small">Still owes</span><strong [class.is-amber]="c.owed > 0">{{ money(c.owed) }}</strong></div>
+      </section>
+      <p class="cd-since">
+        {{ quietText }}@if (c.firstOrderAt) { · first bought {{ c.firstOrderAt | date: 'd MMM y' }} } · {{ sourceLabel | lowercase }}
+        @if (c.paymentTermDays) { · pays in {{ c.paymentTermDays }} days } @else if (c.creditLimit === 0) { · cash only }
+      </p>
+
+      @if (c.note) { <div class="cd-note"><i class="bi bi-sticky"></i><span>{{ c.note }}</span></div> }
+
+      <!-- ── History ────────────────────────────────────────────────────── -->
+      <div class="cd-tabs" role="tablist">
+        <button type="button" role="tab" class="cd-tab" [class.is-active]="tab === 'orders'" (click)="tab = 'orders'">Orders <span class="cd-n">{{ c.orders.length }}</span></button>
+        <button type="button" role="tab" class="cd-tab" [class.is-active]="tab === 'invoices'" (click)="tab = 'invoices'">Invoices <span class="cd-n">{{ c.invoices.length }}</span></button>
+        <button type="button" role="tab" class="cd-tab" [class.is-active]="tab === 'quotes'" (click)="tab = 'quotes'">Quote requests <span class="cd-n">{{ c.quotes.length }}</span></button>
+      </div>
+
+      @switch (tab) {
+        @case ('orders') {
+          <table class="cd-table">
+            <thead><tr><th>Order</th><th>What</th><th class="is-right">Total</th><th class="is-right">Due</th><th></th></tr></thead>
+            <tbody>
+              @for (o of c.orders; track o.id) {
+                <tr>
+                  <td><strong class="cd-block cd-mono">{{ o.number }}</strong><span class="cd-small">{{ o.date | date: 'd MMM y' }} · {{ o.status }}</span></td>
+                  <td class="cd-small cd-items">{{ o.items || '—' }}@if (o.loose) { <span class="cd-chip is-amber">not attached</span> }</td>
+                  <td class="is-right">{{ money(o.total) }}</td>
+                  <td class="is-right"><strong [class.is-amber]="o.due > 0">{{ o.due ? money(o.due) : '—' }}</strong></td>
+                  <td class="is-right"><button type="button" class="cd-link" (click)="openOrder(o.id)">Open</button></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="cd-empty">No orders yet.</td></tr>
+              }
+            </tbody>
+          </table>
+        }
+        @case ('invoices') {
+          <table class="cd-table">
+            <thead><tr><th>Invoice</th><th>Due</th><th class="is-right">Total</th><th class="is-right">Paid</th><th class="is-right">Owing</th><th></th></tr></thead>
+            <tbody>
+              @for (i of c.invoices; track i.id) {
+                <tr>
+                  <td><strong class="cd-block cd-mono">{{ i.number }}</strong><span class="cd-small">{{ i.date | date: 'd MMM y' }}</span></td>
+                  <td class="cd-small">
+                    {{ i.dueDate ? (i.dueDate | date: 'd MMM') : '—' }}
+                    @if (i.overdueDays) { <span class="cd-chip is-red">{{ i.overdueDays }}d late</span> }
+                  </td>
+                  <td class="is-right">{{ money(i.total) }}</td>
+                  <td class="is-right cd-small">{{ money(i.paid) }}</td>
+                  <td class="is-right"><strong [class.is-amber]="i.due > 0">{{ i.due ? money(i.due) : '—' }}</strong></td>
+                  <td class="is-right"><button type="button" class="cd-link" (click)="openInvoice(i.id)">View</button></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="6" class="cd-empty">No invoices yet.</td></tr>
+              }
+            </tbody>
+          </table>
+        }
+        @case ('quotes') {
+          <table class="cd-table">
+            <thead><tr><th>Asked</th><th>About</th><th>Where</th><th>Status</th></tr></thead>
+            <tbody>
+              @for (q of c.quotes; track q.id) {
+                <tr>
+                  <td class="cd-small">{{ q.date | date: 'd MMM y' }}</td>
+                  <td>{{ q.interest || '—' }}</td>
+                  <td class="cd-small">{{ q.location || '—' }}</td>
+                  <td><span class="cd-chip is-grey">{{ q.status }}</span></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4" class="cd-empty">No quote requests from this phone or email.</td></tr>
+              }
+            </tbody>
+          </table>
+        }
+      }
+
+      @if (canDelete) {
+        <div class="cd-danger">
+          <span class="cd-small">Removing a customer keeps every order and invoice — they simply stop pointing at anyone.</span>
+          <button type="button" class="cd-btn cd-btn--danger" [disabled]="busy" nz-popconfirm
+            [nzPopconfirmTitle]="'Remove ' + c.name + '? Their orders and invoices stay.'" (nzOnConfirm)="remove()">Remove customer</button>
+        </div>
+      }
+    } @else if (failed) {
+      <div class="cd-alert is-red"><i class="bi bi-x-circle"></i>Could not load this customer. <button type="button" class="cd-link" (click)="load()">Try again</button></div>
+    } @else {
+      <nz-spin nzSimple class="cd-loading"></nz-spin>
+    }
+  </div>
+</nz-drawer>

@@ -22,6 +22,7 @@ using Volo.Abp.EntityFrameworkCore.Modeling;
 using Volo.Abp.FeatureManagement.EntityFrameworkCore;
 using Volo.Abp.Identity;
 using Volo.Abp.Identity.EntityFrameworkCore;
+using DymoEnergy.Customers;
 using DymoEnergy.Stock;
 using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.SettingManagement.EntityFrameworkCore;
@@ -100,6 +101,8 @@ public class DymoEnergyDbContext :
     public DbSet<StockLedgerReview>    StockLedgerReviews    { get; set; }
     public DbSet<StockLedgerCheck>     StockLedgerChecks     { get; set; }
     public DbSet<StockLedgerSetting>   StockLedgerSettings   { get; set; }
+
+    public DbSet<Customer>             Customers             { get; set; }
     public DbSet<UserSiteSetting>      UserSiteSettings      { get; set; }
     public DbSet<UserSiteSettingImage> UserSiteSettingImages { get; set; }
 
@@ -806,6 +809,30 @@ public class DymoEnergyDbContext :
             b.Property(x => x.LargeValueOver).HasPrecision(18, 2);
             b.Property(x => x.AllowedNetworks).HasMaxLength(512);
             b.Property(x => x.LastExportBy).HasMaxLength(LedgerConsts.MaxName);
+        });
+
+        /* ── Customers ──────────────────────────────────────────────────── */
+        builder.Entity<Customer>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "Customers", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(CustomerConsts.MaxName);
+            b.Property(x => x.Phone).HasMaxLength(32);
+            b.Property(x => x.PhoneKey).HasMaxLength(16);
+            b.Property(x => x.Email).HasMaxLength(CustomerConsts.MaxName);
+            b.Property(x => x.CompanyName).HasMaxLength(CustomerConsts.MaxName);
+            b.Property(x => x.TaxId).HasMaxLength(64);
+            b.Property(x => x.Address).HasMaxLength(512);
+            b.Property(x => x.Area).HasMaxLength(CustomerConsts.MaxShort);
+            b.Property(x => x.City).HasMaxLength(CustomerConsts.MaxShort);
+            b.Property(x => x.District).HasMaxLength(CustomerConsts.MaxShort);
+            b.Property(x => x.AssignedTo).HasMaxLength(CustomerConsts.MaxName);
+            b.Property(x => x.Note).HasMaxLength(CustomerConsts.MaxText);
+            b.Property(x => x.Tags).HasMaxLength(512);
+            b.Property(x => x.CreditLimit).HasPrecision(18, 2);
+            b.HasIndex(x => x.PhoneKey);
+            b.HasIndex(x => x.Name);
         });
 
         /* ── Quote Requests ─────────────────────────────────────────────── */
