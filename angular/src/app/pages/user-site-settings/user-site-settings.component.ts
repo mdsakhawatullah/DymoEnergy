@@ -1,10 +1,33 @@
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import { timeout } from 'rxjs';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModule } from '../../shared/shared.module';
 import { UserSiteSettingService } from '../../proxy/user-site-settings/user-site-setting.service';
 import { UserSiteSettingDto } from '../../proxy/user-site-settings/models';
+import { ImageUploadService } from '../../proxy/image-upload/image-upload.service';
+
+/** Starting copy for the About page — shown on the storefront until the owner changes it. */
+const ABOUT_DEFAULTS = {
+  eyebrow: 'About Dymo Energy',
+  heading: 'Clean, reliable power for every Bangladeshi home and business.',
+  story: 'We started with a simple frustration: load-shedding and rising bills, while the sun shines most of the year. Today our engineers design, supply and service solar systems across the country.',
+  heroImageUrl: '',
+  heroCaption: '',
+  valuesEyebrow: 'What we believe',
+  valuesHeading: 'How we work',
+  values: [
+    { title: 'Honest sizing', text: 'We recommend the system you need — not the biggest one we can sell.' },
+    { title: 'Genuine equipment', text: 'Every product is traceable by serial number and backed locally.' },
+    { title: 'Safe installation', text: 'Proper earthing, breakers and cable sizing on every job.' },
+    { title: 'Here for 25 years', text: 'Service and warranty for as long as your panels run.' },
+  ],
+  teamEyebrow: 'Our team',
+  teamHeading: 'The people behind your system',
+  certsHeading: 'Certifications & partners',
+  showroomTitle: 'Visit our showroom',
+  showroomText: 'See panels, inverters and batteries in person.',
+};
 
 @Component({
   selector: 'app-user-site-settings',
@@ -38,8 +61,10 @@ export class UserSiteSettingsComponent implements OnInit {
     private fb:      FormBuilder,
     private svc:     UserSiteSettingService,
     private message: NzMessageService,
+    private imageUpload: ImageUploadService,
   ) {
     this.buildForm();
+    this.patchAbout(null);
   }
 
   ngOnInit(): void {
@@ -83,6 +108,15 @@ export class UserSiteSettingsComponent implements OnInit {
       socialFacebookUrl:      [null],
       socialTwitterUrl:       [null],
       socialYoutubeUrl:       [null],
+      // ── About page (stored as one JSON string) ─────────────────────────────
+      aboutPage: this.fb.group({
+        eyebrow: [''], heading: [''], story: [''], heroImageUrl: [''], heroCaption: [''],
+        stats: this.fb.array([]),
+        valuesEyebrow: [''], valuesHeading: [''], values: this.fb.array([]),
+        teamEyebrow: [''], teamHeading: [''], team: this.fb.array([]),
+        certsHeading: [''], certs: this.fb.array([]),
+        showroomTitle: [''], showroomText: [''],
+      }),
       // ── Status ───────────────────────────────────────────────────────────
       isActive: [true],
       // ── Images ───────────────────────────────────────────────────────────
@@ -166,6 +200,8 @@ export class UserSiteSettingsComponent implements OnInit {
       isActive:               dto.isActive,
     });
 
+    this.patchAbout(dto.aboutPageContent);
+
     // Rebuild images FormArray
     this.imagesArray.clear();
     (dto.images ?? []).forEach(img => this.imagesArray.push(this.buildImageGroup(img)));
@@ -197,7 +233,8 @@ export class UserSiteSettingsComponent implements OnInit {
   save(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving = true;
-    const payload = this.form.value;
+    const { aboutPage, ...rest } = this.form.value;
+    const payload = { ...rest, aboutPageContent: this.aboutJson(aboutPage) };
 
     const request$ = this.existingId
       ? this.svc.update(this.existingId, payload)
@@ -216,8 +253,88 @@ export class UserSiteSettingsComponent implements OnInit {
     });
   }
 
-  // ── Colour helpers ────────────────────────────────────────────────────
+  // ── About page ────────────────────────────────────────────────────────
 
+  get aboutGroup(): FormGroup { return this.form.get('aboutPage') as FormGroup; }
+  aboutArray(name: 'stats' | 'values' | 'team' | 'certs'): FormArray { return this.aboutGroup.get(name) as FormArray; }
+
+  private row(fields: Record<string, string>): FormGroup {
+    return this.fb.group(Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, [v]])));
+  }
+
+  addAbout(name: 'stats' | 'values' | 'team' | 'certs'): void {
+    const blank = {
+      stats:  { value: '', label: '' },
+      values: { title: '', text: '' },
+      team:   { name: '', role: '', photoUrl: '' },
+      certs:  { name: '', logoUrl: '' },
+    }[name];
+    this.aboutArray(name).push(this.row(blank));
+  }
+
+  removeAbout(name: 'stats' | 'values' | 'team' | 'certs', i: number): void {
+    this.aboutArray(name).removeAt(i);
+  }
+
+  /** Fills the About tab from the saved JSON, or from the starting copy when nothing is saved yet. */
+  private patchAbout(json?: string | null): void {
+    let saved: any = {};
+    try { saved = json ? JSON.parse(json) : {}; } catch { saved = {}; }
+    const d = ABOUT_DEFAULTS;
+    const pick = (k: keyof typeof d) => (saved[k] ?? d[k]) as any;
+
+    this.aboutGroup.patchValue({
+      eyebrow: pick('eyebrow'), heading: pick('heading'), story: pick('story'),
+      heroImageUrl: saved.heroImageUrl ?? '', heroCaption: saved.heroCaption ?? '',
+      valuesEyebrow: pick('valuesEyebrow'), valuesHeading: pick('valuesHeading'),
+      teamEyebrow: pick('teamEyebrow'), teamHeading: pick('teamHeading'),
+      certsHeading: pick('certsHeading'),
+      showroomTitle: pick('showroomTitle'), showroomText: pick('showroomText'),
+    });
+
+    const fill = (name: 'stats' | 'values' | 'team' | 'certs', rows: any[], make: (r: any) => Record<string, string>) => {
+      const arr = this.aboutArray(name);
+      arr.clear();
+      rows.forEach(r => arr.push(this.row(make(r))));
+    };
+    const stats = saved.stats?.length ? saved.stats : Array.from({ length: 4 }, () => ({}));
+    fill('stats',  stats, r => ({ value: r.value ?? '', label: r.label ?? '' }));
+    fill('values', saved.values ?? d.values, r => ({ title: r.title ?? '', text: r.text ?? '' }));
+    fill('team',   saved.team ?? [], r => ({ name: r.name ?? '', role: r.role ?? '', photoUrl: r.photoUrl ?? '' }));
+    fill('certs',  saved.certs ?? [], r => ({ name: r.name ?? '', logoUrl: r.logoUrl ?? '' }));
+  }
+
+  /** Blank rows are dropped so the storefront only shows what was filled in. */
+  private aboutJson(v: any): string {
+    const keep = (rows: any[], key: string) => (rows ?? []).filter(r => (r[key] ?? '').toString().trim());
+    return JSON.stringify({
+      ...v,
+      stats:  keep(v.stats, 'value'),
+      values: keep(v.values, 'title'),
+      team:   keep(v.team, 'name'),
+      certs:  keep(v.certs, 'name'),
+    });
+  }
+
+  /** Opens a file picker, uploads the image and puts its URL into the given control. */
+  uploadInto(control: AbstractControl | null): void {
+    if (!control) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) { this.message.error('Pick an image under 2 MB.'); return; }
+      this.imageUpload.uploadImage(file, 'about').subscribe({
+        next: url => { control.setValue(url); this.message.success('Image uploaded.'); },
+        error: () => this.message.error('Could not upload that image.'),
+      });
+    };
+    input.click();
+  }
+
+  // ── Colour helpers ────────────────────────────────────────────────────
   /** Sync colour-picker → text input */
   onColorPickerChange(controlName: string, event: Event): void {
     const value = (event.target as HTMLInputElement).value;

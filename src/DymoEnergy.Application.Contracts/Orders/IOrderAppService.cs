@@ -15,4 +15,7 @@ public interface IOrderAppService : IApplicationService
     Task<List<OrderItemDto>>             GetOrderItemsAsync(int id);
     Task<OrderDto>                       UpdateStatusAsync(int id, OrderStatus status);
     Task<OrderDto>                       UpdateStageAsync(int id, OrderStage stage);
+
+    /// <summary>Public order lookup: the order number plus the mobile number it was placed with.</summary>
+    Task<OrderTrackingDto>               TrackOrderAsync(TrackOrderInput input);
 }

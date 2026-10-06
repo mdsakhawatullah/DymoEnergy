@@ -39,6 +39,7 @@ export interface UserSiteSettingDto {
   // ── About Section ─────────────────────────────────────────────────────
   aboutTitle?: string;
   aboutDescription?: string;
+  aboutPageContent?: string;
   // ── Categories Section ────────────────────────────────────────────────
   categoriesTitle?: string;
   categoriesDescription?: string;
@@ -80,6 +81,7 @@ export interface CreateUpdateUserSiteSettingDto {
   fontSizeBase?: string;
   aboutTitle?: string;
   aboutDescription?: string;
+  aboutPageContent?: string;
   categoriesTitle?: string;
   categoriesDescription?: string;
   socialLinkedinUrl?: string;

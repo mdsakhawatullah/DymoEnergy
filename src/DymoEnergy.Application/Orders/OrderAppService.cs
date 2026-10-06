@@ -181,6 +181,73 @@ public class OrderAppService : ApplicationService, IOrderAppService
         return MapToDto(order);
     }
 
+    // ── PUBLIC TRACKING ───────────────────────────────────────────────────
+
+    /// <summary>
+    /// Lets a customer see their own order. Both the order number and the mobile number
+    /// must match; every failure gives the same answer so the number cannot be guessed.
+    /// </summary>
+    [AllowAnonymous]
+    public async Task<OrderTrackingDto> TrackOrderAsync(TrackOrderInput input)
+    {
+        const string notFound = "We couldn't find an order with that number and mobile number. Check both and try again.";
+
+        var number = (input.OrderNumber ?? string.Empty).Trim().ToUpperInvariant();
+        var phone  = LastDigits(input.Phone);
+        if (number.Length < 5 || phone.Length < 7)
+            throw new Volo.Abp.UserFriendlyException(notFound);
+
+        var query  = await _orderRepository.GetQueryableAsync();
+        var order  = await AsyncExecuter.FirstOrDefaultAsync(
+            query.Where(o => o.OrderNumber != null && o.OrderNumber.ToUpper() == number));
+
+        if (order == null ||
+            (LastDigits(order.CustomerPhone) != phone && LastDigits(order.DeliveryPhone) != phone))
+            throw new Volo.Abp.UserFriendlyException(notFound);
+
+        var itemQuery = await _itemRepository.GetQueryableAsync();
+        var items = await AsyncExecuter.ToListAsync(
+            itemQuery.Where(i => i.OrderId == order.Id).OrderBy(i => i.DisplayOrder));
+
+        return new OrderTrackingDto
+        {
+            OrderNumber           = order.OrderNumber,
+            OrderDate             = order.OrderDate,
+            EstimatedDeliveryDate = order.EstimatedDeliveryDate,
+            ActualDeliveryDate    = order.ActualDeliveryDate,
+            LastUpdated           = order.LastModificationTime ?? order.CreationTime,
+            Status                = order.Status,
+            Stage                 = order.Stage,
+            ShipmentType          = order.ShipmentType,
+            PaymentType           = order.PaymentType,
+            CustomerName          = order.CustomerName,
+            DeliveryAddress       = order.DeliveryAddress,
+            CurrencyCode          = order.CurrencyCode,
+            Subtotal              = order.Subtotal,
+            DiscountTotal         = order.DiscountTotal,
+            ShippingCost          = order.ShippingCost,
+            GrandTotal            = order.GrandTotal,
+            AmountPaid            = order.AmountPaid,
+            BalanceDue            = order.BalanceDue,
+            Items = items.Select(i => new OrderTrackingItemDto
+            {
+                ProductId   = i.ProductId,
+                ProductName = i.ProductName,
+                Sku         = i.Sku,
+                Quantity    = i.Quantity,
+                UnitPrice   = i.UnitPrice,
+                LineTotal   = i.LineTotal,
+            }).ToList(),
+        };
+    }
+
+    /// <summary>"+880 1912-775034" and "01912775034" both end in the same ten digits.</summary>
+    private static string LastDigits(string? phone)
+    {
+        var digits = new string((phone ?? string.Empty).Where(char.IsDigit).ToArray());
+        return digits.Length > 10 ? digits[^10..] : digits;
+    }
+
     // ── PRIVATE HELPERS ───────────────────────────────────────────────────
 
     private static void ApplyInput(Order o, CreateUpdateOrderDto input)

@@ -68,6 +68,7 @@ public class CreateUpdateUserSiteSettingDto
 
     [MaxLength(4000)]
     public string? AboutDescription { get; set; }
+    public string? AboutPageContent { get; set; }
 
     // ── Categories Section ────────────────────────────────────────────────
     [MaxLength(256)]

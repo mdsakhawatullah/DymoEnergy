@@ -40,6 +40,7 @@ public class UserSiteSettingDto : FullAuditedEntityDto<int>
     // ── About Section ─────────────────────────────────────────────────────
     public string? AboutTitle       { get; set; }
     public string? AboutDescription { get; set; }
+    public string? AboutPageContent { get; set; }
 
     // ── Categories Section ────────────────────────────────────────────────
     public string? CategoriesTitle       { get; set; }

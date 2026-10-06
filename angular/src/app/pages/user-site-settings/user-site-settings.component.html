@@ -32,6 +32,7 @@
     <button type="button" class="settings-nav__item" [class.is-active]="tab === 5" (click)="tab = 5">Primary Button</button>
     <button type="button" class="settings-nav__item" [class.is-active]="tab === 6" (click)="tab = 6">Typography</button>
     <button type="button" class="settings-nav__item" [class.is-active]="tab === 7" (click)="tab = 7">About Section</button>
+    <button type="button" class="settings-nav__item" [class.is-active]="tab === 11" (click)="tab = 11">About Page</button>
     <button type="button" class="settings-nav__item" [class.is-active]="tab === 8" (click)="tab = 8">Categories Section</button>
     <button type="button" class="settings-nav__item" [class.is-active]="tab === 9" (click)="tab = 9">Social Media</button>
     <button type="button" class="settings-nav__item" [class.is-active]="tab === 10" (click)="tab = 10">Images</button>
@@ -289,6 +290,132 @@
                   [nzAutosize]="{ minRows: 4, maxRows: 10 }">
         </textarea>
       </div>
+    </div>
+  </div>
+
+  }
+
+  <!-- ⑫ About Page ───────────────────────────────────────────────────── -->
+  @if (tab === 11) {
+  <div class="settings-card" formGroupName="aboutPage">
+    <div class="section-header">
+      <span class="section-badge">12</span>
+      <span class="section-title">About Page</span>
+    </div>
+    <p class="text-muted small mb-3">Everything on the public <b>/about</b> page. Sections you leave empty (numbers, team, partners) are hidden on the site.</p>
+
+    <!-- Intro -->
+    <div class="ab-group">Intro</div>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="field-label">SMALL HEADING (EYEBROW)</div>
+        <input nz-input formControlName="eyebrow" placeholder="About Dymo Energy" />
+      </div>
+      <div class="col-md-8">
+        <div class="field-label">MAIN HEADING</div>
+        <input nz-input formControlName="heading" placeholder="Clean, reliable power for every home and business." />
+      </div>
+      <div class="col-12">
+        <div class="field-label">OUR STORY</div>
+        <textarea nz-input formControlName="story" [nzAutosize]="{ minRows: 4, maxRows: 12 }"
+                  placeholder="How the company started and what you do today. A blank line starts a new paragraph."></textarea>
+      </div>
+      <div class="col-md-8">
+        <div class="field-label">PHOTO NEXT TO THE STORY</div>
+        <div class="d-flex align-items-center gap-2">
+          @if (aboutGroup.get('heroImageUrl')?.value) { <img [src]="aboutGroup.get('heroImageUrl')?.value" alt="" class="img-thumb" /> }
+          <input nz-input formControlName="heroImageUrl" placeholder="https://… or upload" class="flex-grow-1" />
+          <button nz-button type="button" (click)="uploadInto(aboutGroup.get('heroImageUrl'))">Upload</button>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="field-label">PHOTO CAPTION <span class="text-muted">(optional)</span></div>
+        <input nz-input formControlName="heroCaption" placeholder="Our team on a rooftop install" />
+      </div>
+    </div>
+
+    <!-- Numbers -->
+    <div class="ab-group">
+      Numbers <span class="text-muted small">— up to 4 (e.g. 1,200+ · Systems installed)</span>
+      <button nz-button nzSize="small" type="button" class="ms-auto" (click)="addAbout('stats')" [disabled]="aboutArray('stats').length >= 4"><span nz-icon nzType="plus"></span> Add</button>
+    </div>
+    <div formArrayName="stats">
+      @for (g of aboutArray('stats').controls; track $index; let i = $index) {
+        <div [formGroupName]="i" class="ab-row">
+          <input nz-input formControlName="value" placeholder="1,200+" class="ab-w-sm" />
+          <input nz-input formControlName="label" placeholder="Systems installed" class="flex-grow-1" />
+          <button nz-button nzDanger nzSize="small" type="button" (click)="removeAbout('stats', i)"><span nz-icon nzType="delete"></span></button>
+        </div>
+      }
+    </div>
+
+    <!-- Values -->
+    <div class="ab-group">
+      How we work
+      <button nz-button nzSize="small" type="button" class="ms-auto" (click)="addAbout('values')"><span nz-icon nzType="plus"></span> Add value</button>
+    </div>
+    <div class="row g-3 mb-2">
+      <div class="col-md-4"><div class="field-label">SMALL HEADING</div><input nz-input formControlName="valuesEyebrow" /></div>
+      <div class="col-md-8"><div class="field-label">HEADING</div><input nz-input formControlName="valuesHeading" /></div>
+    </div>
+    <div formArrayName="values">
+      @for (g of aboutArray('values').controls; track $index; let i = $index) {
+        <div [formGroupName]="i" class="ab-row">
+          <span class="ab-num">{{ i + 1 }}</span>
+          <input nz-input formControlName="title" placeholder="Honest sizing" class="ab-w-md" />
+          <input nz-input formControlName="text" placeholder="One sentence about it" class="flex-grow-1" />
+          <button nz-button nzDanger nzSize="small" type="button" (click)="removeAbout('values', i)"><span nz-icon nzType="delete"></span></button>
+        </div>
+      }
+    </div>
+
+    <!-- Team -->
+    <div class="ab-group">
+      Team
+      <button nz-button nzSize="small" type="button" class="ms-auto" (click)="addAbout('team')"><span nz-icon nzType="plus"></span> Add person</button>
+    </div>
+    <div class="row g-3 mb-2">
+      <div class="col-md-4"><div class="field-label">SMALL HEADING</div><input nz-input formControlName="teamEyebrow" /></div>
+      <div class="col-md-8"><div class="field-label">HEADING</div><input nz-input formControlName="teamHeading" /></div>
+    </div>
+    <div formArrayName="team">
+      @for (g of aboutArray('team').controls; track $index; let i = $index) {
+        <div [formGroupName]="i" class="ab-row">
+          @if (g.get('photoUrl')?.value) { <img [src]="g.get('photoUrl')?.value" alt="" class="img-thumb" /> }
+          <input nz-input formControlName="name" placeholder="Name" class="ab-w-md" />
+          <input nz-input formControlName="role" placeholder="Role, e.g. Head of Engineering" class="flex-grow-1" />
+          <input nz-input formControlName="photoUrl" placeholder="Photo URL" class="ab-w-md" />
+          <button nz-button type="button" (click)="uploadInto(g.get('photoUrl'))">Upload</button>
+          <button nz-button nzDanger nzSize="small" type="button" (click)="removeAbout('team', i)"><span nz-icon nzType="delete"></span></button>
+        </div>
+      }
+    </div>
+
+    <!-- Partners -->
+    <div class="ab-group">
+      Certifications &amp; partners
+      <button nz-button nzSize="small" type="button" class="ms-auto" (click)="addAbout('certs')"><span nz-icon nzType="plus"></span> Add</button>
+    </div>
+    <div class="row g-3 mb-2">
+      <div class="col-md-8"><div class="field-label">HEADING</div><input nz-input formControlName="certsHeading" /></div>
+    </div>
+    <div formArrayName="certs">
+      @for (g of aboutArray('certs').controls; track $index; let i = $index) {
+        <div [formGroupName]="i" class="ab-row">
+          @if (g.get('logoUrl')?.value) { <img [src]="g.get('logoUrl')?.value" alt="" class="img-thumb" /> }
+          <input nz-input formControlName="name" placeholder="Name, e.g. SREDA listing" class="flex-grow-1" />
+          <input nz-input formControlName="logoUrl" placeholder="Logo URL (optional)" class="ab-w-md" />
+          <button nz-button type="button" (click)="uploadInto(g.get('logoUrl'))">Upload</button>
+          <button nz-button nzDanger nzSize="small" type="button" (click)="removeAbout('certs', i)"><span nz-icon nzType="delete"></span></button>
+        </div>
+      }
+    </div>
+
+    <!-- Showroom -->
+    <div class="ab-group">Showroom banner</div>
+    <div class="row g-3">
+      <div class="col-md-4"><div class="field-label">TITLE</div><input nz-input formControlName="showroomTitle" /></div>
+      <div class="col-md-8"><div class="field-label">TEXT</div><input nz-input formControlName="showroomText" placeholder="See panels, inverters and batteries in person at …" /></div>
     </div>
   </div>
 

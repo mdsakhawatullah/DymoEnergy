@@ -41,6 +41,9 @@ public class UserSiteSetting : FullAuditedAggregateRoot<int>
     public string? AboutTitle       { get; set; }
     public string? AboutDescription { get; set; }
 
+    /// <summary>JSON for the storefront About page (story, numbers, values, team, partners, showroom).</summary>
+    public string? AboutPageContent { get; set; }
+
     // ── Categories Section ────────────────────────────────────────────────
     public string? CategoriesTitle       { get; set; }
     public string? CategoriesDescription { get; set; }
