@@ -43,6 +43,11 @@ export const APP_ROUTES: Routes = [
     loadComponent: () => import('./pages/user-site-settings/user-site-settings.component').then(c => c.UserSiteSettingsComponent),
     canActivate: [authGuard],
   },
+  {
+    path: 'brand-portfolios',
+    loadComponent: () => import('./pages/brand-portfolios/brand-portfolios.component').then(c => c.BrandPortfoliosComponent),
+    canActivate: [authGuard],
+  },
 
   // ── Project Planning & Execution ──────────────────────────────────────────
   {

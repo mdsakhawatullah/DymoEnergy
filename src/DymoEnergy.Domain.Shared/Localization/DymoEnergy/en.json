@@ -37,6 +37,7 @@
     "Menu:AdminSiteSettings": "SiteSettings",
     "Menu:AdminSiteSetting": "Site Setting",
     "Menu:UserSiteSetting": "User Site Setting",
+    "Menu:BrandPortfolio": "Brand Portfolio",
     "Menu:Categories": "Categories",
     "Menu:Category": "Categories",
     "Menu:Products": "Products",
@@ -208,6 +209,10 @@
     "Enum:OrderCreateMethod.5": "API",
     "Enum:OrderCreateMethod.6": "Marketplace",
 
+    "Permission:BrandPortfolios": "Brand Portfolio Management",
+    "Permission:BrandPortfolios.Create": "Create Brand Portfolios",
+    "Permission:BrandPortfolios.Edit": "Edit Brand Portfolios",
+    "Permission:BrandPortfolios.Delete": "Delete Brand Portfolios",
     "Permission:UserSiteSettings": "User Site Setting Management",
     "Permission:UserSiteSettings.Create": "Create User Site Settings",
     "Permission:UserSiteSettings.Edit": "Edit User Site Settings",

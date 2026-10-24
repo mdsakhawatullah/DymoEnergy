@@ -21,6 +21,14 @@ public interface ICloudinaryService : ITransientDependency
     Task<string> UploadDocumentAsync(Stream fileStream, string fileName, string folder = "DymoEnergy/documents");
 
     /// <summary>
+    /// Uploads a video (MP4, WebM, MOV) to Cloudinary and returns its secure URL.
+    /// </summary>
+    /// <param name="fileStream">The file stream to upload</param>
+    /// <param name="fileName">The name of the file</param>
+    /// <param name="folder">Optional folder name in Cloudinary</param>
+    Task<string> UploadVideoAsync(Stream fileStream, string fileName, string folder = "DymoEnergy/videos");
+
+    /// <summary>
     /// Deletes an image from Cloudinary
     /// </summary>
     /// <param name="publicId">The public ID of the image to delete</param>

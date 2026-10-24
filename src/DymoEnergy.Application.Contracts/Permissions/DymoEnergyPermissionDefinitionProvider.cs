@@ -40,6 +40,11 @@ public class DymoEnergyPermissionDefinitionProvider : PermissionDefinitionProvid
         userSiteSettingsPermission.AddChild(DymoEnergyPermissions.UserSiteSettings.Edit,   L("Permission:UserSiteSettings.Edit"));
         userSiteSettingsPermission.AddChild(DymoEnergyPermissions.UserSiteSettings.Delete, L("Permission:UserSiteSettings.Delete"));
 
+        var brandPortfoliosPermission = myGroup.AddPermission(DymoEnergyPermissions.BrandPortfolios.Default, L("Permission:BrandPortfolios"));
+        brandPortfoliosPermission.AddChild(DymoEnergyPermissions.BrandPortfolios.Create, L("Permission:BrandPortfolios.Create"));
+        brandPortfoliosPermission.AddChild(DymoEnergyPermissions.BrandPortfolios.Edit,   L("Permission:BrandPortfolios.Edit"));
+        brandPortfoliosPermission.AddChild(DymoEnergyPermissions.BrandPortfolios.Delete, L("Permission:BrandPortfolios.Delete"));
+
         var ordersPermission = myGroup.AddPermission(DymoEnergyPermissions.Orders.Default, L("Permission:Orders"));
         ordersPermission.AddChild(DymoEnergyPermissions.Orders.Create, L("Permission:Orders.Create"));
         ordersPermission.AddChild(DymoEnergyPermissions.Orders.Edit,   L("Permission:Orders.Edit"));

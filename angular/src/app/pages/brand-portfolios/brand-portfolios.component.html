@@ -1,0 +1,876 @@
+<!-- ══════════════════════════════════════════════════════════════════════
+     LIST — the brand pages
+     ══════════════════════════════════════════════════════════════════ -->
+@if (view === 'list') {
+
+<div class="d-flex align-items-start justify-content-between mb-4">
+  <div>
+    <h4 class="mb-1 fw-bold">Brand Portfolio</h4>
+    <span class="text-muted small">
+      One page per maker you carry, at /brands/&hellip; — story, figures, certificates, files and photos.
+    </span>
+  </div>
+  <button nz-button nzType="primary" class="btn-create" (click)="newBrand()">
+    <span nz-icon nzType="plus" nzTheme="outline"></span> New brand page
+  </button>
+</div>
+
+<div class="bp-toolbar mb-3">
+  <input nz-input placeholder="Search a brand, address or tagline&hellip;"
+         [(ngModel)]="search" (keyup.enter)="onSearch()" class="bp-search" />
+  <button nz-button (click)="onSearch()">Search</button>
+</div>
+
+@if (listLoading) {
+  <div class="text-center py-5"><nz-spin nzSize="large"></nz-spin></div>
+} @else if (listFailed) {
+  <nz-alert nzType="error" nzShowIcon
+            nzMessage="The brand pages could not be loaded"
+            nzDescription="Check you are signed in and that your role has the Brand Portfolio permission."></nz-alert>
+} @else if (brands.length === 0) {
+  <div class="bp-empty">
+    <span nz-icon nzType="shop" nzTheme="outline" class="bp-empty__icon"></span>
+    <strong>No brand pages yet</strong>
+    <span class="text-muted small">Add the first maker you carry and its page appears on the shop once you publish it.</span>
+    <button nz-button nzType="primary" (click)="newBrand()">New brand page</button>
+  </div>
+} @else {
+
+<div class="settings-card p-0">
+  <nz-table #brandTable [nzData]="brands" [nzFrontPagination]="false" [nzShowPagination]="false" nzSize="middle">
+    <thead>
+      <tr>
+        <th>Brand</th>
+        <th nzWidth="190px">Web address</th>
+        <th nzWidth="170px">Filled in</th>
+        <th nzWidth="105px">Certificates</th>
+        <th nzWidth="70px">Lines</th>
+        <th nzWidth="80px">Public</th>
+        <th nzWidth="140px" class="text-end">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (b of brandTable.data; track b.id) {
+        <tr>
+          <td>
+            <div class="bp-brandcell">
+              @if (b.logoUrl) {
+                <img [src]="b.logoUrl" [alt]="b.name" class="bp-logo" />
+              } @else {
+                <span class="bp-logo bp-logo--text"
+                      [style.color]="b.brandColor || '#5F6B63'">{{ initials(b.name) }}</span>
+              }
+              <span class="bp-brandcell__text">
+                <strong>{{ b.name }}</strong>
+                @if (b.tagline) { <span class="text-muted small">{{ b.tagline }}</span> }
+              </span>
+            </div>
+          </td>
+          <td>
+            @if (shopUrl(b.slug); as url) {
+              @if (b.isPublished) {
+                <a [href]="url" target="_blank" rel="noopener" class="bp-weblink bp-mono"
+                   nz-tooltip nzTooltipTitle="Open this page on the shop">
+                  /brands/{{ b.slug }}<i class="bi bi-box-arrow-up-right"></i>
+                </a>
+              } @else {
+                <span class="bp-mono bp-weblink bp-weblink--off"
+                      nz-tooltip nzTooltipTitle="Draft — switch Public on to see it on the shop">
+                  /brands/{{ b.slug }}
+                </span>
+              }
+            } @else {
+              <code class="bp-mono">/brands/{{ b.slug }}</code>
+            }
+          </td>
+          <td>
+            <div class="bp-bar" [attr.aria-label]="b.completenessPercent + '% filled in'">
+              <span class="bp-bar__fill" [style.width.%]="b.completenessPercent"></span>
+            </div>
+            <span class="text-muted small">{{ b.completenessPercent }}%</span>
+          </td>
+          <td>{{ b.certificateCount }}</td>
+          <td>{{ b.productLineCount }}</td>
+          <td>
+            <nz-switch [ngModel]="b.isPublished"
+                       (ngModelChange)="togglePublished(b, $event)"
+                       nzSize="small"></nz-switch>
+          </td>
+          <td>
+            <div class="bp-actions">
+              @if (shopUrl(b.slug); as url) {
+                @if (b.isPublished) {
+                  <a [href]="url" target="_blank" rel="noopener" class="bp-iconbtn"
+                     aria-label="View on the shop" nz-tooltip nzTooltipTitle="View on the shop">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                } @else {
+                  <span class="bp-iconbtn is-disabled" aria-disabled="true"
+                        nz-tooltip nzTooltipTitle="Not public yet — switch Public on first">
+                    <i class="bi bi-eye-slash"></i>
+                  </span>
+                }
+              }
+              <button type="button" class="bp-iconbtn" (click)="openBrand(b.id)"
+                      aria-label="Edit the page" nz-tooltip nzTooltipTitle="Edit the page">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button type="button" class="bp-iconbtn bp-iconbtn--danger"
+                      aria-label="Delete the page" nz-tooltip nzTooltipTitle="Delete"
+                      nz-popconfirm
+                      nzPopconfirmTitle="Delete this brand page and everything on it?"
+                      nzOkText="Delete" nzOkDanger nzCancelText="Keep"
+                      (nzOnConfirm)="deleteBrand(b.id)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+@if (totalCount > pageSize) {
+  <div class="d-flex justify-content-end mt-3">
+    <nz-pagination [nzPageIndex]="pageIndex" [nzTotal]="totalCount" [nzPageSize]="pageSize"
+                   (nzPageIndexChange)="onPageIndexChange($event)"></nz-pagination>
+  </div>
+}
+
+}
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     EDITOR — the five tabs of one brand page
+     ══════════════════════════════════════════════════════════════════ -->
+@if (view === 'edit') {
+
+@if (loading) {
+  <div class="text-center py-5"><nz-spin nzSize="large"></nz-spin></div>
+} @else {
+
+<form nz-form [formGroup]="form" nzLayout="vertical">
+
+  <!-- ── Header ──────────────────────────────────────────────────────── -->
+  <div class="bp-header">
+    <button nz-button nzType="text" (click)="backToList()" nz-tooltip="Back to the brand pages">
+      <span nz-icon nzType="left" nzTheme="outline"></span>
+    </button>
+
+    @if (form.get('logoUrl')?.value) {
+      <img [src]="form.get('logoUrl')?.value" alt="" class="bp-logo bp-logo--lg" />
+    } @else {
+      <span class="bp-logo bp-logo--lg bp-logo--text"
+            [style.color]="form.get('brandColor')?.value || '#5F6B63'">{{ initials(form.get('name')?.value) }}</span>
+    }
+
+    <div class="bp-header__text">
+      <span class="bp-header__title">
+        <h4 class="mb-0 fw-bold">{{ form.get('name')?.value || 'New brand page' }}</h4>
+        @if (form.get('isPublished')?.value) {
+          <nz-tag nzColor="green">Live</nz-tag>
+        } @else {
+          <nz-tag>Draft</nz-tag>
+        }
+      </span>
+      <span class="bp-mono text-muted small">
+        {{ previewUrl }}
+        @if (savedAt) { · saved {{ savedAt | date: 'd MMM, HH:mm' }} }
+        @if (!editingId) { · not saved yet }
+      </span>
+    </div>
+
+    <span class="flex-grow-1"></span>
+
+    <span class="bp-publish">
+      <span class="text-muted small">Page is public</span>
+      <nz-switch [ngModel]="form.get('isPublished')?.value" [ngModelOptions]="{ standalone: true }"
+                 (ngModelChange)="togglePublishedInEditor($event)"></nz-switch>
+    </span>
+
+    @if (editingId && form.get('isPublished')?.value && shopUrl(editingSlug); as url) {
+      <a nz-button [href]="url" target="_blank" rel="noopener" class="bp-viewlink">
+        <i class="bi bi-box-arrow-up-right"></i> View on shop
+      </a>
+    }
+
+    <button nz-button nzType="primary" class="btn-save" (click)="save()" [nzLoading]="saving">
+      Save changes
+    </button>
+  </div>
+
+  <!-- ── Completeness ────────────────────────────────────────────────── -->
+  <div class="bp-progress">
+    <div class="bp-progress__ring" [style.--bp-pct]="completeness">
+      <span>{{ completeness }}%</span>
+    </div>
+    <span class="bp-progress__text">
+      <strong>{{ completeness }}% filled in — {{ filledCount }} of {{ blockCount }} blocks</strong>
+      <span class="text-muted small">Empty blocks are hidden on the shop, not shown blank.</span>
+    </span>
+    <button nz-button class="bp-jump" (click)="jumpToFirstEmpty()">Jump to the first empty one</button>
+  </div>
+
+  <!-- ── Tabs ────────────────────────────────────────────────────────── -->
+  <nav class="bp-tabs" role="tablist">
+    @for (t of tabs; track t.label; let i = $index) {
+      <button type="button" role="tab" [attr.aria-selected]="tab === i"
+              class="bp-tabs__item" [class.is-active]="tab === i" (click)="tab = i">
+        {{ t.label }}
+      </button>
+    }
+  </nav>
+
+  <div class="bp-layout">
+    <div class="bp-main">
+
+      <!-- ═══════════ ① BASICS & FACTS ═══════════ -->
+      @if (tab === 0) {
+
+      <div class="settings-card">
+        <div class="section-header"><span class="section-badge">1</span><span class="section-title">Basics</span></div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="field-label">BRAND NAME <span class="bp-req">required</span></div>
+            <input nz-input formControlName="name" placeholder="RAGGIE" (blur)="suggestSlug()" />
+            @if (form.get('name')?.touched && form.get('name')?.invalid) {
+              <div class="bp-err">Give the brand a name.</div>
+            }
+          </div>
+          <div class="col-md-6">
+            <div class="field-label">WEB ADDRESS <span class="bp-opt">/brands/&hellip;</span></div>
+            <input nz-input formControlName="slug" placeholder="raggie" />
+            @if (form.get('slug')?.touched && form.get('slug')?.invalid) {
+              <div class="bp-err">Lowercase letters, numbers and single hyphens only.</div>
+            }
+          </div>
+          <div class="col-12">
+            <div class="field-label">TAGLINE <span class="bp-opt">the italic line beside the name</span></div>
+            <input nz-input formControlName="tagline" placeholder="more than just solar" />
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-3">
+            <div class="field-label">LOGO</div>
+            <div class="bp-drop" (click)="uploadImageInto(form.get('logoUrl'))">
+              @if (form.get('logoUrl')?.value) {
+                <img [src]="form.get('logoUrl')?.value" alt="Logo" class="bp-drop__img" />
+              } @else {
+                <span nz-icon nzType="upload" nzTheme="outline"></span>
+                <span class="bp-drop__hint">PNG with a clear background</span>
+                <span class="bp-drop__hint">320 &times; 320 or larger</span>
+              }
+            </div>
+            @if (form.get('logoUrl')?.value) {
+              <button nz-button nzSize="small" nzType="text" class="btn-remove mt-1"
+                      (click)="form.get('logoUrl')?.setValue(null)">Remove logo</button>
+            }
+          </div>
+          <div class="col-md-9">
+            <div class="field-label">SHORT INTRO <span class="bp-opt">two or three sentences, sits under the name</span></div>
+            <textarea nz-input formControlName="shortIntro"
+                      placeholder="Who the maker is, what they are known for, and why you chose to carry them."
+                      [nzAutosize]="{ minRows: 4, maxRows: 7 }"></textarea>
+
+            <div class="row g-3 mt-2">
+              <div class="col-md-6">
+                <div class="field-label">DISTRIBUTOR SINCE</div>
+                <input nz-input formControlName="distributorSince" placeholder="2019" />
+              </div>
+              <div class="col-md-6">
+                <div class="field-label">BRAND COLOUR <span class="bp-opt">tints the page</span></div>
+                <div class="color-row">
+                  <input type="color" class="color-swatch" [value]="colorValue('brandColor')"
+                         (input)="onColorPickerChange('brandColor', $event)" />
+                  <input nz-input formControlName="brandColor" placeholder="#D94F6A" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="settings-card" formGroupName="content">
+        <div class="section-header">
+          <span class="section-badge">2</span>
+          <span class="section-title">The four figures under the hero</span>
+          <span class="bp-hint ms-2">Leave one blank and it drops off the row.</span>
+        </div>
+
+        <div class="row g-3" formArrayName="quickStats">
+          @for (row of contentArray('quickStats').controls; track row; let i = $index) {
+            <div class="col-md-3" [formGroupName]="i">
+              <div class="bp-statcard">
+                <nz-select formControlName="iconKey" class="w-100">
+                  @for (ic of iconChoices; track ic.key) {
+                    <nz-option [nzValue]="ic.key" [nzLabel]="ic.label"></nz-option>
+                  }
+                </nz-select>
+                <input nz-input formControlName="value" placeholder="56" class="bp-statcard__value" />
+                <input nz-input formControlName="label" placeholder="products we stock" nzSize="small" />
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- At a glance -->
+      <div class="settings-card" formGroupName="content">
+        <div class="section-header"><span class="section-badge">3</span><span class="section-title">At a glance</span></div>
+        <span class="bp-hint d-block mb-3">
+          The small fact table beside the story. Add only what you can evidence — leave out anything you are unsure of.
+        </span>
+
+        <div formArrayName="facts">
+          @for (row of contentArray('facts').controls; track row; let i = $index) {
+            <div class="bp-row" [formGroupName]="i">
+              <input nz-input formControlName="key" placeholder="Head office" class="bp-row__key" />
+              <input nz-input formControlName="value" [placeholder]="factHint(row.get('key')?.value)" />
+              <button nz-button nzType="text" class="btn-remove" (click)="removeContentRow('facts', i)">
+                <span nz-icon nzType="close" nzTheme="outline"></span>
+              </button>
+            </div>
+          }
+        </div>
+        <button nz-button nzSize="small" (click)="addContentRow('facts')">+ Add a row</button>
+      </div>
+
+      <!-- Search listing -->
+      <div class="settings-card">
+        <div class="section-header"><span class="section-badge">4</span><span class="section-title">Search listing</span></div>
+
+        <div class="field-label">PAGE TITLE</div>
+        <input nz-input formControlName="metaTitle" placeholder="RAGGIE solar products in Bangladesh | DymoEnergy" />
+
+        <div class="field-label mt-3">
+          DESCRIPTION
+          <span class="bp-opt">{{ metaDescriptionLeft }} of 155 characters left</span>
+        </div>
+        <textarea nz-input formControlName="metaDescription"
+                  placeholder="What someone sees under the link on Google."
+                  [nzAutosize]="{ minRows: 2, maxRows: 4 }"></textarea>
+
+        <div class="bp-serp">
+          <span class="bp-serp__label">How it will look</span>
+          <span class="bp-serp__title">{{ metaTitlePreview }}</span>
+          <span class="bp-serp__url bp-mono">{{ previewUrl }}</span>
+          <span class="bp-serp__desc">{{ metaDescriptionPreview }}</span>
+        </div>
+      </div>
+
+      }
+
+      <!-- ═══════════ ② STORY & WARRANTY ═══════════ -->
+      @if (tab === 1) {
+
+      <div class="settings-card">
+        <div class="section-header">
+          <span class="section-badge">1</span><span class="section-title">The story</span>
+          <span class="flex-grow-1"></span>
+          <button nz-button nzSize="small" (click)="addContentRow('paragraphs')">+ Add a paragraph</button>
+        </div>
+
+        <div class="field-label">SECTION HEADLINE</div>
+        <input nz-input formControlName="storyHeadline" placeholder="Headline about the maker" />
+
+        <div formGroupName="content">
+        <div formArrayName="paragraphs" class="mt-3">
+          @for (row of contentArray('paragraphs').controls; track row; let i = $index) {
+            <div class="bp-pararow" [formGroupName]="i">
+              <span class="bp-move">
+                <button nz-button nzType="text" nzSize="small" [disabled]="i === 0"
+                        (click)="moveContentRow('paragraphs', i, -1)" nz-tooltip="Move up">
+                  <span nz-icon nzType="up" nzTheme="outline"></span>
+                </button>
+                <button nz-button nzType="text" nzSize="small"
+                        [disabled]="i === contentArray('paragraphs').length - 1"
+                        (click)="moveContentRow('paragraphs', i, 1)" nz-tooltip="Move down">
+                  <span nz-icon nzType="down" nzTheme="outline"></span>
+                </button>
+              </span>
+              <textarea nz-input formControlName="text"
+                        placeholder="Where the company is based and what it makes."
+                        [nzAutosize]="{ minRows: 3, maxRows: 8 }"></textarea>
+              <button nz-button nzType="text" class="btn-remove" (click)="removeContentRow('paragraphs', i)">
+                <span nz-icon nzType="close" nzTheme="outline"></span>
+              </button>
+            </div>
+          }
+        </div>
+        </div>
+      </div>
+
+      <div class="settings-card" formGroupName="content">
+        <div class="section-header"><span class="section-badge">2</span><span class="section-title">Why we carry them</span></div>
+        <span class="bp-hint d-block mb-3">
+          Short reasons, shown as a ticked list. Write what is true for your business — price, spare parts, how fast claims are settled.
+        </span>
+
+        <div formArrayName="reasons">
+          @for (row of contentArray('reasons').controls; track row; let i = $index) {
+            <div class="bp-row" [formGroupName]="i">
+              <input nz-input formControlName="title" placeholder="Spare parts on the shelf" class="bp-row__key bp-row__key--wide" />
+              <input nz-input formControlName="text" placeholder="One line." />
+              <button nz-button nzType="text" class="btn-remove" (click)="removeContentRow('reasons', i)">
+                <span nz-icon nzType="close" nzTheme="outline"></span>
+              </button>
+            </div>
+          }
+        </div>
+        <button nz-button nzSize="small" (click)="addContentRow('reasons')">+ Add a reason</button>
+      </div>
+
+      <div class="settings-card" formGroupName="content">
+        <div class="section-header"><span class="section-badge">3</span><span class="section-title">Warranty</span></div>
+
+        <div class="row g-3" formArrayName="warrantyTerms">
+          @for (row of contentArray('warrantyTerms').controls; track row; let i = $index) {
+            <div class="col-md-3" [formGroupName]="i">
+              <div class="field-label">
+                <input nz-input formControlName="category" placeholder="Panels" nzSize="small" />
+              </div>
+              <input nz-input formControlName="term" placeholder="25 years" />
+            </div>
+          }
+        </div>
+        <button nz-button nzSize="small" class="mt-3" (click)="addContentRow('warrantyTerms')">+ Add a category</button>
+
+        <nz-divider></nz-divider>
+
+        <div class="field-label">WARRANTY NOTES</div>
+        <div formArrayName="warrantyNotes">
+          @for (row of contentArray('warrantyNotes').controls; track row; let i = $index) {
+            <div class="bp-row" [formGroupName]="i">
+              <input nz-input formControlName="text"
+                     placeholder="You claim through us, not the factory — bring the invoice and the serial number." />
+              <button nz-button nzType="text" class="btn-remove" (click)="removeContentRow('warrantyNotes', i)">
+                <span nz-icon nzType="close" nzTheme="outline"></span>
+              </button>
+            </div>
+          }
+        </div>
+        <button nz-button nzSize="small" (click)="addContentRow('warrantyNotes')">+ Add a line</button>
+      </div>
+
+      }
+
+      <!-- ═══════════ ③ CERTIFICATES & FILES ═══════════ -->
+      @if (tab === 2) {
+
+      <div class="settings-card">
+        <div class="section-header">
+          <span class="section-badge">1</span>
+          <span class="section-title">Certificates and test reports</span>
+          <span class="flex-grow-1"></span>
+          <button nz-button nzType="primary" nzSize="small" (click)="addCertificate()">+ Add</button>
+        </div>
+
+        <div formArrayName="certificates">
+          @for (row of childArray('certificates').controls; track row; let i = $index) {
+            <div class="bp-certrow" [formGroupName]="i">
+              <div class="bp-certrow__grid">
+                <label class="bp-field">
+                  <span class="field-label">MARK</span>
+                  <input nz-input formControlName="mark" placeholder="IEC 62109" />
+                </label>
+                <label class="bp-field">
+                  <span class="field-label">WHAT IT COVERS</span>
+                  <input nz-input formControlName="covers" placeholder="Inverter models covered" />
+                </label>
+                <label class="bp-field">
+                  <span class="field-label">NUMBER</span>
+                  <input nz-input formControlName="certificateNumber" placeholder="IEC-123456" />
+                </label>
+              </div>
+
+              <div class="bp-certrow__grid">
+                <label class="bp-field">
+                  <span class="field-label">EXPIRES</span>
+                  @if (row.get('noExpiry')?.value) {
+                    <span class="bp-static">No expiry</span>
+                  } @else {
+                    <nz-date-picker formControlName="expiresOn" class="w-100"></nz-date-picker>
+                  }
+                </label>
+                <label class="bp-field bp-field--check">
+                  <span class="field-label">&nbsp;</span>
+                  <label nz-checkbox [ngModel]="row.get('noExpiry')?.value"
+                         [ngModelOptions]="{ standalone: true }"
+                         (ngModelChange)="row.get('noExpiry')?.setValue($event)">
+                    This mark does not lapse
+                  </label>
+                </label>
+                <label class="bp-field">
+                  <span class="field-label">FILE</span>
+                  <span class="bp-filecell">
+                    @if (row.get('fileUrl')?.value) {
+                      <a [href]="row.get('fileUrl')?.value" target="_blank" rel="noopener">
+                        {{ row.get('fileSize')?.value || 'Open file' }}
+                      </a>
+                    } @else {
+                      <span class="text-muted small">Not uploaded</span>
+                    }
+                    <button nz-button nzSize="small" (click)="uploadFileInto(row)">Upload PDF</button>
+                  </span>
+                </label>
+              </div>
+
+              <div class="bp-certrow__foot">
+                <span class="bp-expiry" [class.is-warn]="expiryNote(row).warn">
+                  {{ expiryNote(row).text }}
+                </span>
+                <span class="flex-grow-1"></span>
+                <span class="bp-switchlabel">
+                  <span class="text-muted small">Show on the shop</span>
+                  <nz-switch [ngModel]="row.get('isVisible')?.value"
+                             [ngModelOptions]="{ standalone: true }"
+                             (ngModelChange)="row.get('isVisible')?.setValue($event)"
+                             nzSize="small"></nz-switch>
+                </span>
+                <button nz-button nzType="text" class="btn-remove" (click)="removeChild('certificates', i)">
+                  <span nz-icon nzType="delete" nzTheme="outline"></span>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (childArray('certificates').length === 0) {
+          <span class="bp-hint">No certificates yet. The block is hidden on the shop until you add one.</span>
+        }
+
+        <nz-alert class="mt-3" nzType="warning" nzShowIcon
+                  nzDescription="Upload the supplier's own PDF, not a photo of one. Put the certificate number in so a customer can check it with the issuing body. An expiry inside 60 days is flagged here."></nz-alert>
+      </div>
+
+      <div class="settings-card">
+        <div class="section-header">
+          <span class="section-badge">2</span><span class="section-title">Downloads</span>
+          <span class="flex-grow-1"></span>
+          <button nz-button nzSize="small" (click)="addDownload()">+ Add a file</button>
+        </div>
+        <span class="bp-hint d-block mb-3">
+          Catalogues, datasheets and price lists. A file marked dealers-only asks the visitor to sign in first.
+        </span>
+
+        <div formArrayName="downloads">
+          @for (row of childArray('downloads').controls; track row; let i = $index) {
+            <div class="bp-dlrow" [formGroupName]="i">
+              <input nz-input formControlName="title" placeholder="Full product catalogue 2026" />
+              <nz-select formControlName="kind" class="bp-dlrow__kind">
+                <nz-option [nzValue]="downloadKinds.Pdf" nzLabel="PDF"></nz-option>
+                <nz-option [nzValue]="downloadKinds.Zip" nzLabel="ZIP"></nz-option>
+                <nz-option [nzValue]="downloadKinds.Other" nzLabel="Other"></nz-option>
+              </nz-select>
+              <span class="bp-filecell">
+                @if (row.get('fileUrl')?.value) {
+                  <a [href]="row.get('fileUrl')?.value" target="_blank" rel="noopener">
+                    {{ row.get('fileSize')?.value || 'Open' }}
+                  </a>
+                } @else {
+                  <span class="text-muted small">No file</span>
+                }
+                <button nz-button nzSize="small" (click)="uploadFileInto(row)">Upload</button>
+              </span>
+              <label nz-checkbox [ngModel]="row.get('dealersOnly')?.value"
+                     [ngModelOptions]="{ standalone: true }"
+                     (ngModelChange)="row.get('dealersOnly')?.setValue($event)">Dealers only</label>
+              <button nz-button nzType="text" class="btn-remove" (click)="removeChild('downloads', i)">
+                <span nz-icon nzType="close" nzTheme="outline"></span>
+              </button>
+            </div>
+          }
+        </div>
+
+        @if (childArray('downloads').length === 0) {
+          <span class="bp-hint">No files yet.</span>
+        }
+      </div>
+
+      }
+
+      <!-- ═══════════ ④ PRODUCTS & PROJECTS ═══════════ -->
+      @if (tab === 3) {
+
+      <div class="settings-card">
+        <div class="section-header">
+          <span class="section-badge">1</span><span class="section-title">Product lines on the page</span>
+          <span class="flex-grow-1"></span>
+          <button nz-button nzSize="small" (click)="addProductLine()">+ Add a line</button>
+        </div>
+        <nz-alert nzType="info" nzShowIcon class="mb-3"
+                  nzDescription="Tie a line to a catalogue category and the product count and cheapest price are worked out for you — nothing to maintain twice."></nz-alert>
+
+        <div formArrayName="productLines">
+          @for (row of childArray('productLines').controls; track row; let i = $index) {
+            <div class="bp-linerow" [formGroupName]="i">
+              <div class="bp-linerow__grid">
+                <label class="bp-field">
+                  <span class="field-label">LINE</span>
+                  <input nz-input formControlName="name" placeholder="Hybrid inverters" />
+                </label>
+                <label class="bp-field">
+                  <span class="field-label">CATEGORY <span class="bp-opt">optional</span></span>
+                  <nz-select formControlName="categoryId" nzAllowClear nzShowSearch
+                             nzPlaceHolder="Not linked" class="w-100">
+                    @for (c of categories; track c.value) {
+                      <nz-option [nzValue]="c.value" [nzLabel]="c.displayText"></nz-option>
+                    }
+                  </nz-select>
+                </label>
+                <label class="bp-field">
+                  <span class="field-label">ICON</span>
+                  <nz-select formControlName="iconKey" class="w-100">
+                    @for (ic of iconChoices; track ic.key) {
+                      <nz-option [nzValue]="ic.key" [nzLabel]="ic.label"></nz-option>
+                    }
+                  </nz-select>
+                </label>
+              </div>
+
+              <label class="bp-field">
+                <span class="field-label">ONE-LINE BLURB</span>
+                <input nz-input formControlName="blurb" placeholder="What this line is for, in one line." />
+              </label>
+
+              <div class="bp-linerow__foot">
+                @if (row.get('categoryId')?.value) {
+                  <span class="text-muted small">
+                    {{ row.get('productCount')?.value }} live products
+                    @if (row.get('fromPrice')?.value) { · from ৳{{ row.get('fromPrice')?.value | number }} }
+                  </span>
+                } @else {
+                  <span class="text-muted small">Not linked to a category</span>
+                }
+                <span class="flex-grow-1"></span>
+                <span class="bp-switchlabel">
+                  <span class="text-muted small">Show</span>
+                  <nz-switch [ngModel]="row.get('isVisible')?.value"
+                             [ngModelOptions]="{ standalone: true }"
+                             (ngModelChange)="row.get('isVisible')?.setValue($event)"
+                             nzSize="small"></nz-switch>
+                </span>
+                <button nz-button nzType="text" class="btn-remove" (click)="removeChild('productLines', i)">
+                  <span nz-icon nzType="delete" nzTheme="outline"></span>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (childArray('productLines').length === 0) {
+          <span class="bp-hint">No lines yet. The block is hidden on the shop until you add one.</span>
+        }
+      </div>
+
+      <div class="settings-card">
+        <div class="section-header">
+          <span class="section-badge">2</span><span class="section-title">Jobs done with this brand</span>
+          <span class="flex-grow-1"></span>
+          <button nz-button nzSize="small" (click)="addProject()">+ Add a project</button>
+        </div>
+        <span class="bp-hint d-block mb-3">
+          Show up to three. Only finished jobs with a photo and the customer's written permission belong here.
+        </span>
+
+        <div formArrayName="projects">
+          @for (row of childArray('projects').controls; track row; let i = $index) {
+            <div class="bp-projrow" [formGroupName]="i">
+              <div class="bp-projrow__thumb" (click)="uploadImageInto(row.get('imageUrl'), 'brand-projects')">
+                @if (row.get('imageUrl')?.value) {
+                  <img [src]="row.get('imageUrl')?.value" alt="" />
+                } @else {
+                  <span nz-icon nzType="camera" nzTheme="outline"></span>
+                }
+              </div>
+              <div class="bp-projrow__fields">
+                <input nz-input formControlName="title" placeholder="Project name — Chattogram" />
+                <input nz-input formControlName="subtitle" placeholder="5 kW hybrid · 12 panels" />
+              </div>
+              <nz-select formControlName="consentStatus" class="bp-projrow__consent">
+                <nz-option [nzValue]="consentStatuses.PhotoAndConsent" nzLabel="Photo + consent"></nz-option>
+                <nz-option [nzValue]="consentStatuses.WaitingOnConsent" nzLabel="Waiting on consent"></nz-option>
+                <nz-option [nzValue]="consentStatuses.NoPhoto" nzLabel="No photo"></nz-option>
+              </nz-select>
+              <button nz-button nzType="text" class="btn-remove" (click)="removeChild('projects', i)">
+                <span nz-icon nzType="close" nzTheme="outline"></span>
+              </button>
+            </div>
+          }
+        </div>
+
+        @if (childArray('projects').length === 0) {
+          <span class="bp-hint">No projects picked. The block is hidden on the shop.</span>
+        }
+
+        <nz-divider></nz-divider>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="field-label">CALL-TO-ACTION HEADLINE</div>
+            <input nz-input formControlName="ctaHeadline" placeholder="Thinking about this brand?" />
+          </div>
+          <div class="col-md-6">
+            <div class="field-label">ONE OR TWO LINES UNDER IT</div>
+            <input nz-input formControlName="ctaSubline" placeholder="Tell us your load and we will size it." />
+          </div>
+        </div>
+      </div>
+
+      }
+
+      <!-- ═══════════ ⑤ PHOTOS & VIDEO ═══════════ -->
+      @if (tab === 4) {
+
+      <div class="settings-card">
+        <div class="section-header"><span class="section-badge">1</span><span class="section-title">Hero — photo or video</span></div>
+
+        <div class="bp-herokind">
+          <button type="button" class="bp-herokind__opt"
+                  [class.is-active]="form.get('heroKind')?.value === heroKinds.Photo"
+                  (click)="form.get('heroKind')?.setValue(heroKinds.Photo)">
+            <strong>A photo</strong>
+            <span class="text-muted small">One wide picture of the range or the factory.</span>
+          </button>
+          <button type="button" class="bp-herokind__opt"
+                  [class.is-active]="form.get('heroKind')?.value === heroKinds.Video"
+                  (click)="form.get('heroKind')?.setValue(heroKinds.Video)">
+            <strong>A video</strong>
+            <span class="text-muted small">Plays on its own with the sound off.</span>
+          </button>
+        </div>
+
+        <div class="row g-3 mt-2">
+          <div class="col-md-6">
+            @if (form.get('heroKind')?.value === heroKinds.Photo) {
+              <div class="bp-drop bp-drop--lg" (click)="uploadImageInto(form.get('heroMediaUrl'), 'brand-heroes')">
+                @if (form.get('heroMediaUrl')?.value) {
+                  <img [src]="form.get('heroMediaUrl')?.value" alt="Hero" class="bp-drop__img" />
+                } @else {
+                  <span nz-icon nzType="upload" nzTheme="outline"></span>
+                  <span class="bp-drop__hint">Drop a photo here</span>
+                  <span class="bp-drop__hint">JPG or PNG, 1320 &times; 712 or larger</span>
+                }
+              </div>
+            } @else {
+              <div class="bp-drop bp-drop--lg" (click)="uploadVideoInto(form.get('heroMediaUrl'))">
+                @if (videoProgress !== null) {
+                  <span class="bp-drop__hint">Uploading… {{ videoProgress }}%</span>
+                  <div class="bp-upbar"><span class="bp-upbar__fill" [style.width.%]="videoProgress"></span></div>
+                } @else if (form.get('heroMediaUrl')?.value) {
+                  <video class="bp-drop__img" [src]="form.get('heroMediaUrl')?.value"
+                         muted playsinline controls preload="metadata"
+                         (click)="$event.stopPropagation()"></video>
+                } @else {
+                  <span nz-icon nzType="video-camera" nzTheme="outline"></span>
+                  <span class="bp-drop__hint">Click to pick a video</span>
+                  <span class="bp-drop__hint">MP4, WebM or MOV, 16:9, under 50 MB</span>
+                }
+              </div>
+              <div class="field-label mt-3">VIDEO URL</div>
+              <input nz-input formControlName="heroMediaUrl" placeholder="https://… .mp4" />
+              <span class="bp-hint d-block mt-2">Uploading fills this in. You can also paste a link to a video you already host.</span>
+            }
+          </div>
+          <div class="col-md-6">
+            <div class="field-label">CAPTION SHOWN OVER IT <span class="bp-opt">optional</span></div>
+            <input nz-input formControlName="heroCaption" placeholder="Factory tour" />
+
+            <div class="mt-3 d-flex flex-column gap-2">
+              @if (form.get('heroKind')?.value === heroKinds.Video) {
+                <label nz-checkbox [ngModel]="form.get('heroAutoplayMuted')?.value"
+                       [ngModelOptions]="{ standalone: true }"
+                       (ngModelChange)="form.get('heroAutoplayMuted')?.setValue($event)">
+                  Start it automatically, with the sound off
+                </label>
+              }
+              <label nz-checkbox [ngModel]="form.get('heroUsedForSharing')?.value"
+                     [ngModelOptions]="{ standalone: true }"
+                     (ngModelChange)="form.get('heroUsedForSharing')?.setValue($event)">
+                Also use this picture when the page is shared
+              </label>
+            </div>
+
+            @if (form.get('heroMediaUrl')?.value) {
+              <button nz-button nzSize="small" nzType="text" class="btn-remove mt-2"
+                      (click)="form.get('heroMediaUrl')?.setValue(null)">Remove the hero</button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div class="section-header">
+          <span class="section-badge">2</span><span class="section-title">Factory and product photos</span>
+          <span class="bp-hint ms-2">The first two show beside the story. The rest open in the gallery.</span>
+        </div>
+
+        <div class="bp-gallery" formArrayName="media">
+          @for (row of childArray('media').controls; track row; let i = $index) {
+            <div class="bp-gallery__cell" [formGroupName]="i">
+              <div class="bp-gallery__img" (click)="uploadImageInto(row.get('imageUrl'), 'brand-gallery')">
+                @if (row.get('imageUrl')?.value) {
+                  <img [src]="row.get('imageUrl')?.value" [alt]="row.get('altText')?.value || ''" />
+                } @else {
+                  <span nz-icon nzType="picture" nzTheme="outline"></span>
+                }
+                <span class="bp-gallery__num">{{ i + 1 }}</span>
+                <button type="button" class="bp-gallery__x"
+                        (click)="$event.stopPropagation(); removeChild('media', i)" aria-label="Remove">
+                  <span nz-icon nzType="close" nzTheme="outline"></span>
+                </button>
+              </div>
+              <input nz-input formControlName="caption" placeholder="Factory floor" nzSize="small" />
+              <input nz-input formControlName="altText" placeholder="Alt text" nzSize="small" />
+            </div>
+          }
+
+          <button type="button" class="bp-gallery__add" (click)="addMedia()">
+            <span nz-icon nzType="plus" nzTheme="outline"></span>
+            <span class="bp-drop__hint">Add a photo</span>
+          </button>
+        </div>
+      </div>
+
+      }
+
+    </div>
+
+    <!-- ── Right rail: blocks on this page ───────────────────────────── -->
+    <aside class="bp-rail">
+      <div class="settings-card">
+        <div class="section-header"><span class="section-title">Blocks on this page</span></div>
+        @for (b of blocks; track b.label) {
+          <span class="bp-blockrow">
+            <span nz-icon [nzType]="b.filled ? 'check' : 'plus'" nzTheme="outline"
+                  [class.is-filled]="b.filled" class="bp-blockrow__icon"></span>
+            <span class="bp-blockrow__label" [class.is-empty]="!b.filled">{{ b.label }}</span>
+            <span class="bp-blockrow__note">{{ b.note }}</span>
+          </span>
+        }
+      </div>
+
+      <div class="settings-card">
+        <div class="section-header"><span class="section-title">Page settings</span></div>
+        <div class="field-label">ORDER IN THE BRANDS LIST</div>
+        <nz-input-number formControlName="displayOrder" [nzMin]="0" class="w-100"></nz-input-number>
+
+        <label nz-checkbox class="mt-3" [ngModel]="form.get('isActive')?.value"
+               [ngModelOptions]="{ standalone: true }"
+               (ngModelChange)="form.get('isActive')?.setValue($event)">
+          Active
+        </label>
+        <span class="bp-hint d-block mt-1">
+          Switch this off to retire a brand without deleting its page.
+        </span>
+      </div>
+    </aside>
+  </div>
+</form>
+
+}
+}

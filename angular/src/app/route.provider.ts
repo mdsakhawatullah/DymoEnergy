@@ -190,5 +190,13 @@ function configureRoutes() {
       layout: APP,
       breadcrumbText: '::Menu:UserSiteSetting',
     },
+    {
+      path: '/brand-portfolios',
+      name: '::Menu:BrandPortfolio',
+      parentName: '::Menu:SiteSettings',
+      order: 3,
+      layout: APP,
+      breadcrumbText: '::Menu:BrandPortfolio',
+    },
   ]);
 }

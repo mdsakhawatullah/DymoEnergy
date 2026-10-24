@@ -2,6 +2,9 @@ import { Environment } from '@abp/ng.core';
 
 const baseUrl = 'http://localhost:4200';
 
+/** The customer-facing shop (DymoEnergyUserSite) — brand pages open at {userSiteUrl}/brands/{slug}. */
+export const userSiteUrl = 'http://localhost:4600';
+
 const oAuthConfig = {
   issuer: 'https://localhost:44371/',
   redirectUri: baseUrl,

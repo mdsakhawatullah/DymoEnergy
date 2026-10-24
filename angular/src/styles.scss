@@ -143,7 +143,7 @@ body {
   .lpx-logo-container {
     background-color: var(--ds-sidebar-bg) !important;
     border-bottom: var(--ds-hairline) solid var(--ds-border) !important;
-    height: 73px !important;
+    height: var(--de-topbar-h) !important;
     padding: 0 22px !important;
   }
 }
@@ -242,9 +242,11 @@ body {
 
 #lpx-wrapper.sidebar-minimized {
 
-  // Icons sit at the right edge of the 280px sidebar → visible in the 72px strip
+  // Icons sit at the right edge of the 280px sidebar → visible in the 72px strip.
+  // 208 = 280 − 72, so what is left over is exactly the strip and `center` lands
+  // the icon in the middle of it — the same centre the brand mark uses below.
   .lpx-nav-menu .lpx-menu-item-link {
-    padding-left: 220px !important;
+    padding-left: 208px !important;
     padding-right: 0 !important;
     justify-content: center !important;
     border-left: none !important;
@@ -264,9 +266,19 @@ body {
     display: none !important;
   }
 
-  // Logo area — hide brand name, push icon right
+  // Logo area — hide the wordmark and centre the mark in the 72px strip,
+  // squarely above the nav icons rather than hugging the strip's left edge.
   .lpx-logo-container {
-    padding-left: 220px !important;
+    padding-left: 208px !important;
+    padding-right: 0 !important;
+    justify-content: center !important;
+
+    > a,
+    a.text-decoration-none {
+      width: 100% !important;
+      justify-content: center !important;
+      gap: 0 !important;
+    }
   }
 
   .lpx-brand-name {
@@ -275,6 +287,8 @@ body {
 
   .lpx-brand-logo {
     background-image: var(--lpx-logo-icon) !important;
+    background-position: center !important;
+    margin-right: 0 !important;   // no wordmark to sit beside, so no gap
   }
 
   // Content area — reduce left margin to match 72px sidebar
@@ -1443,9 +1457,9 @@ a {
   padding-top: 6px !important;
 }
 
-// ─── Brand header: 72px, 11px gap, soft bottom border ────────────────────────
+// ─── Brand header: same height as the top bar, 11px gap, soft bottom border ──
 .lpx-sidebar .lpx-logo-container {
-  height: 72px !important;
+  height: var(--de-topbar-h) !important;
   gap: 11px !important;
   padding: 0 22px !important;
   border-bottom: 1px solid #eef0eb !important;
@@ -1862,13 +1876,13 @@ a {
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ─── Sidebar brand row: the anchor is inline by default, which pins the 34px
-//     mark to the top of the 72px header and visually clips it. Make it a
-//     centred flex row (spec: height 72, gap 11, padding 0 22).
+//     mark to the top of the header and visually clips it. Make it a centred
+//     flex row, the same height as the top bar beside it (gap 11, padding 0 22).
 .lpx-sidebar .lpx-logo-container {
   display: flex !important;
   align-items: center !important;
-  height: 72px !important;
-  min-height: 72px !important;
+  height: var(--de-topbar-h) !important;
+  min-height: var(--de-topbar-h) !important;
   padding: 0 22px !important;
   overflow: hidden !important;
 
@@ -2190,4 +2204,97 @@ a {
 // can't be overridden by `left`, but the positioned box honours margin-left.
 .lpx-sidebar .lpx-logo-container .lpx-brand-name {
   margin-left: 13px !important;   // 2px natural gap + 13px = 15px
+}
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  ng-zorro / datatable defaults → design-system green
+//  ng-zorro 20 hard-codes antd blue (#1890ff) for switches, spinners and progress
+//  bars, and the datatable's loading bar is a fixed blue. Re-point them at the
+//  brand tokens once here so no page has to scope its own override.
+//  (abp-loader-bar is already green — see app.component.ts.)
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ─── Switch ──────────────────────────────────────────────────────────────────
+.ant-switch.ant-switch-checked {
+  background-color: var(--de-primary);
+
+  &:hover:not(.ant-switch-disabled) { background-color: var(--de-primary-hover); }
+  &:focus { box-shadow: 0 0 0 3px var(--de-focus-ring); }
+
+  // The little spinner shown while an (nzLoading) switch is saving
+  .ant-switch-loading-icon { color: var(--de-primary); }
+}
+
+.ant-switch:focus-visible { box-shadow: 0 0 0 3px var(--de-focus-ring); }
+
+// ─── Spinners (nz-spin, nzSimple, nzSize="large", nzTip) ─────────────────────
+.ant-spin { color: var(--de-primary); }
+.ant-spin-dot-item { background-color: var(--de-primary); }
+
+// ─── Progress bars / rings ───────────────────────────────────────────────────
+.ant-progress-bg { background-color: var(--de-primary); }
+.ant-progress-steps-item-active { background: var(--de-primary); }
+.ant-progress-inner:not(.ant-progress-circle-gradient) .ant-progress-circle-path { stroke: var(--de-primary); }
+
+// ─── ngx-datatable "loading" bar ─────────────────────────────────────────────
+.ngx-datatable.material .datatable-body .progress-linear .container {
+  background-color: var(--de-leaf);
+  .bar { background-color: var(--de-primary); }
+}
+
+// ─── Checkbox ────────────────────────────────────────────────────────────────
+.ant-checkbox-input:focus + .ant-checkbox-inner,
+.ant-checkbox-wrapper:hover .ant-checkbox-inner,
+.ant-checkbox:hover .ant-checkbox-inner { border-color: var(--de-primary); }
+
+.ant-checkbox-checked::after { border-color: var(--de-primary); }
+.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var(--de-primary);
+  border-color: var(--de-primary);
+}
+.ant-checkbox-indeterminate .ant-checkbox-inner::after { background-color: var(--de-primary); }
+
+// ─── Radio (dot style) ───────────────────────────────────────────────────────
+.ant-radio-input:focus + .ant-radio-inner,
+.ant-radio-wrapper:hover .ant-radio,
+.ant-radio:hover .ant-radio-inner { border-color: var(--de-primary); }
+
+.ant-radio-checked::after { border-color: var(--de-primary); }
+.ant-radio-checked .ant-radio-inner { border-color: var(--de-primary); }
+.ant-radio-inner::after { background-color: var(--de-primary); }
+
+// ─── Radio buttons (nz-radio-group with button style) ────────────────────────
+.ant-radio-button-wrapper:hover { color: var(--de-primary); }
+
+.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+  color: var(--de-primary);
+  border-color: var(--de-primary);
+
+  &::before { background-color: var(--de-primary); }
+  &:first-child { border-color: var(--de-primary); }
+
+  &:hover,
+  &:active {
+    color: var(--de-primary-hover);
+    border-color: var(--de-primary-hover);
+    &::before { background-color: var(--de-primary-hover); }
+  }
+}
+.ant-radio-button-wrapper-checked:not([class*=' ant-radio-button-wrapper-disabled']).ant-radio-button-wrapper:first-child {
+  border-right-color: var(--de-primary);
+}
+
+// Solid variant: filled green with white text
+.ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+  color: #fff;
+  background: var(--de-primary);
+  border-color: var(--de-primary);
+
+  &:hover,
+  &:active {
+    color: #fff;
+    background: var(--de-primary-hover);
+    border-color: var(--de-primary-hover);
+  }
 }

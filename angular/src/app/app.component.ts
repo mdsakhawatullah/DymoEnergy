@@ -5,7 +5,7 @@ import { LoaderBarComponent } from '@abp/ng.theme.shared';
 @Component({
   selector: 'app-root',
   template: `
-    <abp-loader-bar />
+    <abp-loader-bar color="#0E6B3F" />
     <abp-dynamic-layout />
   `,
   imports: [LoaderBarComponent, DynamicLayoutComponent],

@@ -13,6 +13,7 @@ using DymoEnergy.Compliance;
 using DymoEnergy.Finance;
 using DymoEnergy.Shipping;
 using DymoEnergy.UserSiteSettings;
+using DymoEnergy.BrandPortfolios;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
 using Volo.Abp.Data;
@@ -105,6 +106,13 @@ public class DymoEnergyDbContext :
     public DbSet<Customer>             Customers             { get; set; }
     public DbSet<UserSiteSetting>      UserSiteSettings      { get; set; }
     public DbSet<UserSiteSettingImage> UserSiteSettingImages { get; set; }
+
+    public DbSet<BrandPortfolio>            BrandPortfolios            { get; set; }
+    public DbSet<BrandPortfolioCertificate> BrandPortfolioCertificates { get; set; }
+    public DbSet<BrandPortfolioDownload>    BrandPortfolioDownloads    { get; set; }
+    public DbSet<BrandPortfolioProductLine> BrandPortfolioProductLines { get; set; }
+    public DbSet<BrandPortfolioProject>     BrandPortfolioProjects     { get; set; }
+    public DbSet<BrandPortfolioMedia>       BrandPortfolioMedia        { get; set; }
 
     #region Entities from the modules
 
@@ -868,6 +876,100 @@ public class DymoEnergyDbContext :
             b.ConfigureByConvention();
             b.Property(x => x.Id).ValueGeneratedOnAdd();
             b.HasIndex(x => x.UserSiteSettingId);
+        });
+
+        /* ── Brand Portfolios ────────────────────────────────────────────── */
+        builder.Entity<BrandPortfolio>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "BrandPortfolios", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+
+            b.Property(x => x.Name).HasMaxLength(BrandPortfolioConsts.MaxNameLength);
+            b.Property(x => x.Slug).HasMaxLength(BrandPortfolioConsts.MaxSlugLength);
+            b.Property(x => x.Tagline).HasMaxLength(BrandPortfolioConsts.MaxTaglineLength);
+            b.Property(x => x.LogoUrl).HasMaxLength(BrandPortfolioConsts.MaxUrlLength);
+            b.Property(x => x.ShortIntro).HasMaxLength(BrandPortfolioConsts.MaxIntroLength);
+            b.Property(x => x.DistributorSince).HasMaxLength(BrandPortfolioConsts.MaxShortTextLength);
+            b.Property(x => x.BrandColor).HasMaxLength(BrandPortfolioConsts.MaxColorLength);
+            b.Property(x => x.StoryHeadline).HasMaxLength(BrandPortfolioConsts.MaxShortTextLength);
+            b.Property(x => x.HeroMediaUrl).HasMaxLength(BrandPortfolioConsts.MaxUrlLength);
+            b.Property(x => x.HeroCaption).HasMaxLength(BrandPortfolioConsts.MaxShortTextLength);
+            b.Property(x => x.CtaHeadline).HasMaxLength(BrandPortfolioConsts.MaxShortTextLength);
+            b.Property(x => x.CtaSubline).HasMaxLength(BrandPortfolioConsts.MaxShortTextLength);
+            b.Property(x => x.MetaTitle).HasMaxLength(BrandPortfolioConsts.MaxMetaTitleLength);
+            b.Property(x => x.MetaDescription).HasMaxLength(BrandPortfolioConsts.MaxMetaDescLength);
+            b.Property(x => x.ContentJson).HasMaxLength(BrandPortfolioConsts.MaxContentJsonLength);
+
+            b.HasIndex(x => x.Slug);
+            b.HasIndex(x => x.IsPublished);
+        });
+
+        builder.Entity<BrandPortfolioCertificate>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "BrandPortfolioCertificates", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+
+            b.Property(x => x.Mark).HasMaxLength(BrandPortfolioConsts.MaxNameLength);
+            b.Property(x => x.Covers).HasMaxLength(BrandPortfolioConsts.MaxShortTextLength);
+            b.Property(x => x.CertificateNumber).HasMaxLength(BrandPortfolioConsts.MaxCertNumberLength);
+            b.Property(x => x.FileUrl).HasMaxLength(BrandPortfolioConsts.MaxUrlLength);
+            b.Property(x => x.FileSize).HasMaxLength(BrandPortfolioConsts.MaxFileSizeLength);
+
+            b.HasIndex(x => x.BrandPortfolioId);
+        });
+
+        builder.Entity<BrandPortfolioDownload>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "BrandPortfolioDownloads", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+
+            b.Property(x => x.Title).HasMaxLength(BrandPortfolioConsts.MaxNameLength);
+            b.Property(x => x.FileUrl).HasMaxLength(BrandPortfolioConsts.MaxUrlLength);
+            b.Property(x => x.FileSize).HasMaxLength(BrandPortfolioConsts.MaxFileSizeLength);
+
+            b.HasIndex(x => x.BrandPortfolioId);
+        });
+
+        builder.Entity<BrandPortfolioProductLine>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "BrandPortfolioProductLines", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+
+            b.Property(x => x.Name).HasMaxLength(BrandPortfolioConsts.MaxNameLength);
+            b.Property(x => x.Blurb).HasMaxLength(BrandPortfolioConsts.MaxShortTextLength);
+            b.Property(x => x.IconKey).HasMaxLength(BrandPortfolioConsts.MaxIconKeyLength);
+
+            b.HasIndex(x => x.BrandPortfolioId);
+        });
+
+        builder.Entity<BrandPortfolioProject>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "BrandPortfolioProjects", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+
+            b.Property(x => x.Title).HasMaxLength(BrandPortfolioConsts.MaxNameLength);
+            b.Property(x => x.Subtitle).HasMaxLength(BrandPortfolioConsts.MaxShortTextLength);
+            b.Property(x => x.ImageUrl).HasMaxLength(BrandPortfolioConsts.MaxUrlLength);
+
+            b.HasIndex(x => x.BrandPortfolioId);
+        });
+
+        builder.Entity<BrandPortfolioMedia>(b =>
+        {
+            b.ToTable(DymoEnergyConsts.DbTablePrefix + "BrandPortfolioMedia", DymoEnergyConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Id).ValueGeneratedOnAdd();
+
+            b.Property(x => x.ImageUrl).HasMaxLength(BrandPortfolioConsts.MaxUrlLength);
+            b.Property(x => x.Caption).HasMaxLength(BrandPortfolioConsts.MaxShortTextLength);
+            b.Property(x => x.AltText).HasMaxLength(BrandPortfolioConsts.MaxShortTextLength);
+
+            b.HasIndex(x => x.BrandPortfolioId);
         });
     }
 }

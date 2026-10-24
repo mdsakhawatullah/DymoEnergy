@@ -79,6 +79,33 @@ public class CloudinaryService : ICloudinaryService
         return result.SecureUrl.ToString();
     }
 
+    private static readonly string[] VideoExtensions = { ".mp4", ".webm", ".mov", ".m4v", ".ogv" };
+
+    public async Task<string> UploadVideoAsync(System.IO.Stream fileStream, string fileName, string folder = "DymoEnergy/videos")
+    {
+        if (fileStream == null || fileStream.Length == 0)
+            throw new InvalidOperationException("File is empty");
+        if (string.IsNullOrEmpty(fileName))
+            throw new InvalidOperationException("FileName is required");
+
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        if (Array.IndexOf(VideoExtensions, extension) < 0)
+            throw new InvalidOperationException($"File type {extension} is not allowed. Allowed: {string.Join(", ", VideoExtensions)}");
+
+        var uploadParams = new VideoUploadParams
+        {
+            File = new FileDescription(fileName, fileStream),
+            Folder = folder,
+            PublicId = $"{Guid.NewGuid()}",
+        };
+
+        var result = await _cloudinary.UploadAsync(uploadParams);
+        if (result.Error != null)
+            throw new InvalidOperationException($"Upload failed: {result.Error.Message}");
+
+        return result.SecureUrl.ToString();
+    }
+
     public async Task DeleteImageAsync(string publicId)
     {
         if (string.IsNullOrEmpty(publicId))
